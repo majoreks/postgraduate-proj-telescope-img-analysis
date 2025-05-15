@@ -66,9 +66,12 @@ class MyDataset(Dataset):
 
         with open(label_path, 'r') as f:
             labels_data = f.readlines()
-            # still to be done
 
-    
-        return image_data, labels_data
-        # return image_data, image_data_cut
+        labels_data = np.array([[float(x) for x in numeric_string.split()] for numeric_string in labels_data[12:]])
+
+        filtered_labels = labels_data[(labels_data[:,0]>=coords[2]) & (labels_data[:,0]<=coords[3]) & (labels_data[:,1]>=coords[0]) & (labels_data[:,1]<=coords[1])]
+        filtered_labels[:,0] = filtered_labels[:,0] - coords[2]
+        filtered_labels[:,1] = filtered_labels[:,1] - coords[0]
+        
+        return image_data, filtered_labels
         
