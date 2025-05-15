@@ -1,5 +1,5 @@
 import os
-import getStridedVector
+from getStridedVector import getStridedVector
 from torch.utils.data import Dataset
 from astropy.io import fits
 import numpy as np
@@ -40,6 +40,7 @@ class MyDataset(Dataset):
         posindexes = np.array([lenmesh.flatten(), lonmesh.flatten()]).T
 
         self.coordinates = []
+        self.transform = transform
 
         for ii in range(posindexes.shape[0]):
             x = lentgh_positions[posindexes[ii][0]]
@@ -73,5 +74,10 @@ class MyDataset(Dataset):
         filtered_labels[:,0] = filtered_labels[:,0] - coords[2]
         filtered_labels[:,1] = filtered_labels[:,1] - coords[0]
         
+        if self.transform:
+            image_data = self.transform(image_data)
+            ## This is going to be tricky!!!!
+            # filtered_labels = self.transform(filtered_labels)
+
         return image_data, filtered_labels
         
