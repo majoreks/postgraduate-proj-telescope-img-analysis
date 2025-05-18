@@ -5,7 +5,7 @@ from astropy.io import fits
 import numpy as np
 
 
-class MyDataset(Dataset):
+class telescopeDataset(Dataset):
     def __init__(self, images_path, labels_path, transform=None, Npixels=512):
         super().__init__()
         self.images_path = images_path

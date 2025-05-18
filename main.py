@@ -1,14 +1,14 @@
 import torch
-# from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader
+from datasetClass import telescopeDataset
+from torchvision import transforms
 
-# from dataset import MyDataset
 # from model import MyModel
 # from utils import accuracy
-from torchvision import transforms
 # import torch.optim as optim
 # import torch.nn.functional as F
 # import numpy as np
-from MyDataset import MyDataset
+
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -48,13 +48,13 @@ def eval_single_epoch(model, val_loader):
 def train_model(config):
 
     data_transforms = transforms.Compose([transforms.ToTensor()])
-    my_dataset = MyDataset(labels_path = config["labels_path"], images_path = config["images_path"], transform=data_transforms)
-    # train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(my_dataset, [10000, 2500, 2500])
-    # train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
-    # val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
-    # test_loader = DataLoader(test_dataset, batch_size=config["batch_size"])
+    joan_oro_dataset = telescopeDataset(labels_path = config["labels_path"], images_path = config["images_path"], transform=data_transforms)
+    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
+    test_loader = DataLoader(test_dataset, batch_size=config["batch_size"])
 
-    # my_model = MyModel(config["h1"], config["h2"], config["h3"], config["h4"]).to(device)
+    # my_model = MyModel().to(device)
 
     # optimizer = optim.Adam(my_model.parameters(), config["lr"])
     # for epoch in range(config["epochs"]):
@@ -74,12 +74,8 @@ if __name__ == "__main__":
 
     config = {
         "lr": 1e-3,
-        "batch_size": 64,
+        "batch_size": 8,
         "epochs": 5,
-        "h1": 32,
-        "h2": 64,
-        "h3": 128,
-        "h4": 128,
         "labels_path" : "C:/Data/CAT", 
         "images_path" : "C:/Data/RED"
     }
