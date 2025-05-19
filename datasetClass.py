@@ -3,28 +3,30 @@ from getStridedVector import getStridedVector
 from torch.utils.data import Dataset
 from astropy.io import fits
 import numpy as np
-
+import pathlib
 
 class telescopeDataset(Dataset):
-    def __init__(self, images_path, labels_path, transform=None, Npixels=512):
+    def __init__(self, data_path, transform=None, Npixels=512):
         super().__init__()
-        self.images_path = images_path
-        self.labels_path = labels_path
+
+        self.data_path = data_path
         self.transform = transform
 
-        self.images_list = os.listdir(self.images_path)
-        self.labels_list = os.listdir(self.labels_path)
 
-        images_list = [image.split("_V_")[0] for image in self.images_list]
-        labels_list = [label.split("_V_")[0] for label in self.labels_list]
+
+        self.images_list = (list(pathlib.Path(self.data_path).rglob('*_V_imc.fits.gz')))
+        self.labels_list = (list(pathlib.Path(self.data_path).rglob('*_V_imc_trl.dat')))
+
+        images_list = [str(image).split("_V_")[0].split("\\")[-1] for image in self.images_list]
+        labels_list = [str(label).split("_V_")[0].split("\\")[-1] for label in self.labels_list]
 
         combined_list = [image for image in images_list if image in labels_list]
 
         image_str = "_V_imc.fits.gz"
         label_str = "_V_imc_trl.dat"
 
-        self.images_list = [image + image_str for image in combined_list]
-        self.labels_list = [label + label_str for label in combined_list]
+        self.images_list = [image[3:].split(".")[0] + "\\RED\\" + image + image_str for image in combined_list]
+        self.labels_list = [label[3:].split(".")[0] + "\\CAT\\" + label + label_str for label in combined_list]
 
         length = 4108
         width = 4096
@@ -55,8 +57,8 @@ class telescopeDataset(Dataset):
         image_idx = idx // self.Nsubimages
         subimage_idx = idx % self.Nsubimages
 
-        image_path = os.path.join(self.images_path, self.images_list[image_idx])
-        label_path = os.path.join(self.labels_path, self.labels_list[image_idx])
+        image_path = os.path.join(self.data_path, self.images_list[image_idx])
+        label_path = os.path.join(self.data_path, self.labels_list[image_idx])
 
         coords = self.coordinates[subimage_idx]
 

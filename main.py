@@ -48,7 +48,7 @@ def eval_single_epoch(model, val_loader):
 def train_model(config):
 
     data_transforms = transforms.Compose([transforms.ToTensor()])
-    joan_oro_dataset = telescopeDataset(labels_path = config["labels_path"], images_path = config["images_path"], transform=data_transforms)
+    joan_oro_dataset = telescopeDataset(data_path = config["data_path"], transform=data_transforms)
     train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
     train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
@@ -76,9 +76,9 @@ if __name__ == "__main__":
         "lr": 1e-3,
         "batch_size": 8,
         "epochs": 5,
-        "labels_path" : "C:/Data/CAT", 
-        "images_path" : "C:/Data/RED"
+        "data_path": ".\data"
     }
+
     my_model = train_model(config)
 
     
