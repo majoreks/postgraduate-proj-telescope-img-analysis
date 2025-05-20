@@ -49,7 +49,7 @@ def train_model(config):
 
     data_transforms = transforms.Compose([transforms.ToTensor()])
     joan_oro_dataset = telescopeDataset(data_path = config["data_path"], transform=data_transforms)
-    joan_oro_dataset.__getitem__(0)
+
     random_seed = 42
     torch.manual_seed(random_seed)
 
