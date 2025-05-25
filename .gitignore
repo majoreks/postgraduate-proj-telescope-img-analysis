@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
 data/
+data_*/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -176,3 +177,5 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+output/

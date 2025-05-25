@@ -1,7 +1,9 @@
+import tempfile
 import torch
 from torch.utils.data import DataLoader
-from datasetClass import telescopeDataset
 from torchvision import transforms
+from dataset.dataloader import custom_collate_fn
+from dataset.telescope_dataset import TelescopeDataset
 
 # from model import MyModel
 # from utils import accuracy
@@ -9,9 +11,7 @@ from torchvision import transforms
 # import torch.nn.functional as F
 # import numpy as np
 
-
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
 
 def train_single_epoch(model, train_loader, optimizer):
     # model.train()
@@ -48,11 +48,13 @@ def eval_single_epoch(model, val_loader):
 def train_model(config):
 
     data_transforms = transforms.Compose([transforms.ToTensor()])
-    joan_oro_dataset = telescopeDataset(data_path = config["data_path"], transform=data_transforms)
-    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
-    test_loader = DataLoader(test_dataset, batch_size=config["batch_size"])
+    with tempfile.TemporaryDirectory() as tempdir:
+        print(tempdir)
+        joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms)
+        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
+        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
+        test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
     # my_model = MyModel().to(device)
 
@@ -76,7 +78,7 @@ if __name__ == "__main__":
         "lr": 1e-3,
         "batch_size": 8,
         "epochs": 5,
-        "data_path": ".\data"
+        "data_path": "data"
     }
 
     my_model = train_model(config)
