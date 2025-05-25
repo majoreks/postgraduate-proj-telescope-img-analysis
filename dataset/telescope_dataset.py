@@ -2,7 +2,6 @@ import os
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
-from astropy.io import fits
 from pathlib import Path
 from dataset.file_path import DataType, FilePath, get_basename_prefix
 from dataset.get_strided_vector import getStridedVector
