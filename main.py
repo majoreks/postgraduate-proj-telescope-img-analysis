@@ -1,3 +1,4 @@
+import tempfile
 import torch
 from torch.utils.data import DataLoader
 from dataset.telescope_dataset import TelescopeDataset
@@ -46,11 +47,13 @@ def eval_single_epoch(model, val_loader):
 def train_model(config):
 
     data_transforms = transforms.Compose([transforms.ToTensor()])
-    joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], transform=data_transforms)
-    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
-    test_loader = DataLoader(test_dataset, batch_size=config["batch_size"])
+    with tempfile.TemporaryDirectory() as tempdir:
+        print(tempdir)
+        joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms)
+        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
+        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
+        test_loader = DataLoader(test_dataset, batch_size=config["batch_size"])
 
     # my_model = MyModel().to(device)
 

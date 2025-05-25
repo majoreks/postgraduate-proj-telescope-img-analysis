@@ -12,10 +12,11 @@ IMAGE_LENGTH = 4108
 IMAGE_WIDTH = 4096
 
 class TelescopeDataset(Dataset):
-    def __init__(self, data_path, transform=None, Npixels=512):
+    def __init__(self, data_path, cache_dir, transform=None, Npixels=512):
         super().__init__()
 
         self.data_path = data_path
+        self.cache_dir = cache_dir
         self.transform = transform
         self.crop_size = Npixels
 
@@ -64,7 +65,7 @@ class TelescopeDataset(Dataset):
 
         coords = self.coordinates[subimage_idx]
 
-        image_data = read_image(image_path)[coords[0]:coords[1], coords[2]:coords[3]]
+        image_data = read_image(image_path, self.cache_dir)[coords[0]:coords[1], coords[2]:coords[3]]
         labels_data = read_labels(label_path)
 
         labels_data = labels_data[
