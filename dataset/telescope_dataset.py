@@ -6,6 +6,7 @@ from astropy.io import fits
 from pathlib import Path
 from dataset.file_path import DataType, FilePath, get_basename_prefix
 from dataset.get_strided_vector import getStridedVector
+from dataset.image_reader import read_image
 from dataset.labels_reader import HEIGHT_KEY, WIDTH_KEY, X_KEY, Y_KEY, read_labels
 
 IMAGE_LENGTH = 4108
@@ -64,11 +65,7 @@ class TelescopeDataset(Dataset):
 
         coords = self.coordinates[subimage_idx]
 
-        # Load the image and label data
-        with fits.open(image_path) as hdul:
-            image_data = hdul[0].data.astype(np.float32)[coords[0]:coords[1], coords[2]:coords[3]]
-            # image_data_cut = image_data
-
+        image_data = read_image(image_path)[coords[0]:coords[1], coords[2]:coords[3]]
         labels_data = read_labels(label_path)
 
         labels_data = labels_data[
