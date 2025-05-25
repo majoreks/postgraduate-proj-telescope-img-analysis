@@ -5,7 +5,7 @@ from astropy.io import fits
 from pathlib import Path
 from dataset.file_path import DataType, FilePath, get_basename_prefix
 from dataset.get_strided_vector import getStridedVector
-from dataset.labels_reader import X_KEY, Y_KEY, read_labels
+from dataset.labels_reader import HEIGHT_KEY, WIDTH_KEY, X_KEY, Y_KEY, read_labels
 
 class TelescopeDataset(Dataset):
     def __init__(self, data_path, transform=None, Npixels=512):
@@ -13,6 +13,7 @@ class TelescopeDataset(Dataset):
 
         self.data_path = data_path
         self.transform = transform
+        self.crop_size = Npixels
 
         image_paths = list(Path(self.data_path).rglob('*_V_imc.fits.gz'))
         label_paths = list(Path(self.data_path).rglob('*_V_imc_trl.dat'))
@@ -76,6 +77,11 @@ class TelescopeDataset(Dataset):
 
         labels_data[X_KEY] -= coords[2]
         labels_data[Y_KEY] -= coords[0]
+
+        labels_data[X_KEY] /= self.crop_size
+        labels_data[Y_KEY] /= self.crop_size
+        labels_data[WIDTH_KEY] /= self.crop_size
+        labels_data[HEIGHT_KEY] /= self.crop_size
         
         if self.transform:
             image_data = self.transform(image_data)
