@@ -1,11 +1,15 @@
 import os
 import numpy as np
+import pandas as pd
 from torch.utils.data import Dataset
 from astropy.io import fits
 from pathlib import Path
 from dataset.file_path import DataType, FilePath, get_basename_prefix
 from dataset.get_strided_vector import getStridedVector
 from dataset.labels_reader import HEIGHT_KEY, WIDTH_KEY, X_KEY, Y_KEY, read_labels
+
+IMAGE_LENGTH = 4108
+IMAGE_WIDTH = 4096
 
 class TelescopeDataset(Dataset):
     def __init__(self, data_path, transform=None, Npixels=512):
@@ -29,11 +33,8 @@ class TelescopeDataset(Dataset):
             str(FilePath(key, DataType.LABEL)) for key in common_keys
         ]
 
-        length = 4108
-        width = 4096
-
-        lentgh_positions = getStridedVector(length, Npixels)
-        width_positions = getStridedVector(width, Npixels)
+        lentgh_positions = getStridedVector(IMAGE_LENGTH, Npixels)
+        width_positions = getStridedVector(IMAGE_WIDTH, Npixels)
 
         self.Nlength = len(lentgh_positions)
         self.Nwidth = len(width_positions)
@@ -78,10 +79,7 @@ class TelescopeDataset(Dataset):
         labels_data[X_KEY] -= coords[2]
         labels_data[Y_KEY] -= coords[0]
 
-        labels_data[X_KEY] /= self.crop_size
-        labels_data[Y_KEY] /= self.crop_size
-        labels_data[WIDTH_KEY] /= self.crop_size
-        labels_data[HEIGHT_KEY] /= self.crop_size
+        self.__normalize_coordinates(labels_data)
         
         if self.transform:
             image_data = self.transform(image_data)
@@ -90,4 +88,10 @@ class TelescopeDataset(Dataset):
 
         labels_data = labels_data.to_dict(orient='records')
         return image_data, labels_data
+
+    def __normalize_coordinates(self, labels_data: pd.DataFrame) -> None:
+        labels_data[X_KEY] /= self.crop_size
+        labels_data[Y_KEY] /= self.crop_size
+        labels_data[WIDTH_KEY] /= self.crop_size
+        labels_data[HEIGHT_KEY] /= self.crop_size
         
