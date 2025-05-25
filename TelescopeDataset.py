@@ -1,9 +1,56 @@
+from enum import Enum
 import os
 from getStridedVector import getStridedVector
 from torch.utils.data import Dataset
 from astropy.io import fits
 import numpy as np
-import pathlib
+from pathlib import Path
+
+class DataType(Enum):
+    LABEL = 1
+    IMAGE = 2
+
+class FilePath():
+    __IMAGE_PATH_POSTFIX = "_V_imc.fits.gz"
+    __LABEL_PATH_POSTFIX = "_V_imc_trl.dat"
+
+    __IMAGE_PATH_DIR = "RED"
+    __LABEL_PATH_DIR = "CAT"
+
+    def __init__(self, key: str, type: DataType):
+        self.__key = key
+        self.__dataType = type
+
+    def __str__(self) -> str:
+        return self.path
+
+    @property
+    def path(self) -> str:
+        return f"{self.__key[3:].split('.')[0]}/{self.__dir}/{self.__key}{self.__postfix}"
+
+    @property
+    def __postfix(self) -> str:
+        if self.__dataType == DataType.IMAGE:
+            return self.__IMAGE_PATH_POSTFIX
+        elif self.__dataType == DataType.LABEL:
+            return self.__LABEL_PATH_POSTFIX
+        else:
+            raise Exception("Unknown data type", self.__dataType)
+        
+    @property
+    def __dir(self) -> str:
+        if self.__dataType == DataType.IMAGE:
+            return self.__IMAGE_PATH_DIR
+        elif self.__dataType == DataType.LABEL:
+            return self.__LABEL_PATH_DIR
+        else:
+            raise Exception("Unknown data type", self.__dataType)
+
+def get_basename_prefix(path: Path) -> str:
+    return path.name.split("_V_")[0]
+
+def build_path(key: str, type: DataType) -> FilePath:
+    return FilePath(key, type)
 
 class TelescopeDataset(Dataset):
     def __init__(self, data_path, transform=None, Npixels=512):
@@ -12,21 +59,19 @@ class TelescopeDataset(Dataset):
         self.data_path = data_path
         self.transform = transform
 
+        image_paths = list(Path(self.data_path).rglob('*_V_imc.fits.gz'))
+        label_paths = list(Path(self.data_path).rglob('*_V_imc_trl.dat'))
 
+        image_map = {get_basename_prefix(p): p for p in image_paths}
+        label_map = {get_basename_prefix(p): p for p in label_paths}
+        common_keys = sorted(set(image_map.keys()) & set(label_map.keys()))
 
-        self.images_list = (list(pathlib.Path(self.data_path).rglob('*_V_imc.fits.gz')))
-        self.labels_list = (list(pathlib.Path(self.data_path).rglob('*_V_imc_trl.dat')))
-
-        images_list = [str(image).split("_V_")[0].split("\\")[-1] for image in self.images_list]
-        labels_list = [str(label).split("_V_")[0].split("\\")[-1] for label in self.labels_list]
-
-        combined_list = [image for image in images_list if image in labels_list]
-
-        image_str = "_V_imc.fits.gz"
-        label_str = "_V_imc_trl.dat"
-
-        self.images_list = [image[3:].split(".")[0] + "\\RED\\" + image + image_str for image in combined_list]
-        self.labels_list = [label[3:].split(".")[0] + "\\CAT\\" + label + label_str for label in combined_list]
+        self.images_list = [
+            str(FilePath(key, DataType.IMAGE)) for key in common_keys
+        ]
+        self.labels_list = [
+            str(FilePath(key, DataType.LABEL)) for key in common_keys
+        ]
 
         length = 4108
         width = 4096
@@ -64,7 +109,7 @@ class TelescopeDataset(Dataset):
 
         # Load the image and label data
         with fits.open(image_path) as hdul:
-            image_data = hdul[0].data[coords[0]:coords[1], coords[2]:coords[3]]
+            image_data = hdul[0].data.astype(np.float32)[coords[0]:coords[1], coords[2]:coords[3]]
             # image_data_cut = image_data
 
         with open(label_path, 'r') as f:

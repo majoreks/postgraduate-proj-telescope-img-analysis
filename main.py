@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from datasetClass import TelescopeDataset
+from TelescopeDataset import TelescopeDataset
 from torchvision import transforms
 
 # from model import MyModel
