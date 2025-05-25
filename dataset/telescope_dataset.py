@@ -70,12 +70,12 @@ class TelescopeDataset(Dataset):
         labels_data = labels_data[
             (labels_data[X_KEY] >= coords[2]) & (labels_data[X_KEY] <= coords[3]) &
             (labels_data[Y_KEY] >= coords[0]) & (labels_data[Y_KEY] <= coords[1])
-        ].copy()
+        ]
 
         labels_data[X_KEY] -= coords[2]
         labels_data[Y_KEY] -= coords[0]
 
-        self.__normalize_coordinates(labels_data)
+        labels_data = self.__normalize_coordinates(labels_data)
         
         if self.transform:
             image_data = self.transform(image_data)
@@ -90,4 +90,5 @@ class TelescopeDataset(Dataset):
         labels_data[Y_KEY] /= self.crop_size
         labels_data[WIDTH_KEY] /= self.crop_size
         labels_data[HEIGHT_KEY] /= self.crop_size
+        return labels_data
         
