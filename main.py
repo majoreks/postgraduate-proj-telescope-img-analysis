@@ -1,8 +1,11 @@
 import tempfile
 import torch
 from torch.utils.data import DataLoader
+from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
 from torchvision import transforms
+
+from dev_utils.traverse_and_time import traverse_and_time
 
 # from model import MyModel
 # from utils import accuracy
@@ -51,9 +54,13 @@ def train_model(config):
         print(tempdir)
         joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms)
         train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
-        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
-        test_loader = DataLoader(test_dataset, batch_size=config["batch_size"])
+        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
+        test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
+        # print(len(train_dataset))
+        # print(joan_oro_dataset.Nsubimages)
+        # print(len(train_loader))
+        traverse_and_time(train_loader)
 
     # my_model = MyModel().to(device)
 
@@ -77,7 +84,7 @@ if __name__ == "__main__":
         "lr": 1e-3,
         "batch_size": 8,
         "epochs": 5,
-        "data_path": "data"
+        "data_path": "data_full"
     }
 
     my_model = train_model(config)
