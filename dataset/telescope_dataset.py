@@ -1,11 +1,11 @@
-from enum import Enum
 import os
-from dataset.file_path import DataType, FilePath, get_basename_prefix
-from dataset.get_strided_vector import getStridedVector
+import numpy as np
 from torch.utils.data import Dataset
 from astropy.io import fits
-import numpy as np
 from pathlib import Path
+from dataset.file_path import DataType, FilePath, get_basename_prefix
+from dataset.get_strided_vector import getStridedVector
+from dataset.labels_reader import X_KEY, Y_KEY, read_labels
 
 class TelescopeDataset(Dataset):
     def __init__(self, data_path, transform=None, Npixels=512):
@@ -67,19 +67,21 @@ class TelescopeDataset(Dataset):
             image_data = hdul[0].data.astype(np.float32)[coords[0]:coords[1], coords[2]:coords[3]]
             # image_data_cut = image_data
 
-        with open(label_path, 'r') as f:
-            labels_data = f.readlines()
+        labels_data = read_labels(label_path)
 
-        labels_data = np.array([[float(x) for x in numeric_string.split()] for numeric_string in labels_data[12:]])
+        labels_data = labels_data[
+            (labels_data[X_KEY] >= coords[2]) & (labels_data[X_KEY] <= coords[3]) &
+            (labels_data[Y_KEY] >= coords[0]) & (labels_data[Y_KEY] <= coords[1])
+        ].copy()
 
-        filtered_labels = labels_data[(labels_data[:,0]>=coords[2]) & (labels_data[:,0]<=coords[3]) & (labels_data[:,1]>=coords[0]) & (labels_data[:,1]<=coords[1])]
-        filtered_labels[:,0] = filtered_labels[:,0] - coords[2]
-        filtered_labels[:,1] = filtered_labels[:,1] - coords[0]
+        labels_data[X_KEY] -= coords[2]
+        labels_data[Y_KEY] -= coords[0]
         
         if self.transform:
             image_data = self.transform(image_data)
             ## This is going to be tricky!!!!
             # filtered_labels = self.transform(filtered_labels)
 
-        return image_data, filtered_labels
+        labels_data = labels_data.to_dict(orient='records')
+        return image_data, labels_data
         
