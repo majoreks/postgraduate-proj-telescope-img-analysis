@@ -39,7 +39,7 @@ def calculate_class(row: pd.Series, threshold: float = 0.3) -> pd.Series:
     return pd.Series([1 if ellipticity > threshold else 0], index=CLASSES_KEYS)
 
 def read_labels(labels_path: str) -> pd.DataFrame:
-    labels_df = pd.read_csv(labels_path, delim_whitespace=True, names=DAT_LABELS, comment=DAT_COMMENTS_KEY)
+    labels_df = pd.read_csv(labels_path, sep='\s+', names=DAT_LABELS, comment=DAT_COMMENTS_KEY)
     labels_df = labels_df[(labels_df[DAT_FLAGS_KEY] == 0) & (labels_df[DAT_FLUX_KEY] != 99.0)]
 
     labels_df[COORDINATES_KEYS] = labels_df.apply(calculate_bbox, axis=1)
