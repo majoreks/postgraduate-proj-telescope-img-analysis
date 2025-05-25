@@ -44,6 +44,6 @@ def read_labels(labels_path: str) -> pd.DataFrame:
 
     labels_df[COORDINATES_KEYS] = labels_df.apply(calculate_bbox, axis=1)
     labels_df[CLASSES_KEYS] = labels_df.apply(calculate_class, axis=1)
-    
+
     labels_df = labels_df[LABEL_KEYS]
     return labels_df
