@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from TelescopeDataset import TelescopeDataset
+from dataset.TelescopeDataset import TelescopeDataset
 from torchvision import transforms
 
 # from model import MyModel
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         "lr": 1e-3,
         "batch_size": 8,
         "epochs": 5,
-        "data_path": ".\data"
+        "data_path": "data"
     }
 
     my_model = train_model(config)

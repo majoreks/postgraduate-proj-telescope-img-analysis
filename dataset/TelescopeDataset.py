@@ -1,6 +1,6 @@
 from enum import Enum
 import os
-from getStridedVector import getStridedVector
+from dataset.getStridedVector import getStridedVector
 from torch.utils.data import Dataset
 from astropy.io import fits
 import numpy as np
