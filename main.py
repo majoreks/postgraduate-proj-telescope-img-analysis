@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from dataset.TelescopeDataset import TelescopeDataset
+from dataset.telescope_dataset import TelescopeDataset
 from torchvision import transforms
 
 # from model import MyModel
@@ -9,9 +9,7 @@ from torchvision import transforms
 # import torch.nn.functional as F
 # import numpy as np
 
-
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
 
 def train_single_epoch(model, train_loader, optimizer):
     # model.train()
