@@ -4,7 +4,7 @@ from astropy.io import fits
 
 
 def read_image(image_path: str, cache_dir: str) -> np.ndarray: 
-    image_cached_path = Path(f"{cache_dir}/{image_path}").with_suffix('.npy')
+    image_cached_path = Path(f"{cache_dir}/{Path(image_path).name}").with_suffix('.npy')
 
     if image_cached_path.exists():
         return np.load(image_cached_path)   
