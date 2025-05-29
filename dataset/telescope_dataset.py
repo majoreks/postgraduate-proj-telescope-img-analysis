@@ -6,13 +6,16 @@ from pathlib import Path
 from dataset.file_path import DataType, FilePath, get_basename_prefix
 from dataset.get_strided_vector import getStridedVector
 from dataset.image_reader import read_image
-from dataset.labels_reader import HEIGHT_KEY, WIDTH_KEY, X_KEY, Y_KEY, read_labels
+from dataset.labels_reader import HEIGHT_KEY, WIDTH_KEY, X_KEY, Y_KEY,CLASS_KEY,COORDINATES_KEYS,read_labels
+
+import albumentations as A
+from dataset.plotImagesBBoxes import plotFITSImageWithBoundingBoxes as plotImagesBBoxes
 
 IMAGE_LENGTH = 4108
 IMAGE_WIDTH = 4096
 
 class TelescopeDataset(Dataset):
-    def __init__(self, data_path, cache_dir, transform=None, Npixels=512):
+    def __init__(self, data_path, cache_dir, transform : A.core.composition.Compose = None, Npixels=512):
         super().__init__()
 
         self.data_path = data_path
@@ -60,8 +63,8 @@ class TelescopeDataset(Dataset):
         image_idx = idx // self.Nsubimages
         subimage_idx = idx % self.Nsubimages
 
-        image_path = os.path.join(self.data_path, self.images_list[image_idx])
-        label_path = os.path.join(self.data_path, self.labels_list[image_idx])
+        image_path = Path(self.data_path, self.images_list[image_idx])
+        label_path = Path(self.data_path, self.labels_list[image_idx])
 
         coords = self.coordinates[subimage_idx]
 
@@ -76,15 +79,21 @@ class TelescopeDataset(Dataset):
         labels_data[X_KEY] -= coords[2]
         labels_data[Y_KEY] -= coords[0]
 
-        labels_data = self.__normalize_coordinates(labels_data)
-        
-        if self.transform:
-            image_data = self.transform(image_data)
-            ## This is going to be tricky!!!!
-            # filtered_labels = self.transform(filtered_labels)
+        label_data = np.array(labels_data[CLASS_KEY])
+        bbox_data = np.array(labels_data[COORDINATES_KEYS], dtype=np.float32)
+        # plotImagesBBoxes(image_data,bbox_data)
 
-        labels_data = labels_data.to_dict(orient='records')
-        return image_data, labels_data
+        if self.transform:
+            transformed = self.transform(image=image_data, bboxes=bbox_data, labels=label_data)
+            image_data = transformed['image']
+            bbox_data = transformed['bboxes']
+            label_data = transformed['labels']
+            # plotImagesBBoxes(image_data.numpy().squeeze() ,bbox_data )
+
+        bbox_data /= self.crop_size
+    
+        return image_data, np.concatenate([bbox_data, label_data.reshape(-1,1) ], axis=1).astype(np.float32)
+
 
     def __normalize_coordinates(self, labels_data: pd.DataFrame) -> None:
         labels_data[X_KEY] /= self.crop_size

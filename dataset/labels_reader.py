@@ -24,22 +24,28 @@ DAT_LABELS = [
 ]
 
 def calculate_bbox(row: pd.Series, scale: float = 1.0) -> pd.Series:
+    """
+    Return bbox in COCO format [x_min, y_min, width, height]
+    """
+    
     x_center = row[DAT_X_KEY]
     y_center = row[DAT_Y_KEY]
     flux_radius = row[DAT_FLUX_KEY]
     ellipticity = row[DAT_ELLIPTICITY_KEY]
 
-    width = scale * flux_radius * (1 + ellipticity)
-    height = scale * flux_radius
+    scale = 5
 
-    return pd.Series([x_center, y_center, width, height], index=COORDINATES_KEYS)
+    width = scale * flux_radius 
+    height = scale * flux_radius* (1 + ellipticity)
+
+    return pd.Series([x_center-width/2, y_center-height/2, width, height], index=COORDINATES_KEYS)
 
 def calculate_class(row: pd.Series, threshold: float = 0.3) -> pd.Series:
     ellipticity = row[DAT_ELLIPTICITY_KEY]
     return pd.Series([1 if ellipticity > threshold else 0], index=CLASSES_KEYS)
 
 def read_labels(labels_path: str) -> pd.DataFrame:
-    labels_df = pd.read_csv(labels_path, sep='\s+', names=DAT_LABELS, comment=DAT_COMMENTS_KEY)
+    labels_df = pd.read_csv(labels_path, sep=r'\s+', names=DAT_LABELS, comment=DAT_COMMENTS_KEY)
     labels_df = labels_df[(labels_df[DAT_FLAGS_KEY] == 0) & (labels_df[DAT_FLUX_KEY] != 99.0)]
 
     labels_df[COORDINATES_KEYS] = labels_df.apply(calculate_bbox, axis=1)

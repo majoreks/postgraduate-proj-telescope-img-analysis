@@ -5,6 +5,8 @@ from torchvision import transforms
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
 
+import albumentations as A
+
 # from model import MyModel
 # from utils import accuracy
 # import torch.optim as optim
@@ -47,10 +49,14 @@ def eval_single_epoch(model, val_loader):
 
 def train_model(config):
 
-    data_transforms = transforms.Compose([transforms.ToTensor()])
+    # data_transforms = transforms.Compose([transforms.ToTensor()])
+
+    data_transforms = A.Compose([A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='coco', label_fields=['labels'], filter_invalid_bboxes=True))
+
     with tempfile.TemporaryDirectory() as tempdir:
         print(tempdir)
         joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms)
+        # im, lab = joan_oro_dataset.__getitem__(2)  # Test if the dataset is working
         train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
         train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
         val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
