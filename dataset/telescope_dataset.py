@@ -1,22 +1,24 @@
 import os
 import numpy as np
 import pandas as pd
+import torch
 from torch.utils.data import Dataset
 from pathlib import Path
 from dataset.file_path import DataType, FilePath, get_basename_prefix
 from dataset.get_strided_vector import getStridedVector
 from dataset.image_reader import read_image
-from dataset.labels_reader import HEIGHT_KEY, WIDTH_KEY, X_KEY, Y_KEY,CLASS_KEY,COORDINATES_KEYS,read_labels
+from dataset.labels_reader import Y_MAX_KEY, X_MAX_KEY, X_MIN_KEY, Y_MIN_KEY,CLASS_KEY,COORDINATES_KEYS,read_labels
 
 import albumentations as A
-from dataset.plotImagesBBoxes import plotFITSImageWithBoundingBoxes as plotImagesBBoxes
 
 IMAGE_LENGTH = 4108
 IMAGE_WIDTH = 4096
 
 class TelescopeDataset(Dataset):
-    def __init__(self, data_path, cache_dir, transform : A.core.composition.Compose = None, Npixels=512):
+    def __init__(self, data_path, cache_dir, device: torch.device, transform : A.core.composition.Compose = None, Npixels=512):
         super().__init__()
+
+        self.device = device
 
         self.data_path = data_path
         self.cache_dir = cache_dir
@@ -72,33 +74,32 @@ class TelescopeDataset(Dataset):
         labels_data = read_labels(label_path)
 
         labels_data = labels_data[
-            (labels_data[X_KEY] >= coords[2]) & (labels_data[X_KEY] <= coords[3]) &
-            (labels_data[Y_KEY] >= coords[0]) & (labels_data[Y_KEY] <= coords[1])
+            (labels_data[X_MIN_KEY] >= coords[2]) & (labels_data[X_MIN_KEY] <= coords[3]) &
+            (labels_data[Y_MIN_KEY] >= coords[0]) & (labels_data[Y_MIN_KEY] <= coords[1])
         ]
 
-        labels_data[X_KEY] -= coords[2]
-        labels_data[Y_KEY] -= coords[0]
+        labels_data[X_MIN_KEY] -= coords[2]
+        labels_data[Y_MIN_KEY] -= coords[0]
+        labels_data[X_MAX_KEY] -= coords[2]      # x_max
+        labels_data[Y_MAX_KEY] -= coords[0]      # y_max
+
+        within_x = (labels_data[X_MAX_KEY] > 0) & (labels_data[X_MIN_KEY] < self.crop_size)
+        within_y = (labels_data[Y_MAX_KEY] > 0) & (labels_data[Y_MIN_KEY] < self.crop_size)
+        labels_data = labels_data[within_x & within_y]
 
         label_data = np.array(labels_data[CLASS_KEY])
         bbox_data = np.array(labels_data[COORDINATES_KEYS], dtype=np.float32)
-        # plotImagesBBoxes(image_data,bbox_data)
 
         if self.transform:
-            transformed = self.transform(image=image_data, bboxes=bbox_data, labels=label_data)
+            transformed = self.transform(image=image_data, bboxes=bbox_data.tolist(), labels=label_data.tolist())
             image_data = transformed['image']
             bbox_data = transformed['bboxes']
             label_data = transformed['labels']
-            # plotImagesBBoxes(image_data.numpy().squeeze() ,bbox_data )
 
-        bbox_data /= self.crop_size
+        # bbox_data /= self.crop_size
     
-        return image_data, np.concatenate([bbox_data, label_data.reshape(-1,1) ], axis=1).astype(np.float32)
+        targets = {"boxes": torch.tensor(bbox_data, dtype=torch.float32),
+                   "labels": torch.tensor(label_data, dtype=torch.int64)}
 
-
-    def __normalize_coordinates(self, labels_data: pd.DataFrame) -> None:
-        labels_data[X_KEY] /= self.crop_size
-        labels_data[Y_KEY] /= self.crop_size
-        labels_data[WIDTH_KEY] /= self.crop_size
-        labels_data[HEIGHT_KEY] /= self.crop_size
-        return labels_data
+        return image_data, targets
         
