@@ -17,5 +17,4 @@ def custom_collate_fn(batch: List[Tuple[torch.Tensor, List[Dict]]]) -> Tuple[tor
     for image_data, labels_data in filtered_batch:
         images.append(image_data)
         labels.append(labels_data)
-    images = torch.stack(images, dim=0)
     return images, labels
