@@ -15,7 +15,7 @@ IMAGE_LENGTH = 4108
 IMAGE_WIDTH = 4096
 
 class TelescopeDataset(Dataset):
-    def __init__(self, data_path, cache_dir, device: torch.device, transform : A.core.composition.Compose = None, Npixels=512):
+    def __init__(self, data_path, cache_dir, device: torch.device, transform : A.core.composition.Compose = None, Npixels=512+1):
         super().__init__()
 
         self.device = device
