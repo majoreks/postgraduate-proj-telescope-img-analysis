@@ -80,11 +80,13 @@ def train_model(config):
         state_dict =  torch.hub.load_state_dict_from_url(url)
         model.load_state_dict(state_dict)
 
+        # substitute first layer with one that accepts 1 channel image
         old_conv = model.backbone.body.conv1
         new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True)
         model.backbone.body.conv1 = new_conv
 
+        # setup first layer for retraining
         for name, param in model.backbone.named_parameters():
             if name.startswith("body.conv1") or name.startswith("body.layer1"):
                 param.requires_grad = True
@@ -94,23 +96,14 @@ def train_model(config):
         model.to(device).eval()
         
         num_classes = 3 # stars, galaxies + background
-
         in_features = model.roi_heads.box_predictor.cls_score.in_features
-
         model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
         model = model.train().to(device)
 
-        optimizer = torch.optim.Adam([{"params": model.backbone.parameters(), "lr": 1e-4},
-                                      {"params": model.rpn.parameters(), "lr": 1e-3},
-                                      {"params": model.roi_heads.parameters(), "lr": 1e-3}],
-                                     lr=1e-4,  # default is usually 1e-3, you can tune this
-                                     weight_decay=0.0001
-                                     )
+        optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.0001)
 
         loss_history = defaultdict(list)
-
-        model.train()
         for epoch in range(config['epochs']):
             print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
@@ -122,7 +115,6 @@ def train_model(config):
                 loss = sum(loss for loss in loss_dict.values())
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)  # Add this
                 optimizer.step()
 
                 for k, v in loss_dict.items():
