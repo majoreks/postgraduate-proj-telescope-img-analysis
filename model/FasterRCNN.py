@@ -71,8 +71,8 @@ class FasterRCNN(nn.Module):
             box_score_thresh, box_nms_thresh, box_detections_per_img)
         min_size=800
         max_size=1333
-        self.image_mean = [0.485, 0.456, 0.406]
-        self.image_std = [0.229, 0.224, 0.225]
+        self.image_mean = [0.5]
+        self.image_std = [0.5]
 
         # Module that does the correct data augmentation
         self.transform = GeneralizedRCNNTransform(min_size, max_size, self.image_mean, self.image_std)

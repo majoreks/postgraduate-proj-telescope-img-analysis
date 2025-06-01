@@ -1,4 +1,6 @@
+from collections import defaultdict
 import tempfile
+import torch.nn as nn
 from matplotlib import pyplot as plt
 import torch
 from torch.utils.data import DataLoader
@@ -11,11 +13,14 @@ from dataset.telescope_dataset import TelescopeDataset
 
 import albumentations as A
 
+from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from model.FastRCNNPredictor import FastRCNNPredictor
 from model.FasterRCNN import FasterRCNN
 from model.TwoMLPHead import TwoMLPHead
 from config.device import get_device
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+
+from postprocess.plot_losses import plot_losses
 
 device = get_device()
 
@@ -68,14 +73,17 @@ def train_model(config):
         joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms, device=device)
         # im, lab = joan_oro_dataset.__getitem__(2)  # Test if the dataset is working
         train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
-        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn)
         val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
         test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
         # x, y = next(iter(train_loader))
-        # print(y[0])
-        # print(x[0])
+        # print(x.shape)
+        # print(len(y))
+        # print(y[0]["boxes"].shape)
+        # print(y[0]["labels"].shape)
         # return
+
     
         backbone = resnet_fpn_backbone("resnet50", pretrained=True)
         model = FasterRCNN(backbone)
@@ -90,13 +98,12 @@ def train_model(config):
         state_dict =  torch.hub.load_state_dict_from_url(url)
         model.load_state_dict(state_dict)
 
-        # old_conv = model.backbone.body.conv1
-        # new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        # new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True)
-        # model.backbone.body.conv1 = new_conv
+        old_conv = model.backbone.body.conv1
+        new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True)
+        model.backbone.body.conv1 = new_conv
 
         model.to(device).eval()
-
         
         num_classes = 3 # stars, galaxies + background
 
@@ -116,15 +123,11 @@ def train_model(config):
             weight_decay=0.0001
         )
 
-        # x, y = next(iter(train_loader))
-        # print(y)
-        epoch_losses = []
+        loss_history = defaultdict(list)
 
         model.train()
         for epoch in range(config['epochs']):
             print(f"\nEpoch {epoch+1}/{config['epochs']}")
-
-            running_loss = 0.0
 
             for i, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch+1}"):
                 images = [img.to(device) for img in images]
@@ -134,39 +137,15 @@ def train_model(config):
                 loss = sum(loss for loss in loss_dict.values())
                 optimizer.zero_grad()
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)  # Add this
                 optimizer.step()
 
-                running_loss += loss.item()
+                for k, v in loss_dict.items():
+                    loss_history[k].append(v.item())
 
-                # if i%100 == 0:
-                #     loss_dict_printable = {k: f"{v.item():.2f}" for k, v in loss_dict.items()}
-                #     print(f"[{i}/{len(train_loader)}] loss: {loss_dict_printable}")
+        plot_losses(loss_history, save_plot=True)
 
-            avg_epoch_loss = running_loss / len(train_loader)
-            epoch_losses.append(avg_epoch_loss)
-
-        plt.figure(figsize=(10, 5))
-        plt.plot(range(1, len(epoch_losses)+1), epoch_losses, marker='o')
-        plt.xlabel("Epoch")
-        plt.ylabel("Loss")
-        plt.title("Training Loss Over Epochs")
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('output/train_loss.png', dpi=400)
-
-        # optimizer = optim.Adam(my_model.parameters(), config["lr"])
-        # for epoch in range(config["epochs"]):
-        #     loss, acc = train_single_epoch(my_model, train_loader, optimizer)
-        #     print(f"Train Epoch {epoch} loss={loss:.2f} acc={acc:.2f}")
-        #     loss, acc = eval_single_epoch(my_model, val_loader)
-        #     print(f"Eval Epoch {epoch} loss={loss:.2f} acc={acc:.2f}")
-        
-        # loss, acc = eval_single_epoch(my_model, test_loader)
-        # print(f"Test loss={loss:.2f} acc={acc:.2f}")
-
-        # return my_model
-
-        # Put model in eval mode
+        return
 
         model = model.eval()
 
@@ -216,7 +195,7 @@ if __name__ == "__main__":
         "lr": 1e-3,
         "batch_size": 8,
         "epochs": 5,
-        "data_path": "data_full"
+        "data_path": "data"
     }
 
     my_model = train_model(config)
