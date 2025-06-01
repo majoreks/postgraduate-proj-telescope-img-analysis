@@ -57,14 +57,11 @@ def eval_single_epoch(model, val_loader):
 
 def train_model(config):
 
-    # data_transforms = transforms.Compose([transforms.ToTensor()])
-
     data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
     with tempfile.TemporaryDirectory() as tempdir:
-        print(tempdir)
         joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms, device=device)
-        # im, lab = joan_oro_dataset.__getitem__(2)  # Test if the dataset is working
+
         train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
         train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
         val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
@@ -98,16 +95,12 @@ def train_model(config):
         
         num_classes = 3 # stars, galaxies + background
 
-        # Get the number of input features for the classifier
         in_features = model.roi_heads.box_predictor.cls_score.in_features
 
-        # Replace the pre-trained head with a new one
         model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
-        # Set model to training mode and move to device
         model = model.train().to(device)
 
-        # Create optimizer for ONLY the new box_predictor module
         optimizer = torch.optim.Adam([{"params": model.backbone.parameters(), "lr": 1e-4},
                                       {"params": model.rpn.parameters(), "lr": 1e-3},
                                       {"params": model.roi_heads.parameters(), "lr": 1e-3}],
@@ -141,14 +134,11 @@ def train_model(config):
 
         model = model.eval()
 
-        # Pick an image from the dataset
-        image, target = joan_oro_dataset[0]  # or any index you'd like
+        image, target = joan_oro_dataset[0] 
 
-        # Run inference
         with torch.no_grad():
             detections = model([image.to(device)])[0]
 
-        # NMS and thresholding
         iou_threshold = 0.2
         score_threshold = 0.4
 
@@ -158,13 +148,11 @@ def train_model(config):
         scores = [s for i, s in enumerate(detections["scores"]) if i in keep_idx and s > score_threshold]
         labels = [l for i, l in enumerate(detections["labels"]) if i in keep_idx and detections["scores"][i] > score_threshold]
 
-        # Class label mapping
         idx2label = {
             1: "star",
             2: "galaxy"
         }
 
-        # Visualize results
         im = to_pil_image(image.cpu())
         draw = ImageDraw.Draw(im)
 
@@ -174,7 +162,6 @@ def train_model(config):
             text = f"{idx2label.get(label.item(), 'unknown')} {score.item()*100:.1f}%"
             draw.text((coords[0], coords[1] - 10), text, fill="white")
 
-        # Show image
         plt.imshow(im)
         plt.axis('off')
         plt.savefig('output/test.png', dpi=400)
