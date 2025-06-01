@@ -24,12 +24,6 @@ from postprocess.plot_losses import plot_losses
 
 device = get_device()
 
-# from model import MyModel
-# from utils import accuracy
-# import torch.optim as optim
-# import torch.nn.functional as F
-# import numpy as np
-
 def train_single_epoch(model, train_loader, optimizer):
     # model.train()
     # accs, losses = [], []
@@ -66,22 +60,23 @@ def train_model(config):
 
     # data_transforms = transforms.Compose([transforms.ToTensor()])
 
-    data_transforms = A.Compose([A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
+    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
     with tempfile.TemporaryDirectory() as tempdir:
         print(tempdir)
         joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms, device=device)
         # im, lab = joan_oro_dataset.__getitem__(2)  # Test if the dataset is working
         train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
-        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn)
+        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
         val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
         test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
         # x, y = next(iter(train_loader))
-        # print(x.shape)
+        # print(x[0].shape)
         # print(len(y))
         # print(y[0]["boxes"].shape)
         # print(y[0]["labels"].shape)
+        # plotFITSImageWithBoundingBoxes(x[0], y[0], save_fig=True)
         # return
 
     
