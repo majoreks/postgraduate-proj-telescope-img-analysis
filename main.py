@@ -13,7 +13,6 @@ from dataset.telescope_dataset import TelescopeDataset
 
 import albumentations as A
 
-from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from model.FastRCNNPredictor import FastRCNNPredictor
 from model.FasterRCNN import FasterRCNN
 from model.TwoMLPHead import TwoMLPHead
@@ -71,15 +70,6 @@ def train_model(config):
         val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
         test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
-        # x, y = next(iter(train_loader))
-        # print(x[0].shape)
-        # print(len(y))
-        # print(y[0]["boxes"].shape)
-        # print(y[0]["labels"].shape)
-        # plotFITSImageWithBoundingBoxes(x[0], y[0], save_fig=True)
-        # return
-
-    
         backbone = resnet_fpn_backbone("resnet50", pretrained=True)
         model = FasterRCNN(backbone)
 
@@ -98,6 +88,12 @@ def train_model(config):
         new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True)
         model.backbone.body.conv1 = new_conv
 
+        for name, param in model.backbone.named_parameters():
+            if name.startswith("body.conv1") or name.startswith("body.layer1"):
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+
         model.to(device).eval()
         
         num_classes = 3 # stars, galaxies + background
@@ -112,11 +108,12 @@ def train_model(config):
         model = model.train().to(device)
 
         # Create optimizer for ONLY the new box_predictor module
-        optimizer = torch.optim.Adam(
-            model.roi_heads.box_predictor.parameters(),
-            lr=1e-4,  # default is usually 1e-3, you can tune this
-            weight_decay=0.0001
-        )
+        optimizer = torch.optim.Adam([{"params": model.backbone.parameters(), "lr": 1e-4},
+                                      {"params": model.rpn.parameters(), "lr": 1e-3},
+                                      {"params": model.roi_heads.parameters(), "lr": 1e-3}],
+                                     lr=1e-4,  # default is usually 1e-3, you can tune this
+                                     weight_decay=0.0001
+                                     )
 
         loss_history = defaultdict(list)
 
@@ -189,8 +186,8 @@ if __name__ == "__main__":
     config = {
         "lr": 1e-3,
         "batch_size": 8,
-        "epochs": 5,
-        "data_path": "data"
+        "epochs": 15,
+        "data_path": "data_full"
     }
 
     my_model = train_model(config)
