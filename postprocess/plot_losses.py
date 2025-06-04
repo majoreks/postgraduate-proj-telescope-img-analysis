@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 
-def plot_losses(loss_history, fname, save_plot = False):
+def plot_losses(loss_history, fname, save_plot = False) -> None:
     num_losses = len(loss_history)
     cols = 2  # or 3 if you prefer more compact layout
     rows = math.ceil(num_losses / cols)
