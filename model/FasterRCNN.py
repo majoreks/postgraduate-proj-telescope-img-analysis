@@ -21,7 +21,7 @@ class FasterRCNN(nn.Module):
         self.backbone = backbone
 
         out_channels = backbone.out_channels
-        anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+        anchor_sizes = ((8,), (16,), (32,), (64,), (128,))
         aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
 
         # Declare the anchor generator of the Region Proposal Network (RPN)
@@ -45,7 +45,7 @@ class FasterRCNN(nn.Module):
 
         # ROI Align
         box_roi_pool = MultiScaleRoIAlign(
-            featmap_names=['0', '1', '2', '3'],
+            featmap_names=['0', '1'],
             output_size=7,
             sampling_ratio=2)
 
@@ -69,8 +69,8 @@ class FasterRCNN(nn.Module):
             box_batch_size_per_image, box_positive_fraction,
             bbox_reg_weights,
             box_score_thresh, box_nms_thresh, box_detections_per_img)
-        min_size=800
-        max_size=1333
+        min_size=1024
+        max_size=2048
         self.image_mean = [0.5]
         self.image_std = [0.5]
 
