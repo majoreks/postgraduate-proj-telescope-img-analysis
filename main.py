@@ -1,39 +1,32 @@
-from collections import defaultdict
-import tempfile
 import torch.nn as nn
 import torch
+import albumentations as A
+import tempfile
+from collections import defaultdict
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
-
-import albumentations as A
-
 from model.FastRCNNPredictor import FastRCNNPredictor
 from model.FasterRCNN import FasterRCNN
 from model.TwoMLPHead import TwoMLPHead
 from config.device import get_device
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
-
 from postprocess.plot_losses import plot_losses
 
 device = get_device()
 
-def train_single_epoch(model, train_loader, optimizer):
-    # model.train()
-    # accs, losses = [], []
-    # for x, y in train_loader:
-    #     optimizer.zero_grad()
-    #     x, y = x.to(device), y.to(device)
-    #     y_ = model(x)
-    #     loss = F.cross_entropy(y_, y)
-    #     loss.backward()
-    #     optimizer.step()
-    #     acc = accuracy(y, y_)
-    #     losses.append(loss.item())
-    #     accs.append(acc.item())
-    # return np.mean(losses), np.mean(accs)
-    pass
+def train_single_epoch(model, images, targets, optimizer, device):
+    images = [img.to(device) for img in images]
+    targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+
+    predictions, loss_dict = model(images, targets)
+    loss = sum(loss for loss in loss_dict.values())
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    
+    return predictions, loss_dict
 
 
 def eval_single_epoch(model, val_loader):
@@ -103,15 +96,9 @@ def train_model(config):
         for epoch in range(config['epochs']):
             print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
-            for i, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch+1}"):
-                images = [img.to(device) for img in images]
-                targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
-                predictions, loss_dict = model(images, targets)
-                loss = sum(loss for loss in loss_dict.values())
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+            for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch+1}"):
+                model.train()
+                predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
 
                 for k, v in loss_dict.items():
                     loss_history[k].append(v.item())
