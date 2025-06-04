@@ -1,12 +1,8 @@
 from collections import defaultdict
 import tempfile
 import torch.nn as nn
-from matplotlib import pyplot as plt
 import torch
 from torch.utils.data import DataLoader
-import torchvision
-from torchvision.transforms.functional import to_pil_image
-from PIL import ImageDraw
 from tqdm import tqdm
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
@@ -101,7 +97,7 @@ def train_model(config):
 
         model = model.train().to(device)
 
-        optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.0001)
+        optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
 
         loss_history = defaultdict(list)
         for epoch in range(config['epochs']):
@@ -120,44 +116,7 @@ def train_model(config):
                 for k, v in loss_dict.items():
                     loss_history[k].append(v.item())
 
-        plot_losses(loss_history, save_plot=True)
-
-        return
-
-        model = model.eval()
-
-        image, target = joan_oro_dataset[0] 
-
-        with torch.no_grad():
-            detections = model([image.to(device)])[0]
-
-        iou_threshold = 0.2
-        score_threshold = 0.4
-
-        keep_idx = torchvision.ops.nms(detections["boxes"], detections["scores"], iou_threshold)
-
-        boxes = [b for i, b in enumerate(detections["boxes"]) if i in keep_idx and detections["scores"][i] > score_threshold]
-        scores = [s for i, s in enumerate(detections["scores"]) if i in keep_idx and s > score_threshold]
-        labels = [l for i, l in enumerate(detections["labels"]) if i in keep_idx and detections["scores"][i] > score_threshold]
-
-        idx2label = {
-            1: "star",
-            2: "galaxy"
-        }
-
-        im = to_pil_image(image.cpu())
-        draw = ImageDraw.Draw(im)
-
-        for box, score, label in zip(boxes, scores, labels):
-            coords = box.cpu().tolist()
-            draw.rectangle(coords, outline="red", width=2)
-            text = f"{idx2label.get(label.item(), 'unknown')} {score.item()*100:.1f}%"
-            draw.text((coords[0], coords[1] - 10), text, fill="white")
-
-        plt.imshow(im)
-        plt.axis('off')
-        plt.savefig('output/test.png', dpi=400)
-        pass
+        plot_losses(loss_history, fname="train_loss.png", save_plot=True)
 
 
 if __name__ == "__main__":
@@ -170,5 +129,3 @@ if __name__ == "__main__":
     }
 
     my_model = train_model(config)
-
-    
