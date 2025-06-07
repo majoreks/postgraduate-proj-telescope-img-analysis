@@ -1,9 +1,11 @@
 import torch
-import albumentations as A
 import tempfile
+import albumentations as A
 from collections import defaultdict
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from config.arg_reader import read_arguments
+from config.mode import Mode
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
 from config.device import get_device
@@ -41,45 +43,63 @@ def eval_single_epoch(model, val_loader):
     pass
 
 
-def train_model(config):
+def train_model(config, tempdir):
 
     data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    with tempfile.TemporaryDirectory() as tempdir:
-        joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms, device=device)
+    joan_oro_dataset = TelescopeDataset(data_path=config["train_data_path"], cache_dir=tempdir, transform=data_transforms, device=device)
 
-        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
-        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
-        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
-        test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
+    train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn) # TODO add validation
 
-        model = load_model(device)
+    model = load_model(device)
 
-        model = model.train()
-        optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
+    model = model.train()
+    optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
 
-        loss_history = defaultdict(list)
-        for epoch in range(config['epochs']):
-            print(f"\nEpoch {epoch+1}/{config['epochs']}")
+    loss_history = defaultdict(list)
+    for epoch in range(config['epochs']):
+        print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
-            for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch+1}"):
-                model.train()
-                predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
+        for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch+1}"):
+            model.train()
+            predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
 
-                for k, v in loss_dict.items():
-                    loss_history[k].append(v.item())
+            for k, v in loss_dict.items():
+                loss_history[k].append(v.item())
 
-        save_model(model)
-        plot_losses(loss_history, fname="train_loss.png", save_plot=True)
+    save_model(model)
+    plot_losses(loss_history, fname="train_loss.png", save_plot=True)
 
+def inference(path, tempdir):
+    data_transforms = A.Compose([A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-if __name__ == "__main__":
+    dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
+    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
+
+    model = load_model(device, True)
+
+    print(len(test_loader))
+    print(model)
+
+def main() -> None:
+    mode = read_arguments()
+    print(f'mode', mode)
 
     config = {
         "lr": 1e-3,
         "batch_size": 8,
         "epochs": 3,
-        "data_path": "data_full"
+        "train_data_path": "data_full"
     }
 
-    my_model = train_model(config)
+    with tempfile.TemporaryDirectory() as tempdir:
+        if mode == Mode.TRAIN:
+            train_model(config, tempdir)
+
+        elif mode == Mode.INFER:
+            inference('data_inference', tempdir)
+
+if __name__ == "__main__":
+    main()
