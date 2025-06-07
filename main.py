@@ -90,7 +90,7 @@ def main() -> None:
     print(f'mode', mode)
 
     config = {
-        "lr": 1e-4,
+        "lr": 1e-3,
         "batch_size": 8,
         "epochs": 15,
         "train_data_path": "data_full"
