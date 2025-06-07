@@ -2,12 +2,12 @@ import pandas as pd
 
 __all__ = ['read_labels']
 
-X_KEY = "x_center"
-Y_KEY = "y_center"
-WIDTH_KEY = "width"
-HEIGHT_KEY = "height"
+X_MIN_KEY = "x_min"
+Y_MIN_KEY = "y_min"
+X_MAX_KEY = "x_max"
+Y_MAX_KEY = "y_max"
 CLASS_KEY = "class_id"
-COORDINATES_KEYS = [X_KEY, Y_KEY, WIDTH_KEY, HEIGHT_KEY]
+COORDINATES_KEYS = [X_MIN_KEY, Y_MIN_KEY, X_MAX_KEY, Y_MAX_KEY]
 CLASSES_KEYS = [CLASS_KEY]
 LABEL_KEYS = COORDINATES_KEYS + CLASSES_KEYS
 
@@ -38,11 +38,16 @@ def calculate_bbox(row: pd.Series, scale: float = 1.0) -> pd.Series:
     width = scale * flux_radius 
     height = scale * flux_radius* (1 + ellipticity)
 
-    return pd.Series([x_center-width/2, y_center-height/2, width, height], index=COORDINATES_KEYS)
+    x_min = x_center - width / 2
+    y_min = y_center - height / 2
+    x_max = x_center + width / 2
+    y_max = y_center + height / 2
+
+    return pd.Series([x_min, y_min, x_max, y_max], index=COORDINATES_KEYS)
 
 def calculate_class(row: pd.Series, threshold: float = 0.3) -> pd.Series:
     ellipticity = row[DAT_ELLIPTICITY_KEY]
-    return pd.Series([1 if ellipticity > threshold else 0], index=CLASSES_KEYS)
+    return pd.Series([2 if ellipticity > threshold else 1], index=CLASSES_KEYS)
 
 def read_labels(labels_path: str) -> pd.DataFrame:
     labels_df = pd.read_csv(labels_path, sep=r'\s+', names=DAT_LABELS, comment=DAT_COMMENTS_KEY)

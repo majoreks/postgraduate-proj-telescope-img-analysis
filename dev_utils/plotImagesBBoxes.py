@@ -2,11 +2,17 @@ import matplotlib.patches as patches
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plotFITSImageWithBoundingBoxes(image_data, labels_df):
+def voc_to_coco(boxes):
+    return [[x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in boxes.cpu().numpy()]
+
+def plotFITSImageWithBoundingBoxes(image_data_, labels_df_, save_fig: bool = False) -> None:
     """
         PLOTS A FITS IMAGE WITH BOUNDING BOXES IN COCO FORMAT
 
     """
+    labels_df = voc_to_coco(labels_df_['boxes'])
+    image_data = image_data_[0] if image_data_.ndim == 3 and image_data_.shape[0] == 1 else image_data_
+
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
     
@@ -35,5 +41,7 @@ def plotFITSImageWithBoundingBoxes(image_data, labels_df):
     ax.set_xlabel("X (pixels)")
     ax.set_ylabel("Y (pixels)")
     #Should preserve the sky coordinates per each patch. I don't know if it's necessary right now, but for science it will definitely be interesting
-    plt.show()
-    pass
+    if save_fig:
+        plt.savefig('output/labels.png', dpi=400)
+    else:
+        plt.show()

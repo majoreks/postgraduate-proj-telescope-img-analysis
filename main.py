@@ -1,35 +1,33 @@
-import tempfile
 import torch
+import tempfile
+import albumentations as A
+from collections import defaultdict
 from torch.utils.data import DataLoader
-from torchvision import transforms
+from tqdm import tqdm
+from config.arg_reader import read_arguments
+from config.mode import Mode
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
+from config.device import get_device
+from model.load_model import load_model
+from model.model_reader import save_model
+from postprocess.plot_losses import plot_losses
 
-import albumentations as A
+device = get_device()
 
-# from model import MyModel
-# from utils import accuracy
-# import torch.optim as optim
-# import torch.nn.functional as F
-# import numpy as np
+def train_single_epoch(model, images, targets, optimizer, device):
+    images = [img.to(device) for img in images]
+    targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    optimizer.zero_grad()
 
-def train_single_epoch(model, train_loader, optimizer):
-    # model.train()
-    # accs, losses = [], []
-    # for x, y in train_loader:
-    #     optimizer.zero_grad()
-    #     x, y = x.to(device), y.to(device)
-    #     y_ = model(x)
-    #     loss = F.cross_entropy(y_, y)
-    #     loss.backward()
-    #     optimizer.step()
-    #     acc = accuracy(y, y_)
-    #     losses.append(loss.item())
-    #     accs.append(acc.item())
-    # return np.mean(losses), np.mean(accs)
-    pass
+    predictions, loss_dict = model(images, targets)
+    loss = sum(loss for loss in loss_dict.values())
+
+    loss.backward()
+    optimizer.step()
+    
+    return predictions, loss_dict
 
 
 def eval_single_epoch(model, val_loader):
@@ -47,46 +45,63 @@ def eval_single_epoch(model, val_loader):
     pass
 
 
-def train_model(config):
+def train_model(config, tempdir):
 
-    # data_transforms = transforms.Compose([transforms.ToTensor()])
+    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    data_transforms = A.Compose([A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='coco', label_fields=['labels'], filter_invalid_bboxes=True))
+    joan_oro_dataset = TelescopeDataset(data_path=config["train_data_path"], cache_dir=tempdir, transform=data_transforms, device=device)
 
-    with tempfile.TemporaryDirectory() as tempdir:
-        print(tempdir)
-        joan_oro_dataset = TelescopeDataset(data_path = config["data_path"], cache_dir=tempdir, transform=data_transforms)
-        # im, lab = joan_oro_dataset.__getitem__(2)  # Test if the dataset is working
-        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.7, 0.15, 0.15])
-        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
-        val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
-        test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
+    train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn) # TODO add validation
 
-    # my_model = MyModel().to(device)
+    model = load_model(device)
 
-    # optimizer = optim.Adam(my_model.parameters(), config["lr"])
-    # for epoch in range(config["epochs"]):
-    #     loss, acc = train_single_epoch(my_model, train_loader, optimizer)
-    #     print(f"Train Epoch {epoch} loss={loss:.2f} acc={acc:.2f}")
-    #     loss, acc = eval_single_epoch(my_model, val_loader)
-    #     print(f"Eval Epoch {epoch} loss={loss:.2f} acc={acc:.2f}")
-    
-    # loss, acc = eval_single_epoch(my_model, test_loader)
-    # print(f"Test loss={loss:.2f} acc={acc:.2f}")
+    model = model.train()
+    optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
 
-    # return my_model
-    pass
+    loss_history = defaultdict(list)
+    for epoch in range(config['epochs']):
+        print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
+        for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch+1}"):
+            model.train()
+            predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
 
-if __name__ == "__main__":
+            for k, v in loss_dict.items():
+                loss_history[k].append(v.item())
+
+    save_model(model)
+    plot_losses(loss_history, fname="train_loss.png", save_plot=True)
+
+def inference(path, tempdir):
+    data_transforms = A.Compose([A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
+
+    dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
+    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
+
+    model = load_model(device, True)
+
+    print(len(test_loader))
+    print(model)
+
+def main() -> None:
+    mode = read_arguments()
+    print(f'mode', mode)
 
     config = {
         "lr": 1e-3,
         "batch_size": 8,
-        "epochs": 5,
-        "data_path": "data"
+        "epochs": 15,
+        "train_data_path": "data_full"
     }
 
-    my_model = train_model(config)
+    with tempfile.TemporaryDirectory() as tempdir:
+        if mode == Mode.TRAIN:
+            train_model(config, tempdir)
 
-    
+        elif mode == Mode.INFER:
+            inference('data_inference', tempdir)
+
+if __name__ == "__main__":
+    main()
