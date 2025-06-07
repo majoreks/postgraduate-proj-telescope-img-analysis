@@ -19,9 +19,11 @@ def train_single_epoch(model, images, targets, optimizer, device):
     images = [img.to(device) for img in images]
     targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
+    optimizer.zero_grad()
+
     predictions, loss_dict = model(images, targets)
     loss = sum(loss for loss in loss_dict.values())
-    optimizer.zero_grad()
+
     loss.backward()
     optimizer.step()
     
@@ -88,9 +90,9 @@ def main() -> None:
     print(f'mode', mode)
 
     config = {
-        "lr": 1e-3,
+        "lr": 1e-4,
         "batch_size": 8,
-        "epochs": 3,
+        "epochs": 15,
         "train_data_path": "data_full"
     }
 
