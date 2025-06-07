@@ -12,25 +12,20 @@ num_classes_pretrained = 91
 num_classes = 3 # stars, galaxies + background
 
 def load_model(device: torch.device, load_weights: bool = False) -> nn.Module:
-    if load_weights:
-        backbone = resnet_fpn_backbone("resnet50", pretrained=False)
-        model = FasterRCNN(backbone)
-
-        model.roi_heads.box_head = TwoMLPHead(in_size, representation_size)
-        model.roi_heads.box_predictor = FastRCNNPredictor(representation_size, num_classes)
-
-        new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        model.backbone.body.conv1 = new_conv
-
-        read_model(model, device)
-
-        return model
-
-    backbone = resnet_fpn_backbone("resnet50", pretrained=True)
+    backbone = resnet_fpn_backbone("resnet50", pretrained=not load_weights)
     model = FasterRCNN(backbone)
 
     model.roi_heads.box_head = TwoMLPHead(in_size, representation_size)
-    model.roi_heads.box_predictor = FastRCNNPredictor(representation_size, num_classes_pretrained)
+    model.roi_heads.box_predictor = FastRCNNPredictor(representation_size, num_classes if load_weights else num_classes_pretrained)
+
+    if load_weights:
+        new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        model.backbone.body.conv1 = new_conv
+
+        model = read_model(model, device)
+        model = model.to(device)
+
+        return model
 
     url = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
     state_dict =  torch.hub.load_state_dict_from_url(url)

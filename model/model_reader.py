@@ -10,5 +10,4 @@ def save_model(model: nn.Module) -> None:
 
 def read_model(model: nn.Module, device: torch.device) -> nn.Module:
     model.load_state_dict(torch.load(save_path, map_location=device))
-    model.to(device)
     return model
