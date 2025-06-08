@@ -21,9 +21,15 @@ class TelescopeDataset(Dataset):
         image_paths = list(Path(self.data_path).rglob('*_V_imc.fits.gz'))
         label_paths = list(Path(self.data_path).rglob('*_V_imc_trl.dat'))
 
+        print("🔍 Total imágenes encontradas:", len(image_paths))
+        print("🔍 Total etiquetas encontradas:", len(label_paths))
+
+
         image_map = {get_basename_prefix(p): p for p in image_paths}
         label_map = {get_basename_prefix(p): p for p in label_paths}
         common_keys = sorted(set(image_map.keys()) & set(label_map.keys()))
+
+        print("🔍 Total muestras comunes:", len(common_keys))
 
         self.images_list = [str(FilePath(key, DataType.IMAGE)) for key in common_keys]
         self.labels_list = [str(FilePath(key, DataType.LABEL)) for key in common_keys]
@@ -57,5 +63,7 @@ class TelescopeDataset(Dataset):
             "boxes": torch.tensor(bbox_data, dtype=torch.float32),
             "labels": torch.tensor(label_data, dtype=torch.int64)
         }
+
+
 
         return image_data, targets

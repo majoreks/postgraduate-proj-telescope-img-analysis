@@ -1,5 +1,6 @@
 import torch
 import tempfile
+import os
 import albumentations as A
 from collections import defaultdict
 from torch.utils.data import DataLoader
@@ -12,6 +13,7 @@ from config.device import get_device
 from model.load_model import load_model
 from model.model_reader import save_model
 from postprocess.plot_losses import plot_losses
+from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 
 device = get_device()
 
@@ -75,15 +77,88 @@ def train_model(config, tempdir):
     plot_losses(loss_history, fname="train_loss.png", save_plot=True)
 
 def inference(path, tempdir):
+    '''print('inference',path)
+    print('-----')
+    #dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
+    #joan_oro_dataset = TelescopeDataset(data_path=config["train_data_path"], cache_dir=tempdir,
+                                        transform=data_transforms, device=device)
     data_transforms = A.Compose([A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
+
+    train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     model = load_model(device, True)
 
-    print(len(test_loader))
-    print(model)
+    #print(len(test_loader))
+    #print(model)
+    print(f"Número de muestras cargadas: {len(dataset)}")'''
+
+    print('inference', path)
+    print('-----')
+    print("📁 Directorio de datos:", path)
+    if not os.path.exists(path):
+        print("❌ ERROR: El directorio no existe.")
+    else:
+        print("✅ El directorio existe.")
+        print("📦 Archivos encontrados:", os.listdir(path))
+
+
+    data_transforms = A.Compose(
+        [A.ToTensorV2()],
+        bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True)
+    )
+
+    dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
+    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
+
+    model = load_model(device, load_weights =True)
+    model.eval()
+
+    print(f"Número de muestras cargadas: {len(dataset)}")
+
+    results = []
+
+    with torch.no_grad():
+        for idx, (images, targets) in enumerate(test_loader):
+            images = [img.to(device) for img in images]
+            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+
+            # Obtener predicciones del modelo
+            predictions, _ = model(images, targets)
+
+            # Almacenar resultados
+            results.append({
+                'image_index': idx,
+                'image_tensor': images[0].cpu(),
+                'ground_truth': targets[0],   # dict con 'boxes' y 'labels'
+                'prediction': predictions[0]  # dict con 'boxes', 'labels', 'scores'
+            })
+
+            print(f"[{idx}] GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
+
+    # Opcional: guardar en disco como torch.save
+    output_path = os.path.join(tempdir, "results.pt")
+    torch.save(results, output_path)
+    print(f"\nResultados guardados en: {output_path}")
+
+    for i in range(min(3, len(results))):
+        image = results[i]['image_tensor'].cpu().numpy()
+        labels = results[i]['prediction']  # o 'ground_truth' si quieres comparar
+
+        plotFITSImageWithBoundingBoxes(image, labels, save_fig=False)
+
+    #avaluar el model sobre les dades de test:
+        #1. filtrar objecte dataset a la regió test del dataset (szimon to harmonize)
+        #2. Iterar la regió del dataset i avaluar el model sobre cada element de la iteració
+                #com es guarda això
+        #3. guardar la sortida del model (optimitzant el recàlcul si es pot - prog. dinàmica/fer cachés)
+        #4. Processar la sortida i transformat la sortida (matriu) en imatge
+        #5. Pintar les BB model i BB GT per cada imatge
+        #6. mètriques... [distància de la BB M i la BB GT]
+
+    #estructura de dades com s'itera
+    #utilitzar aquelles que hagin anat a parar al badge de test
 
 def main() -> None:
     mode = read_arguments()
