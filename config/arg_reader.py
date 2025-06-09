@@ -13,7 +13,19 @@ def read_arguments() -> Mode:
         required=True,
         help="Mode to run: 'train' or 'infer'"
     )
+    parser.add_argument(
+        "--task",
+        "-t",
+        type=str,
+        required=True,
+        help="Task name (optional)"
+    )
+    parser.add_argument(
+        "--dev",
+        action="store_true",
+        help="Enable development mode (disables logging, saves locally, etc.)"
+    )
 
     args = parser.parse_args()
 
-    return args.mode
+    return args.mode, args.task, args.dev
