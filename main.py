@@ -2,7 +2,6 @@ import torch
 import tempfile
 import os
 import albumentations as A
-from collections import defaultdict
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from config.arg_reader import read_arguments
@@ -10,9 +9,9 @@ from config.mode import Mode
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
 from config.device import get_device
+from logger.logger import Logger
 from model.load_model import load_model
 from model.model_reader import save_model
-from postprocess.plot_losses import plot_losses
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 
 device = get_device()
@@ -41,7 +40,7 @@ def eval_single_epoch(model, images, targets):
     return predictions, loss_dict
 
 
-def train_model(config, tempdir):
+def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
@@ -51,32 +50,32 @@ def train_model(config, tempdir):
     train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn) # TODO add validation
 
+    logger = Logger(task, config, dev)
+
     model = load_model(device)
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
 
-    train_loss_history = defaultdict(list)
-    eval_loss_history = defaultdict(list)
+    logger.log_model(model)
+
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
         for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"train | epoch {epoch+1}"):
             predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
 
-            for k, v in loss_dict.items():
-                train_loss_history[k].append(v.item())
+            logger.log_train_loss(loss_dict, True)
 
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
                 predictions, loss_dict = eval_single_epoch(model, images, targets)
 
-                for k, v in loss_dict.items():
-                    eval_loss_history[k].append(v.item())
+                logger.log_train_loss(loss_dict, False)
 
     save_model(model)
-    plot_losses(train_loss_history, fname="train_loss.png", save_plot=True)
-    plot_losses(eval_loss_history, fname="eval_loss.png", save_plot=True)
+    logger.flush()
+
 
 def inference(path, tempdir):
     '''print('inference',path)
@@ -163,8 +162,7 @@ def inference(path, tempdir):
     #utilitzar aquelles que hagin anat a parar al badge de test
 
 def main() -> None:
-    mode = read_arguments()
-    print(f'mode', mode)
+    mode, task, dev = read_arguments()
 
     config = {
         "lr": 1e-3,
@@ -175,7 +173,7 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory() as tempdir:
         if mode == Mode.TRAIN:
-            train_model(config, tempdir)
+            train_model(config, tempdir, task, dev)
 
         elif mode == Mode.INFER:
             inference('data_inference', tempdir)
