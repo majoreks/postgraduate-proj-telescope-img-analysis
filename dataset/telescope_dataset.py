@@ -10,13 +10,15 @@ from dataset.labels_reader import (
 import albumentations as A
 
 class TelescopeDataset(Dataset):
-    def __init__(self, data_path, cache_dir, device: torch.device, transform: A.core.composition.Compose = None):
+    def __init__(self, data_path, cache_dir, device: torch.device, transform: A.core.composition.Compose = None, loadasrgb=False):
         super().__init__()
 
         self.device = device
         self.data_path = data_path
         self.cache_dir = cache_dir
         self.transform = transform
+        self.loadImagesAsRGB = loadasrgb
+        self.num_classes = 2
 
         image_paths = list(Path(self.data_path).rglob('*_V_imc.fits.gz'))
         label_paths = list(Path(self.data_path).rglob('*_V_imc_trl.dat'))
@@ -41,13 +43,15 @@ class TelescopeDataset(Dataset):
         image_path = Path(self.data_path, self.images_list[idx])
         label_path = Path(self.data_path, self.labels_list[idx])
 
-        image_data = read_image(image_path, self.cache_dir)  # Shape: [H, W]
+        image_data = read_image(image_path, self.cache_dir, loadasrgb=self.loadImagesAsRGB)  # Shape: [H, W]
         labels_data = read_labels(label_path)
 
         label_data = np.array(labels_data[CLASS_KEY])
         bbox_data = np.array(labels_data[COORDINATES_KEYS], dtype=np.float32)
 
-        image_data = np.expand_dims(image_data, axis=2)  # [H, W, 1]
+        if image_data.ndim == 2:
+            # If the image is grayscale, expand dimensions to [H, W, 1]
+            image_data = np.expand_dims(image_data, axis=2)  # [H, W, 1]
 
         if self.transform:
             transformed = self.transform(
