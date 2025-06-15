@@ -35,20 +35,6 @@ def main():
     image_height = 4108
     image_area = image_width * image_height
 
-    # Filter invalid bounding boxes
-    valid_mask = (
-        (df['x_min'] < df['x_max']) &
-        (df['y_min'] < df['y_max']) &
-        (df['x_min'] >= 0) & (df['x_max'] <= image_width) &
-        (df['y_min'] >= 0) & (df['y_max'] <= image_height)
-    )
-
-    df = df[valid_mask].reset_index(drop=True)
-
-    print(f"Num objects after filtering: {len(df)}")
-
-    print('\n\n')
-
     # Calculate width, length, size, and ratio
     df['width'] = df['x_max'] - df['x_min']
     df['length'] = df['y_max'] - df['y_min']
@@ -75,8 +61,22 @@ def main():
     print(f"Average Size: {avg_size:.2f} pixels²")
     print(f"Average Ratio to Image: {avg_ratio:.8f} ({avg_ratio * 100:.5f}%)")
 
-    # print("\nTop 10 Largest Objects by Size:")
-    # print(df.nlargest(10, 'size')[['x_min', 'y_min', 'x_max', 'y_max', 'class_id', 'size']])
+    print("\nTop 10 Largest Objects by Size:")
+    print(df.nlargest(10, 'size')[['x_min', 'y_min', 'x_max', 'y_max', 'class_id', 'size']])
+
+    # Filter invalid bounding boxes
+    valid_mask = (
+        (df['x_min'] < df['x_max']) &
+        (df['y_min'] < df['y_max']) &
+        (df['x_min'] >= 0) & (df['x_max'] <= image_width) &
+        (df['y_min'] >= 0) & (df['y_max'] <= image_height)
+    )
+
+    df = df[valid_mask].reset_index(drop=True)
+
+    print(f"Num objects after filtering: {len(df)}")
+
+    print('\n\n')
 
     # Detect outliers using IQR
     Q1 = df['size'].quantile(0.25)
@@ -115,6 +115,9 @@ def main():
     print(f" - Lower bound: {lower_bound:.2f}")
     print(f" - Upper bound: {upper_bound:.2f}")
     print(f"\nDetected {len(outliers)} outlier(s) based on size:")
+
+    print("\nnon_outliers Top 10 Largest Objects by Size:")
+    print(non_outliers.nlargest(10, 'size')[['x_min', 'y_min', 'x_max', 'y_max', 'class_id', 'size']])
 
     # Plot: Full Histogram
     plt.figure(figsize=(12, 5))
