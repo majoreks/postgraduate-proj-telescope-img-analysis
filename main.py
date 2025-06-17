@@ -43,14 +43,13 @@ def eval_single_epoch(model, val_loader):
 
 def train_model(config, tempdir):
 
-    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
+    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'],filter_invalid_bboxes=True))
 
     joan_oro_dataset = TelescopeDataset(data_path=config["train_data_path"], cache_dir=tempdir, transform=data_transforms, device=device, loadasrgb=config["load_data_as_rgb"])
 
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
     train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn) # TODO add validation
-
 
     backbone = resnet_fpn_backbone('resnet50', weights=ResNet50_Weights.DEFAULT)
     anchor_generator  = torchvision.models.detection.anchor_utils.AnchorGenerator(
@@ -206,7 +205,7 @@ def main() -> None:
         "lr": 1e-3,
         "batch_size": 2,
         "epochs": 15,
-        "train_data_path": "..\\data2",
+        "train_data_path": "..\\images1000",
         "load_data_as_rgb": True,
         # "train_data_path": "C:\\Users\\RaulOnrubiaIbanez\\OneDrive - Zenithal Blue Technologies S.L.U\\Personal\\UPC\\JOData",
         # "train_data_path": "data_full",

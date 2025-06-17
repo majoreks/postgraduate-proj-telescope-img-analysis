@@ -20,8 +20,11 @@ class TelescopeDataset(Dataset):
         self.loadImagesAsRGB = loadasrgb
         self.num_classes = 2
 
-        image_paths = list(Path(self.data_path).rglob('*_V_imc.fits.gz'))
-        label_paths = list(Path(self.data_path).rglob('*_V_imc_trl.dat'))
+        image_paths = list(Path(self.data_path).rglob('*_imc.fits.gz'))
+        label_paths = [
+            p for p in Path(self.data_path).rglob('*_imc_trl.dat')
+            if p.stat().st_size > 1344
+        ]
 
         print("🔍 Total imágenes encontradas:", len(image_paths))
         print("🔍 Total etiquetas encontradas:", len(label_paths))

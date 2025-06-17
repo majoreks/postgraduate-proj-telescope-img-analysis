@@ -6,8 +6,8 @@ class DataType(Enum):
     IMAGE = 2
 
 class FilePath():
-    __IMAGE_PATH_POSTFIX = "_V_imc.fits.gz"
-    __LABEL_PATH_POSTFIX = "_V_imc_trl.dat"
+    __IMAGE_PATH_POSTFIX = "_U_imc.fits.gz"
+    __LABEL_PATH_POSTFIX = "_U_imc_trl.dat"
 
     __IMAGE_PATH_DIR = "RED"
     __LABEL_PATH_DIR = "CAT"
@@ -21,7 +21,8 @@ class FilePath():
 
     @property
     def path(self) -> str:
-        return f"{self.__key[3:].split('.')[0]}/{self.__dir}/{self.__key}{self.__postfix}"
+        # return f"{self.__key[3:].split('.')[0]}/{self.__dir}/{self.__key}{self.__postfix}"
+        return f"{self.__key}{self.__postfix}"
 
     @property
     def __postfix(self) -> str:
@@ -42,7 +43,7 @@ class FilePath():
             raise Exception("Unknown data type", self.__dataType)
 
 def get_basename_prefix(path: Path) -> str:
-    return path.name.split("_V_")[0]
+    return path.name.split("_U_")[0]
 
 def build_path(key: str, type: DataType) -> FilePath:
     return FilePath(key, type)
