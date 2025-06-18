@@ -44,8 +44,10 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    joan_oro_dataset = TelescopeDataset(data_path=config["train_data_path"], cache_dir=tempdir, transform=data_transforms, device=device)
+    train_data_path = os.path.join(config["data_path"], "train_dataset")
+    joan_oro_dataset = TelescopeDataset(data_path=train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
 
+    torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
     train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn) # TODO add validation
@@ -80,13 +82,13 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 def inference(path, tempdir):
     '''print('inference',path)
     print('-----')
+    test_data_path = os.path.join(config["data_path"], "test_dataset")
+    joan_oro_dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
+
     #dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
-    #joan_oro_dataset = TelescopeDataset(data_path=config["train_data_path"], cache_dir=tempdir,
+    #joan_oro_dataset = TelescopeDataset(data_path=config["data_path"], cache_dir=tempdir,
                                         transform=data_transforms, device=device)
     data_transforms = A.Compose([A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
-
-
-    train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     model = load_model(device, True)
@@ -160,6 +162,43 @@ def inference(path, tempdir):
 
     #estructura de dades com s'itera
     #utilitzar aquelles que hagin anat a parar al badge de test
+def split_dataset(config: dict, tempdir: str) -> None:
+
+    data_path = config["data_path"]
+
+    gz_files = []
+    for root, _, files in os.walk(data_path):
+        gz_files.extend([os.path.join(root, f) for f in files if f.endswith('.gz')])
+    dat_files = []
+    for root, _, files in os.walk(data_path):
+        dat_files.extend([os.path.join(root, f) for f in files if f.endswith('.dat')])
+
+    for file_path in gz_files:
+        dest_path = os.path.join(data_path, os.path.basename(file_path))
+        if file_path != dest_path:
+            os.rename(file_path, dest_path)
+
+    for file_path in dat_files:
+        dest_path = os.path.join(data_path, os.path.basename(file_path))
+        if file_path != dest_path:
+            os.rename(file_path, dest_path)
+
+    # Remove all empty folders recursively under data_path
+    for root, dirs, files in os.walk(data_path, topdown=False):
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            if not os.listdir(dir_path):
+                os.rmdir(dir_path)
+
+    joan_oro_dataset = TelescopeDataset(data_path=data_path, cache_dir=tempdir, transform=None, device=device)
+    joan_oro_dataset.move_empty_to_folder(os.path.join(config['data_path'], "metadataless_dataset"))
+        
+    torch.manual_seed(42)
+    train_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
+    train_dataset.dataset.move_dataset_to_folder(os.path.join(config['data_path'], "train_dataset"), indexes=train_dataset.indices)
+    test_dataset.dataset.move_dataset_to_folder(os.path.join(config['data_path'], "test_dataset"), indexes=test_dataset.indices)
+
+    
 
 def main() -> None:
     mode, task, dev = read_arguments()
@@ -168,13 +207,29 @@ def main() -> None:
         "lr": 1e-3,
         "batch_size": 6,
         "epochs": 15,
-        "train_data_path": "data_full"
+        "data_path": "../images1000",
+        "allow_splitting": True
     }
 
     with tempfile.TemporaryDirectory() as tempdir:
+        
+        if config["allow_splitting"] == True:
+            data_path = config["data_path"]
+            print("Listing folders in:", data_path)
+            need_to_split = True
+            if os.path.exists(data_path):
+                if len(os.listdir(data_path)) == 3:
+                    folders = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(config["data_path"], f))]
+                    if set(folders) == {"metadataless_dataset", "test_dataset", "train_dataset"}:
+                        need_to_split = False
+                        print("Dataset already split into train and test folders.")
+            
+            if need_to_split == True:
+                print("Dataset not split, merging all files and splitting now...")
+                split_dataset(config, tempdir)
+
         if mode == Mode.TRAIN:
             train_model(config, tempdir, task, dev)
-
         elif mode == Mode.INFER:
             inference('data_inference', tempdir)
 
