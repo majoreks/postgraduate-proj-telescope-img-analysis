@@ -23,22 +23,70 @@ class TelescopeDataset(Dataset):
             p for p in Path(self.data_path).rglob('*_imc_trl.dat')
             if p.stat().st_size > 1344
         ]
+        empty_paths = [
+            p for p in Path(self.data_path).rglob('*_imc_trl.dat')
+            if p.stat().st_size == 1344
+        ]
 
         print("🔍 Total imágenes encontradas:", len(image_paths))
         print("🔍 Total etiquetas encontradas:", len(label_paths))
+        print("🔍 Total etiqueta vacías:", len(empty_paths))
 
 
         image_map = {get_basename_prefix(p): p for p in image_paths}
         label_map = {get_basename_prefix(p): p for p in label_paths}
         common_keys = sorted(set(image_map.keys()) & set(label_map.keys()))
 
-        print("🔍 Total muestras comunes:", len(common_keys))
-
         self.images_list = [str(FilePath(key, DataType.IMAGE)) for key in common_keys]
         self.labels_list = [str(FilePath(key, DataType.LABEL)) for key in common_keys]
+        
+        empty_image_map = {get_basename_prefix(p): p for p in image_paths}
+        empty_label_map = {get_basename_prefix(p): p for p in empty_paths}
+        empty_common_keys = sorted(set(empty_image_map.keys()) & set(empty_label_map.keys()))
+
+        self.empty_images_list = [str(FilePath(key, DataType.IMAGE)) for key in empty_common_keys]
+        self.empty_labels_list = [str(FilePath(key, DataType.LABEL)) for key in empty_common_keys]
+        
+        pass
 
     def __len__(self):
         return len(self.images_list)
+
+    def move_empty_to_folder(self, folder_path: str):
+        folder_path = Path(folder_path)
+        folder_path.mkdir(parents=True, exist_ok=True)
+
+        for image_path, label_path in zip(self.empty_images_list, self.empty_labels_list):
+            image_file = Path(self.data_path, image_path)
+            label_file = Path(self.data_path, label_path)
+
+            if image_file.exists() and label_file.exists():
+                image_file.rename(folder_path / image_file.name)
+                label_file.rename(folder_path / label_file.name)
+            else:
+                print(f"File not found: {image_file} or {label_file}")
+        self.empty_images_list = []
+        self.empty_labels_list = []
+
+    def move_dataset_to_folder(self, folder_path: str, indexes=None):
+        folder_path = Path(folder_path)
+        folder_path.mkdir(parents=True, exist_ok=True)
+
+        if indexes is None:
+            indexes = range(len(self.images_list))
+
+        indexes = list(indexes)
+
+        for image_path, label_path in zip([self.images_list[i] for i in indexes], [self.labels_list[i] for i in indexes]):
+            image_file = Path(self.data_path, image_path)
+            label_file = Path(self.data_path, label_path)
+
+            if image_file.exists() and label_file.exists():
+                image_file.rename(folder_path / image_file.name)
+                label_file.rename(folder_path / label_file.name)
+            else:
+                print(f"File not found: {image_file} or {label_file}")
+
 
     def __getitem__(self, idx):
         image_path = Path(self.data_path, self.images_list[idx])
