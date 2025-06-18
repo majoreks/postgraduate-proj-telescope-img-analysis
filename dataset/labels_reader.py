@@ -20,7 +20,7 @@ DAT_COMMENTS_KEY = "#"
 DAT_LABELS = [
     DAT_X_KEY, DAT_Y_KEY, "ALPHA_J2000", "DELTA_J2000",
     "MAG_AUTO", "MAGERR_AUTO", "FWHM_WORLD", DAT_FLUX_KEY,
-    DAT_ELLIPTICITY_KEY, "THETA_WORLD", "THETA_J2000", DAT_FLAGS_KEY
+    DAT_ELLIPTICITY_KEY, "THETA_WORLD", "THETA_J2000", DAT_FLAGS_KEY, "MAG_CALIB","MAGERR_CALIB"
 ]
 
 def calculate_bbox(row: pd.Series, scale: float = 1.0) -> pd.Series:
@@ -50,11 +50,15 @@ def calculate_class(row: pd.Series, threshold: float = 0.3) -> pd.Series:
     return pd.Series([2 if ellipticity > threshold else 1], index=CLASSES_KEYS)
 
 def read_labels(labels_path: str) -> pd.DataFrame:
-    labels_df = pd.read_csv(labels_path, sep=r'\s+', names=DAT_LABELS, comment=DAT_COMMENTS_KEY)
+    labels_df = pd.read_csv(labels_path, sep=r'\s+', names=DAT_LABELS, comment=DAT_COMMENTS_KEY, engine='python')
     labels_df = labels_df[(labels_df[DAT_FLAGS_KEY] == 0) & (labels_df[DAT_FLUX_KEY] != 99.0)]
 
-    labels_df[COORDINATES_KEYS] = labels_df.apply(calculate_bbox, axis=1)
-    labels_df[CLASSES_KEYS] = labels_df.apply(calculate_class, axis=1)
+    if len(labels_df) > 0:
+        labels_df[COORDINATES_KEYS] = labels_df.apply(calculate_bbox, axis=1)
+        labels_df[CLASSES_KEYS] = labels_df.apply(calculate_class, axis=1)
 
+    else:
+        labels_df[[*COORDINATES_KEYS, *CLASSES_KEYS]] = None           
+    
     labels_df = labels_df[LABEL_KEYS]
     return labels_df
