@@ -1,3 +1,4 @@
+import json
 from dev_utils.analyse_labels.labels_reader import read_labels
 import matplotlib.pyplot as plt
 import os
@@ -24,9 +25,11 @@ def main():
                         if df["reason"] not in results:
                             results[df["reason"]] = {}
                             results[df["reason"]]["occurences"] = 0
-                            results[df["reason"]]["paths"] = []
+                            # results[df["reason"]]["paths"] = []
+                            results[df["reason"]]["fname"] = []
                         results[df["reason"]]["occurences"] += 1
-                        results[df["reason"]]["paths"].append(file_path)
+                        # results[df["reason"]]["paths"].append(file_path)
+                        results[df["reason"]]["fname"].append(file_path.split("/")[-1])
                         continue
 
                     all_data.append(df["labels"])
@@ -35,6 +38,9 @@ def main():
 
     for key, value in results.items():
         print(f'{key} | {value["occurences"]}')
+    with open("dev_utils/analyse_labels/results/empty_files.json", "w") as f:
+        json.dump(results, f, indent=4)
+
 
     if not all_data:
         print("No valid data files found.")
