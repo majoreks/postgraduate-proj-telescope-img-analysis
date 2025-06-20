@@ -86,6 +86,17 @@ non_outliers Top 10 Largest Objects by Size:
 - 14930 objects can be considered outliers (~5.7%)
     - Spread among 603 unique files
 
+### Object size
+#### All objects
+- Average Size of an object (all objects): 128.39 pixels²
+- Average Ratio to Image: (all objects) (0.00076%)
+#### All objects except top 0.5%
+- Average Size: 116.12 pixels²
+- Average Ratio to Image: 0.00000690 (0.00069%)
+#### All objects except outliers
+- Average Size: 99.14 pixels²
+- Average Ratio to Image: 0.00000589 (0.00059%)
+
 ## Possible actions
 - Clip invalid objects so that they don't extend beyond image
 - Remove top 0.5% by size objects to remove larger outliers

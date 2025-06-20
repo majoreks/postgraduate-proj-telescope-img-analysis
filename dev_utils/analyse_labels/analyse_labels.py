@@ -113,9 +113,14 @@ def main():
     
     top_percent_size_bound = df['size'].quantile(0.995)
     top_percent_quantile_outlier = df[df['size'] >= top_percent_size_bound]
-    print(f'num objects top 1%: {len(top_percent_quantile_outlier)}')
-    print(f'Num unique files with top 1% outliers {len(top_percent_quantile_outlier["PATH"].unique())}')
+    print(f'num objects top 0.5%: {len(top_percent_quantile_outlier)}')
+    print(f'Num unique files with top 0.5% outliers {len(top_percent_quantile_outlier["PATH"].unique())}')
     top_percent_quantile_non_outliers = df[df['size'] < top_percent_size_bound]
+
+    avg_size = top_percent_quantile_non_outliers['size'].mean()
+    avg_ratio = top_percent_quantile_non_outliers['ratio'].mean()
+    print(f"Average Size: {avg_size:.2f} pixels²")
+    print(f"Average Ratio to Image: {avg_ratio:.8f} ({avg_ratio * 100:.5f}%)")
 
     # Identify outliers
     outliers = df[(df['size'] < lower_bound) | (df['size'] > upper_bound)]
