@@ -1,13 +1,16 @@
-from dataset.labels_reader import read_labels
+from dev_utils.analyse_labels.labels_reader import read_labels
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
 
-root_dir = 'data_full'
+# root_dir = os.path.expanduser('/home/szymon/code/posgrado/postgraduate-proj-telescope-img-analysis/data_full')
+root_dir = os.path.expanduser('~/data/posgrado-proj/images1000')
 image_width, image_height = 4096, 4108
 image_area = image_width * image_height
 
 all_data = []
+
+results = {}
 
 def main():
     for dirpath, dirnames, filenames in os.walk(root_dir):
@@ -16,9 +19,22 @@ def main():
                 file_path = os.path.join(dirpath, file)
                 try:
                     df = read_labels(file_path)
-                    all_data.append(df)
+
+                    if df["reason"] != 'success':
+                        if df["reason"] not in results:
+                            results[df["reason"]] = {}
+                            results[df["reason"]]["occurences"] = 0
+                            results[df["reason"]]["paths"] = []
+                        results[df["reason"]]["occurences"] += 1
+                        results[df["reason"]]["paths"].append(file_path)
+                        continue
+
+                    all_data.append(df["labels"])
                 except Exception as e:
                     print(f"Error reading {file_path}: {e}")
+
+    for key, value in results.items():
+        print(f'{key} | {value["occurences"]}')
 
     if not all_data:
         print("No valid data files found.")
@@ -26,12 +42,12 @@ def main():
 
     print(f'Num files found: {len(all_data)}')
 
-    # df = read_labels('/home/szymon/code/posgrado/postgraduate-proj-telescope-img-analysis/data_full/2458950/CAT/TJO2458950.59205_V_imc_trl.dat')
+    # df = read_labels('/home/szymon/code/posgrado/postgraduate-proj-telescope-img-analysis/data_full/2458950/CAT/TJO2458950.59431_V_imc_trl.dat')
     df = pd.concat(all_data, ignore_index=True)
 
     print(f'Num objects found: {len(df)}')
 
-    image_width = 4096
+    image_width = 4096   
     image_height = 4108
     image_area = image_width * image_height
 
@@ -62,7 +78,7 @@ def main():
     print(f"Average Ratio to Image: {avg_ratio:.8f} ({avg_ratio * 100:.5f}%)")
 
     print("\nTop 10 Largest Objects by Size:")
-    print(df.nlargest(10, 'size')[['x_min', 'y_min', 'x_max', 'y_max', 'class_id', 'size']])
+    print(df.nlargest(10, 'size'))
 
     # Filter invalid bounding boxes
     valid_mask = (
@@ -72,9 +88,13 @@ def main():
         (df['y_min'] >= 0) & (df['y_max'] <= image_height)
     )
 
+    df_invalid = df[~valid_mask].reset_index(drop=True)
     df = df[valid_mask].reset_index(drop=True)
 
     print(f"Num objects after filtering: {len(df)}")
+    print(f"Num invalid objects after filtering: {len(df_invalid)}")
+    df_invalid.to_csv('output/dev/data/invalid.csv')
+    print(f'Num unique files with invalid values {len(df_invalid["PATH"].unique())}')
 
     print('\n\n')
 
@@ -84,10 +104,19 @@ def main():
     IQR = Q3 - Q1
     lower_bound = max(0, Q1 - 1.5 * IQR)  
     upper_bound = Q3 + 1.5 * IQR
+    
+    top_percent_size_bound = df['size'].quantile(0.995)
+    top_percent_quantile_outlier = df[df['size'] >= top_percent_size_bound]
+    print(f'num objects top 1%: {len(top_percent_quantile_outlier)}')
+    print(f'Num unique files with top 1% outliers {len(top_percent_quantile_outlier["PATH"].unique())}')
+    top_percent_quantile_non_outliers = df[df['size'] < top_percent_size_bound]
 
     # Identify outliers
     outliers = df[(df['size'] < lower_bound) | (df['size'] > upper_bound)]
     non_outliers = df[(df['size'] >= lower_bound) & (df['size'] <= upper_bound)]
+
+    outliers.to_csv('output/dev/data/outliers.csv')
+    print(f'Num unique files with outliers {len(outliers["PATH"].unique())}')
 
     # Compute averages
     avg_width = non_outliers['width'].mean()
@@ -120,9 +149,9 @@ def main():
     print(non_outliers.nlargest(10, 'size')[['x_min', 'y_min', 'x_max', 'y_max', 'class_id', 'size']])
 
     # Plot: Full Histogram
-    plt.figure(figsize=(12, 5))
+    plt.figure(figsize=(18, 5))
 
-    plt.subplot(1, 2, 1)
+    plt.subplot(2, 3, 1)
     plt.hist(df['size'], bins=50, edgecolor='black', color='steelblue')
     plt.title('Histogram of Object Sizes (All Data)')
     plt.xlabel('Size (pixels²)')
@@ -130,11 +159,38 @@ def main():
     plt.grid(True, linestyle='--', alpha=0.5)
 
     # Plot: Filtered Histogram (excluding outliers)
-    plt.subplot(1, 2, 2)
+    plt.subplot(2, 3, 2)
     plt.hist(non_outliers['size'], bins=50, edgecolor='black', color='seagreen')
     plt.title('Histogram of Object Sizes (No Outliers)')
     plt.xlabel('Size (pixels²)')
     plt.ylabel('Frequency')
+    plt.grid(True, linestyle='--', alpha=0.5)
+
+    # Plot: Filtered Histogram (excluding outliers)
+    plt.subplot(2, 3, 3)
+    plt.hist(top_percent_quantile_non_outliers['size'], bins=50, edgecolor='black', color='seagreen')
+    plt.title('Histogram of Object Sizes (No top 1% outliers)')
+    plt.xlabel('Size (pixels²)')
+    plt.ylabel('Frequency')
+    plt.grid(True, linestyle='--', alpha=0.5)
+
+    # Plot: Filtered Histogram (excluding outliers)
+    plt.subplot(2, 3, 4)
+    plt.boxplot(df['size'])
+    plt.title('Boxplot all data')
+    plt.xlabel('Size (pixels²)')
+    plt.grid(True, linestyle='--', alpha=0.5)
+
+    plt.subplot(2, 3, 5)
+    plt.boxplot(non_outliers['size'])
+    plt.title('Boxplot no outliers')
+    plt.xlabel('Size (pixels²)')
+    plt.grid(True, linestyle='--', alpha=0.5)
+
+    plt.subplot(2, 3, 6)
+    plt.boxplot(outliers['size'])
+    plt.title('Boxplot outliers')
+    plt.xlabel('Size (pixels²)')
     plt.grid(True, linestyle='--', alpha=0.5)
 
     plt.tight_layout()
