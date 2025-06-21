@@ -2,7 +2,7 @@ import torch
 import tempfile
 import os
 import albumentations as A
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 from config.arg_reader import read_arguments
 from config.mode import Mode
@@ -13,10 +13,13 @@ from logger.logger import Logger
 from model.load_model import load_model
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_single_epoch(model, images, targets, optimizer, device):
+    model.train()
+
     images = [img.to(device) for img in images]
     targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
@@ -31,13 +34,14 @@ def train_single_epoch(model, images, targets, optimizer, device):
     return predictions, loss_dict
 
 
-def eval_single_epoch(model, images, targets):
+def eval_single_epoch(model, images):
+    model.eval()
+
     images = [img.to(device) for img in images]
-    targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-    predictions, loss_dict = model(images, targets)
+    predictions = model(images)
 
-    return predictions, loss_dict
+    return predictions
 
 
 def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
@@ -46,7 +50,10 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     train_data_path = os.path.join(config["data_path"], "train_dataset")
     joan_oro_dataset = TelescopeDataset(data_path=train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
-
+    if dev:
+        joan_oro_dataset = Subset(joan_oro_dataset, range(min(50, len(joan_oro_dataset))))
+        config["epochs"] = 5
+    
     torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
     train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
@@ -65,15 +72,23 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
         for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"train | epoch {epoch+1}"):
+            if len(images) == len(targets) == 0:
+                print("Batch size 0, skipping")
+                continue
+
             predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
 
             logger.log_train_loss(loss_dict, True)
 
+        metric = MeanAveragePrecision(iou_type="bbox")
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
-                predictions, loss_dict = eval_single_epoch(model, images, targets)
+                predictions = eval_single_epoch(model, images)
+                predictions = predictions[0]
+                predictions = [{k: v.detach().cpu() for k, v in pred.items()} for pred in predictions]
+                metric.update(predictions, targets)
 
-                logger.log_train_loss(loss_dict, False)
+                logger.log_train_loss(metric.compute(), False)
 
     save_model(model)
     logger.flush()
@@ -223,9 +238,9 @@ def main() -> None:
 
     config = {
         "lr": 1e-3,
-        "batch_size": 6,
+        "batch_size": 2,
         "epochs": 15,
-        "data_path": "../images1000",
+        "data_path": "/home/szymon/data/posgrado-proj/images1000",
         "allow_splitting": True
     }
 

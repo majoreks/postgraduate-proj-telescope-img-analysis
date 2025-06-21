@@ -9,3 +9,5 @@ albumentations
 tqdm
 wandb
 requests
+torchmetrics
+torchmetrics[detection]
