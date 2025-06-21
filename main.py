@@ -120,11 +120,11 @@ def inference(config, tempdir):
 
 
     dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
-    test_loader = DataLoader(dataset, batch_size=config['batch_size'], collate_fn=custom_collate_fn)
+    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     download_model_data()
     model = load_model(device, load_weights =True)
-    model =  read_model(model, device)
+    model = read_model(model, device)
     model.eval()
 
     print(f"Número de muestras cargadas: {len(dataset)}")
@@ -133,6 +133,14 @@ def inference(config, tempdir):
 
     with torch.no_grad():
         for idx, (images, targets) in enumerate(test_loader):
+            if not images:
+                print(f"Skipping idx {idx} because images is empty.")
+                continue
+            
+            if not targets:
+                print(f"Skipping idx {idx} because targets is empty.")
+                continue
+
             images = [img.to(device) for img in images]
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
@@ -159,7 +167,7 @@ def inference(config, tempdir):
         predictions = results[i]['prediction']  # o 'ground_truth' si quieres comparar
         ground_truth = results[i]['ground_truth']
 
-        plotFITSImageWithBoundingBoxes(image, labels_predictions=predictions, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=str(i))
+        plotFITSImageWithBoundingBoxes(image, labels_predictions=predictions, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=str(results[i]['image_index']))
 
     #avaluar el model sobre les dades de test:
         #1. filtrar objecte dataset a la regió test del dataset (szimon to harmonize)
