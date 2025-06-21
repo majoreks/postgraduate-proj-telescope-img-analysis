@@ -115,6 +115,4 @@ class TelescopeDataset(Dataset):
             "labels": torch.tensor(label_data, dtype=torch.int64)
         }
 
-
-
         return image_data, targets
