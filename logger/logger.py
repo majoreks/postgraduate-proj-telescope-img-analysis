@@ -33,7 +33,14 @@ class Logger():
         else:
             aggregated_loss_dict = self.__train_loss if is_train else self.__eval_loss
             for k, v in loss_dict.items():
-                aggregated_loss_dict[k].append(v.item())
+                if v.numel() == 1:
+                    aggregated_loss_dict[k].append(v.item())
+                else:
+                    for i, val in enumerate(v.tolist()):
+                        aggregated_key = f"{k}_{i}"
+                        if aggregated_key not in aggregated_loss_dict:
+                            aggregated_loss_dict[aggregated_key] = []
+                        aggregated_loss_dict[aggregated_key].append(val)
 
     def flush(self) -> None:
         if not self._enabled:
