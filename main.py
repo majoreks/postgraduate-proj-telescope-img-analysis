@@ -11,10 +11,10 @@ from dataset.telescope_dataset import TelescopeDataset
 from config.device import get_device
 from logger.logger import Logger
 from model.load_model import load_model
-from model.model_reader import save_model
+from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 
-device = get_device()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_single_epoch(model, images, targets, optimizer, device):
     images = [img.to(device) for img in images]
@@ -79,7 +79,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
     logger.flush()
 
 
-def inference(path, tempdir):
+def inference(config, tempdir):
     '''print('inference',path)
     print('-----')
     test_data_path = os.path.join(config["data_path"], "test_dataset")
@@ -97,25 +97,34 @@ def inference(path, tempdir):
     #print(model)
     print(f"Número de muestras cargadas: {len(dataset)}")'''
 
-    print('inference', path)
+    test_data_path = os.path.join(config["data_path"], "test_dataset")
+
+    print('inference', test_data_path)
     print('-----')
-    print("📁 Directorio de datos:", path)
-    if not os.path.exists(path):
+    print("📁 Directorio de datos:", test_data_path)
+    if not os.path.exists(test_data_path):
         print("❌ ERROR: El directorio no existe.")
     else:
         print("✅ El directorio existe.")
-        print("📦 Archivos encontrados:", os.listdir(path))
+        # print("📦 Archivos encontrados:", os.listdir(test_data_path))
 
 
-    data_transforms = A.Compose(
-        [A.ToTensorV2()],
-        bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True)
-    )
+    # data_transforms = A.Compose(
+    #     [A.ToTensorV2()],
+    #     bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True)
+    # )
+    
+    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.ToTensorV2()], 
+                                 bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
+                                                          filter_invalid_bboxes=True))
 
-    dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
-    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
+    dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
+    test_loader = DataLoader(dataset, batch_size=config['batch_size'], collate_fn=custom_collate_fn)
+
+    download_model_data()
     model = load_model(device, load_weights =True)
+    model =  read_model(model, device)
     model.eval()
 
     print(f"Número de muestras cargadas: {len(dataset)}")
@@ -145,11 +154,12 @@ def inference(path, tempdir):
     torch.save(results, output_path)
     print(f"\nResultados guardados en: {output_path}")
 
-    for i in range(min(3, len(results))):
+    for i in range(max(3, len(results))):
         image = results[i]['image_tensor'].cpu().numpy()
-        labels = results[i]['prediction']  # o 'ground_truth' si quieres comparar
+        predictions = results[i]['prediction']  # o 'ground_truth' si quieres comparar
+        ground_truth = results[i]['ground_truth']
 
-        plotFITSImageWithBoundingBoxes(image, labels, save_fig=False)
+        plotFITSImageWithBoundingBoxes(image, labels_predictions=predictions, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=str(i))
 
     #avaluar el model sobre les dades de test:
         #1. filtrar objecte dataset a la regió test del dataset (szimon to harmonize)
@@ -231,7 +241,7 @@ def main() -> None:
         if mode == Mode.TRAIN:
             train_model(config, tempdir, task, dev)
         elif mode == Mode.INFER:
-            inference('data_inference', tempdir)
+            inference(config, tempdir)
 
 if __name__ == "__main__":
     main()
