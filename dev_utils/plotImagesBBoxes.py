@@ -70,3 +70,5 @@ def plotFITSImageWithBoundingBoxes(image_data_, labels_ground_truth, labels_pred
         plt.savefig(filename, dpi=400)
     else:
         plt.show()
+    
+    plt.close(fig)
