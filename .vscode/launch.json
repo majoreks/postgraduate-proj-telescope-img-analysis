@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": "-m train -t test --dev",
-            "justMyCode": false
+            "args": ["-m", "train", "-t", "test", "--dev"],
+            "justMyCode": true
             
         }
     ]
