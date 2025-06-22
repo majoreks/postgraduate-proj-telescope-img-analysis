@@ -25,7 +25,9 @@ class Logger():
         if self._enabled:
             wandb.watch(model, log='all', log_freq=100, log_graph=True)
 
-    def log_train_loss(self, loss_dict: dict, is_train: bool) -> None:
+    def log_train_loss(self, *loss_dicts: dict, is_train: bool) -> None:
+        loss_dict = { k: v for d in loss_dicts for k, v in d.items() }
+
         if self._enabled:
             label = 'training' if is_train else 'eval'
             log_data = {f'{label}/{k}': v.item() for k, v in loss_dict.items()}

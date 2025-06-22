@@ -8,12 +8,12 @@ from config.arg_reader import read_arguments
 from config.mode import Mode
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
-from config.device import get_device
 from logger.logger import Logger
 from model.load_model import load_model
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchmetrics.detection.iou import IntersectionOverUnion
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -68,8 +68,11 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     logger.log_model(model)
 
-    metric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
-    metric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
+    mAPMetric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
+    mAPMetric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
+    iou_metric = IntersectionOverUnion(
+        class_metrics=True
+    )
 
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
@@ -81,22 +84,26 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
             predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
 
-            logger.log_train_loss(loss_dict, True)
+            logger.log_train_loss(loss_dict, is_train=True)
 
-        metric.reset()
+        mAPMetric.reset()
+        iou_metric.reset()
 
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
                 predictions = eval_single_epoch(model, images)
                 predictions = predictions[0]
                 predictions = [{k: v.detach().cpu() for k, v in pred.items()} for pred in predictions]
-                metric.update(predictions, targets)
+                mAPMetric.update(predictions, targets)
+                iou_metric.update(predictions, targets)
 
-                metrics = metric.compute()
-                if "classes" in metrics: # this is used just to log classes, e.g. 1 and 2
-                    del metrics["classes"]
+                mAPMetrics = mAPMetric.compute()
+                iouMetrics = iou_metric.compute()
 
-                logger.log_train_loss(metric.compute(), False)
+                if "classes" in mAPMetrics: # this is used just to log classes, e.g. 1 and 2
+                    del mAPMetrics["classes"]
+
+                logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
 
     save_model(model)
     logger.flush()
