@@ -68,6 +68,9 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     logger.log_model(model)
 
+    metric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
+    metric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
+
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
@@ -80,8 +83,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
             logger.log_train_loss(loss_dict, True)
 
-        metric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
-        metric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
+        metric.reset()
 
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
@@ -91,7 +93,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
                 metric.update(predictions, targets)
 
                 metrics = metric.compute()
-                if "classes" in metrics: # this is used just to log apparent classes, e.g. 1 and 2
+                if "classes" in metrics: # this is used just to log classes, e.g. 1 and 2
                     del metrics["classes"]
 
                 logger.log_train_loss(metric.compute(), False)
