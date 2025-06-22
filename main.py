@@ -52,7 +52,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
     joan_oro_dataset = TelescopeDataset(data_path=train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     if dev:
         joan_oro_dataset = Subset(joan_oro_dataset, range(min(50, len(joan_oro_dataset))))
-        config["epochs"] = 5
+        config["epochs"] = 3
     
     torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
@@ -61,7 +61,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     logger = Logger(task, config, dev)
 
-    model = load_model(device)
+    model = load_model(device, box_detections_per_img=config["box_detections_per_img"])
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
@@ -80,13 +80,19 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
             logger.log_train_loss(loss_dict, True)
 
-        metric = MeanAveragePrecision(iou_type="bbox")
+        metric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
+        metric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
+
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
                 predictions = eval_single_epoch(model, images)
                 predictions = predictions[0]
                 predictions = [{k: v.detach().cpu() for k, v in pred.items()} for pred in predictions]
                 metric.update(predictions, targets)
+
+                metrics = metric.compute()
+                if "classes" in metrics: # this is used just to log apparent classes, e.g. 1 and 2
+                    del metrics["classes"]
 
                 logger.log_train_loss(metric.compute(), False)
 
@@ -138,7 +144,7 @@ def inference(config, tempdir):
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     download_model_data()
-    model = load_model(device, load_weights =True)
+    model = load_model(device, box_detections_per_img=config["box_detections_per_img"], load_weights =True)
     model = read_model(model, device)
     model.eval()
 
@@ -241,7 +247,8 @@ def main() -> None:
         "batch_size": 2,
         "epochs": 15,
         "data_path": "/home/szymon/data/posgrado-proj/images1000",
-        "allow_splitting": True
+        "allow_splitting": True,
+        "box_detections_per_img": 1000
     }
 
     with tempfile.TemporaryDirectory() as tempdir:

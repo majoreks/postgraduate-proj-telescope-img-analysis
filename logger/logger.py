@@ -45,4 +45,4 @@ class Logger():
     def flush(self) -> None:
         if not self._enabled:
             plot_losses(self.__train_loss, fname="train_loss.png", save_plot=True)
-            plot_losses(self.__eval_loss, fname="eval_loss.png", save_plot=True)
+            plot_losses(self.__eval_loss, fname="eval_loss.png", save_plot=True, is_loss=False)

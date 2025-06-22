@@ -11,9 +11,9 @@ representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 3 # stars, galaxies + background
 
-def load_model(device: torch.device, load_weights: bool = False) -> nn.Module:
+def load_model(device: torch.device, box_detections_per_img: int, load_weights: bool = False) -> nn.Module:
     backbone = resnet_fpn_backbone("resnet50", pretrained=not load_weights)
-    model = FasterRCNN(backbone, box_detections_per_img=1000)
+    model = FasterRCNN(backbone, box_detections_per_img=box_detections_per_img)
 
     model.roi_heads.box_head = TwoMLPHead(in_size, representation_size)
     model.roi_heads.box_predictor = FastRCNNPredictor(representation_size, num_classes if load_weights else num_classes_pretrained)
