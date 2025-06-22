@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+import torch
 import wandb
 import torch.nn as nn
 from postprocess.plot_losses import plot_losses
@@ -9,6 +10,7 @@ PROJECT_NAME = "postgraduate-sat-object-detection"
 class Logger():
     def __init__(self, task: str, config: dict, dev: bool = False):
         self._enabled = not dev
+        self._step = 1
 
         if self._enabled:
             self.__init_logger(task, config)
@@ -30,8 +32,15 @@ class Logger():
 
         if self._enabled:
             label = 'training' if is_train else 'eval'
-            log_data = {f'{label}/{k}': v.item() for k, v in loss_dict.items()}
-            wandb.log(log_data)
+            log_data = {}
+            
+            for k, v in loss_dict.items():
+                if v.numel() == 1:
+                    log_data[f'{label}/{k}'] = v.item()
+                else:
+                    for i, val in enumerate(v.tolist()):
+                        log_data[f'{label}/{k}_{i}'] = val
+            wandb.log(log_data, step = self._step)
         else:
             aggregated_loss_dict = self.__train_loss if is_train else self.__eval_loss
             for k, v in loss_dict.items():
@@ -43,6 +52,9 @@ class Logger():
                         if aggregated_key not in aggregated_loss_dict:
                             aggregated_loss_dict[aggregated_key] = []
                         aggregated_loss_dict[aggregated_key].append(val)
+
+    def step(self) -> None:
+        self._step += 1
 
     def flush(self) -> None:
         if not self._enabled:

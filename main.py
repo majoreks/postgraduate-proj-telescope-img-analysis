@@ -77,14 +77,19 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
+        train_losses = {}  # will hold lists of each loss term
+
         for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"train | epoch {epoch+1}"):
             if len(images) == len(targets) == 0:
                 print("Batch size 0, skipping")
                 continue
 
             predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
+            for k, v in loss_dict.items():
+                train_losses.setdefault(k, []).append(v.item())
 
-            logger.log_train_loss(loss_dict, is_train=True)
+        avg_train = {k: torch.tensor(sum(vals)/len(vals), dtype=torch.float32) for k, vals in train_losses.items()}
+        logger.log_train_loss(avg_train, is_train=True)
 
         mAPMetric.reset()
         iou_metric.reset()
@@ -104,6 +109,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
         mAPMetrics.pop("classes", None)
 
         logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
+        logger.step()
 
     save_model(model)
     logger.flush()
