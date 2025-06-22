@@ -2,21 +2,24 @@ import torch
 import tempfile
 import os
 import albumentations as A
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 from config.arg_reader import read_arguments
 from config.mode import Mode
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
-from config.device import get_device
 from logger.logger import Logger
 from model.load_model import load_model
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchmetrics.detection.iou import IntersectionOverUnion
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_single_epoch(model, images, targets, optimizer, device):
+    model.train()
+
     images = [img.to(device) for img in images]
     targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
@@ -31,13 +34,14 @@ def train_single_epoch(model, images, targets, optimizer, device):
     return predictions, loss_dict
 
 
-def eval_single_epoch(model, images, targets):
+def eval_single_epoch(model, images):
+    model.eval()
+
     images = [img.to(device) for img in images]
-    targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-    predictions, loss_dict = model(images, targets)
+    predictions = model(images)
 
-    return predictions, loss_dict
+    return predictions
 
 
 def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
@@ -46,7 +50,10 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     train_data_path = os.path.join(config["data_path"], "train_dataset")
     joan_oro_dataset = TelescopeDataset(data_path=train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
-
+    if dev:
+        joan_oro_dataset = Subset(joan_oro_dataset, range(min(50, len(joan_oro_dataset))))
+        config["epochs"] = 3
+    
     torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, [0.82, 0.18])
     train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
@@ -54,26 +61,55 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
 
     logger = Logger(task, config, dev)
 
-    model = load_model(device)
+    model = load_model(device, box_detections_per_img=config["box_detections_per_img"])
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
 
     logger.log_model(model)
 
+    mAPMetric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
+    mAPMetric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
+    iou_metric = IntersectionOverUnion(
+        class_metrics=True
+    )
+
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
-        for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"train | epoch {epoch+1}"):
-            predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
+        train_losses = {}  # will hold lists of each loss term
 
-            logger.log_train_loss(loss_dict, True)
+        for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"train | epoch {epoch+1}"):
+            if len(images) == len(targets) == 0:
+                print("Batch size 0, skipping")
+                continue
+
+            predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
+            for k, v in loss_dict.items():
+                train_losses.setdefault(k, []).append(v.item())
+
+        avg_train = {k: torch.tensor(sum(vals)/len(vals), dtype=torch.float32) for k, vals in train_losses.items()}
+        logger.log_train_loss(avg_train, is_train=True)
+
+        mAPMetric.reset()
+        iou_metric.reset()
 
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
-                predictions, loss_dict = eval_single_epoch(model, images, targets)
+                predictions = eval_single_epoch(model, images)
 
-                logger.log_train_loss(loss_dict, False)
+                predictions = predictions[0]
+                predictions = [{k: v.detach().cpu() for k, v in pred.items()} for pred in predictions]
+
+                mAPMetric.update(predictions, targets)
+                iou_metric.update(predictions, targets)
+
+        mAPMetrics = mAPMetric.compute()
+        iouMetrics = iou_metric.compute()
+        mAPMetrics.pop("classes", None)
+
+        logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
+        logger.step()
 
     save_model(model)
     logger.flush()
@@ -123,7 +159,7 @@ def inference(config, tempdir):
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     download_model_data()
-    model = load_model(device, load_weights =True)
+    model = load_model(device, box_detections_per_img=config["box_detections_per_img"], load_weights =True)
     model = read_model(model, device)
     model.eval()
 
@@ -223,10 +259,11 @@ def main() -> None:
 
     config = {
         "lr": 1e-3,
-        "batch_size": 6,
+        "batch_size": 2,
         "epochs": 15,
-        "data_path": "../images1000",
-        "allow_splitting": True
+        "data_path": "/home/szymon/data/posgrado-proj/images1000",
+        "allow_splitting": True,
+        "box_detections_per_img": 1000
     }
 
     with tempfile.TemporaryDirectory() as tempdir:
