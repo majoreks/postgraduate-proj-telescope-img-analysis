@@ -92,18 +92,18 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool) -> None:
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
                 predictions = eval_single_epoch(model, images)
+
                 predictions = predictions[0]
                 predictions = [{k: v.detach().cpu() for k, v in pred.items()} for pred in predictions]
+
                 mAPMetric.update(predictions, targets)
                 iou_metric.update(predictions, targets)
 
-                mAPMetrics = mAPMetric.compute()
-                iouMetrics = iou_metric.compute()
+        mAPMetrics = mAPMetric.compute()
+        iouMetrics = iou_metric.compute()
+        mAPMetrics.pop("classes", None)
 
-                if "classes" in mAPMetrics: # this is used just to log classes, e.g. 1 and 2
-                    del mAPMetrics["classes"]
-
-                logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
+        logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
 
     save_model(model)
     logger.flush()
