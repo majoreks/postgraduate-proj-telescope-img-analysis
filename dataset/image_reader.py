@@ -16,3 +16,6 @@ def read_image(image_path: str, cache_dir: str) -> np.ndarray:
         np.save(image_cached_path, data)
 
         return data
+    
+
+        # hdul[0].header['EXPTIME'] -> exposure time
