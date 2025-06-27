@@ -1,11 +1,8 @@
-import torch
+from config.arg_reader import read_arguments
 import tempfile
 import os
-import albumentations as A
-from collections import defaultdict
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-from config.arg_reader import read_arguments
+from traineval import train_model, inference
+from dataset.managedataset import check_and_split
 from config.mode import Mode
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
@@ -198,26 +195,32 @@ def inference(path, tempdir):
     #utilitzar aquelles que hagin anat a parar al badge de test
 
 def main() -> None:
-    # mode = read_arguments()
-    # print(f'mode', mode)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    mode, task, dev = read_arguments()
 
     config = {
         "lr": 1e-3,
         "batch_size": 2,
         "epochs": 15,
-        "train_data_path": "..\\images1000",
-        "load_data_as_rgb": True,
-        # "train_data_path": "C:\\Users\\RaulOnrubiaIbanez\\OneDrive - Zenithal Blue Technologies S.L.U\\Personal\\UPC\\JOData",
-        # "train_data_path": "data_full",
+        "data_path": "../images1000",
+        "allow_splitting": True,
+        "box_detections_per_img": 1000,
+        "train_test_split": [0.9, 0.1], # full dataset split in train + test
+        "train_val_split": [0.9, 0.1], # train dataset split in train + val
+        "crop_size": 512
     }
     mode = Mode.TRAIN
 
-    with tempfile.TemporaryDirectory() as tempdir:
-        if mode == Mode.TRAIN:
-            train_model(config, tempdir)
 
+    with tempfile.TemporaryDirectory() as tempdir:
+    
+        check_and_split(config,temp_dir=tempdir, device=device)
+        
+        if mode == Mode.TRAIN:
+            train_model(config, tempdir, task, dev, device=device)
         elif mode == Mode.INFER:
-            inference('data_inference', tempdir)
+            inference(config, tempdir, device=device)
 
 if __name__ == "__main__":
     main()
