@@ -11,7 +11,11 @@ representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 3 # stars, galaxies + background
 
-def load_model(device: torch.device, box_detections_per_img: int, load_weights: bool = False) -> nn.Module:
+def load_model(device: torch.device, config:dict, load_weights: bool = False) -> nn.Module:
+
+    box_detections_per_img= config['box_detections_per_img']
+    nms_threshold = config['nms_threshold']
+
     backbone = resnet_fpn_backbone("resnet50", pretrained=not load_weights)
     model = FasterRCNN(backbone, box_detections_per_img=box_detections_per_img)
 
@@ -45,6 +49,8 @@ def load_model(device: torch.device, box_detections_per_img: int, load_weights: 
 
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+
+    model.roi_heads.nms_thresh = nms_threshold
 
     model = model.to(device)
     
