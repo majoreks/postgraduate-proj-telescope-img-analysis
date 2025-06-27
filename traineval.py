@@ -57,7 +57,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
     logger = Logger(task, config, dev)
 
-    model = load_model(device, box_detections_per_img=config["box_detections_per_img"])
+    model = load_model(device, config)
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
@@ -112,23 +112,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
 
 def inference(config, tempdir, device):
-    '''print('inference',path)
-    print('-----')
-    test_data_path = os.path.join(config["data_path"], "test_dataset")
-    joan_oro_dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
-
-    #dataset = TelescopeDataset(data_path=path, cache_dir=tempdir, transform=data_transforms, device=device)
-    #joan_oro_dataset = TelescopeDataset(data_path=config["data_path"], cache_dir=tempdir,
-                                        transform=data_transforms, device=device)
-    data_transforms = A.Compose([A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
-    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
-
-    model = load_model(device, True)
-
-    #print(len(test_loader))
-    #print(model)
-    print(f"Número de muestras cargadas: {len(dataset)}")'''
-
+    
     test_data_path = os.path.join(config["data_path"], "test_dataset")
 
     print('inference', test_data_path)
@@ -138,15 +122,9 @@ def inference(config, tempdir, device):
         print("❌ ERROR: El directorio no existe.")
     else:
         print("✅ El directorio existe.")
-        # print("📦 Archivos encontrados:", os.listdir(test_data_path))
 
-
-    # data_transforms = A.Compose(
-    #     [A.ToTensorV2()],
-    #     bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True)
-    # )
     
-    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=512, height=512), A.ToTensorV2()], 
+    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.ToTensorV2()], 
                                  bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
                                                           filter_invalid_bboxes=True))
 
@@ -155,7 +133,7 @@ def inference(config, tempdir, device):
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     download_model_data()
-    model = load_model(device, box_detections_per_img=config["box_detections_per_img"], load_weights =True)
+    model = load_model(device, config=config, load_weights=True)
     model = read_model(model, device)
     model.eval()
 
@@ -184,7 +162,8 @@ def inference(config, tempdir, device):
                 'image_index': idx,
                 'image_tensor': images[0].cpu(),
                 'ground_truth': targets[0],   # dict con 'boxes' y 'labels'
-                'prediction': predictions[0]  # dict con 'boxes', 'labels', 'scores'
+                'prediction': predictions[0],  # dict con 'boxes', 'labels', 'scores'
+                'filename': dataset.images[idx]  # nombre del archivo de imagen
             })
 
             print(f"[{idx}] GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
@@ -199,7 +178,7 @@ def inference(config, tempdir, device):
         predictions = results[i]['prediction']  # o 'ground_truth' si quieres comparar
         ground_truth = results[i]['ground_truth']
 
-        plotFITSImageWithBoundingBoxes(image, labels_predictions=predictions, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=str(results[i]['image_index']))
+        plotFITSImageWithBoundingBoxes(image, labels_predictions=predictions, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=str(results[i]['image_index']), title_sufix=results[i]['filename'])
 
     #avaluar el model sobre les dades de test:
         #1. filtrar objecte dataset a la regió test del dataset (szimon to harmonize)
