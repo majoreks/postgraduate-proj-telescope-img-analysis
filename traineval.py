@@ -12,32 +12,11 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchmetrics.detection.iou import IntersectionOverUnion
 import os
 
+from model.CustomMaskRCNN import CustomMaskRCNN
+from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchvision.models import ResNet50_Weights
+import torchvision
 
-def train_single_epoch(model, images, targets, optimizer, device):
-    model.train()
-
-    images = [img.to(device) for img in images]
-    targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
-    optimizer.zero_grad()
-
-    predictions, loss_dict = model(images, targets)
-    loss = sum(loss for loss in loss_dict.values())
-
-    loss.backward()
-    optimizer.step()
-    
-    return predictions, loss_dict
-
-
-def eval_single_epoch(model, images, device):
-    model.eval()
-
-    images = [img.to(device) for img in images]
-
-    predictions = model(images)
-
-    return predictions
 
 
 def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> None:
@@ -57,7 +36,36 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
     logger = Logger(task, config, dev)
 
-    model = load_model(device, config)
+    backbone = resnet_fpn_backbone('resnet50', weights=ResNet50_Weights.DEFAULT)
+    anchor_generator  = torchvision.models.detection.anchor_utils.AnchorGenerator(
+        sizes=((32,), (64,), (128,), (256,), (512,)),
+        aspect_ratios=((0.5, 1.0, 2.0),) * 5
+    )
+    roi_pooler = torchvision.ops.MultiScaleRoIAlign(
+        featmap_names=['0', '1', '2', '3', '4'],
+        output_size=7,
+        sampling_ratio=2
+    )
+    mask_roi_pooler = torchvision.ops.MultiScaleRoIAlign(
+        featmap_names=['0', '1', '2', '3', '4'],
+        output_size=14,
+        sampling_ratio=2
+    )
+
+    model = CustomMaskRCNN(backbone, 
+        backbone_trainable=True,
+        num_classes=joan_oro_dataset.num_classes,
+        rpn_anchor_generator=anchor_generator, 
+        box_roi_pooler=roi_pooler,
+        mask_roi_pooler=mask_roi_pooler)
+    
+    if config["load_data_as_rgb"]:
+        model.SetToRGB()  # Set the model to accept RGB images
+    else:
+        model.SetToGrayscale()  # Set the model to accept grayscale images
+    
+
+    model.setTrainableLayers("roi_heads2_first_layer")  # Set the first layer of the ROI heads to be trainable
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
@@ -109,7 +117,20 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
     save_model(model)
     logger.flush()
+    
+def train_single_epoch(model, images, targets, optimizer, device):
+    images = [img.to(device) for img in images]
+    targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
+    optimizer.zero_grad()
+
+    predictions, loss_dict = model(images, targets)
+    loss = sum(loss for loss in loss_dict.values())
+
+    loss.backward()
+    optimizer.step()
+    
+    return predictions, loss_dict
 
 def inference(config, tempdir, device):
     
