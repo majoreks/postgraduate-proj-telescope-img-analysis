@@ -60,3 +60,9 @@ class Logger():
         if not self._enabled:
             plot_losses(self.__train_loss, fname="train_loss.png", save_plot=True)
             plot_losses(self.__eval_loss, fname="eval_loss.png", save_plot=True, is_loss=False)
+
+    def log_text(self, msg: str) -> None:
+        if self._enabled:
+            wandb.log({"log/text": msg}, step=self._step)
+        else:
+            print(msg)
