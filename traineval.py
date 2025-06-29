@@ -1,4 +1,5 @@
 import torch
+import copy
 import albumentations as A
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
@@ -56,7 +57,6 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn) # TODO add validation
 
     logger = Logger(task, config, dev)
-
     model = load_model(device, config)
 
     model = model.train()
@@ -69,6 +69,19 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     iou_metric = IntersectionOverUnion(
         class_metrics=True
     )
+
+    # --- Checkpointing Setup ---
+    ckpt_cfg = config.get("checkpointing", {})
+    checkpoint_enabled = ckpt_cfg.get("enabled", False)
+    save_last = ckpt_cfg.get("save_last", True)
+    checkpoint_dir = os.path.join(tempdir, ckpt_cfg.get("save_path", "checkpoints"))
+    if checkpoint_enabled:
+        os.makedirs(checkpoint_dir, exist_ok=True)
+    checkpoint_metrics = ckpt_cfg.get("metrics", {})
+    best_scores = {
+        metric: float('-inf') if mode == "max" else float('inf')
+        for metric, mode in checkpoint_metrics.items()
+    }
 
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
@@ -106,6 +119,28 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
         logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
         logger.step()
+
+        # --- Checkpointing per metric ---
+        if checkpoint_enabled:
+            for metric_name, mode in checkpoint_metrics.items():
+                score = mAPMetrics.get(metric_name)
+                if score is None:
+                    print(f"⚠️ Métrica '{metric_name}' no encontrada.")
+                    continue
+
+                is_better = score > best_scores[metric_name] if mode == "max" else score < best_scores[metric_name]
+                if is_better:
+                    best_scores[metric_name] = score
+                    ckpt_path = os.path.join(checkpoint_dir, f"best_model_{metric_name}.pt")
+                    torch.save(copy.deepcopy(model.state_dict()), ckpt_path)
+                    print(f"New best '{metric_name}' = {score:.4f} → checkpoint saved in {ckpt_path}")
+
+            # --- Save last model if required ---
+        if checkpoint_enabled and save_last:
+            last_ckpt_path = os.path.join(checkpoint_dir, "last_model.pt")
+            torch.save(model.state_dict(), last_ckpt_path)
+            print(f"Last model saved in {last_ckpt_path}")
+
 
     save_model(model)
     logger.flush()
