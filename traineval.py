@@ -163,7 +163,7 @@ def inference(config, tempdir, device):
                 'image_tensor': images[0].cpu(),
                 'ground_truth': targets[0],   # dict con 'boxes' y 'labels'
                 'prediction': predictions[0],  # dict con 'boxes', 'labels', 'scores'
-                'filename': dataset.images[idx]  # nombre del archivo de imagen
+                'filename': dataset.images_list[idx-1]  # nombre del archivo de imagen
             })
 
             print(f"[{idx}] GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
