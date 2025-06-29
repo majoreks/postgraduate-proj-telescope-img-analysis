@@ -111,7 +111,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     logger.flush()
 
 
-def inference(config, tempdir, device):
+def inference(config, tempdir, device, save_fig=True):
     
     test_data_path = os.path.join(config["data_path"], "test_dataset")
 
@@ -153,34 +153,36 @@ def inference(config, tempdir, device):
 
             images = [img.to(device) for img in images]
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-            filename=dataset.images_list[idx].split(".fits")[0].replace(".", "_")
 
             # Obtener predicciones del modelo
             predictions, _ = model(images, targets)
 
+            # Aux variables
+            image=images[0].cpu().numpy()
+            ground_truth=targets[0]
+            prediction=predictions[0]
+            filename=dataset.images_list[idx].split(".fits")[0].replace(".", "_")
+
+            # Print results from the model
+            print(f"[{idx}] Image {filename} GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
+
+            # Saves the inference plotted image
+            if save_fig:
+                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=f"{idx}_{filename}", title_sufix=filename)              
+
             # Almacenar resultados
             results.append({
                 'image_index': idx,
-                'image_tensor': images[0].cpu(),
-                'ground_truth': targets[0],   # dict con 'boxes' y 'labels'
-                'prediction': predictions[0],  # dict con 'boxes', 'labels', 'scores'
+                'image_tensor': images[0].cpu().numpy(),
+                'ground_truth': ground_truth,   # dict con 'boxes' y 'labels'
+                'prediction': prediction,  # dict con 'boxes', 'labels', 'scores'
                 'filename': filename  # nombre del archivo de imagen
             })
-
-            print(f"[{idx}] Image {filename} GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
 
     # Opcional: guardar en disco como torch.save
     output_path = os.path.join(tempdir, "results.pt")
     torch.save(results, output_path)
     print(f"\nResultados guardados en: {output_path}")
-
-    for i in range(max(3, len(results))):
-        image = results[i]['image_tensor'].cpu().numpy()
-        predictions = results[i]['prediction']  # o 'ground_truth' si quieres comparar
-        ground_truth = results[i]['ground_truth']
-        sufix=f"{results[i]['image_index']}_{results[i]['filename']}"
-
-        plotFITSImageWithBoundingBoxes(image, labels_predictions=predictions, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=sufix, title_sufix=results[i]['filename'])
 
     #avaluar el model sobre les dades de test:
         #1. filtrar objecte dataset a la regió test del dataset (szimon to harmonize)
