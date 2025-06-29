@@ -26,13 +26,14 @@ def main() -> None:
         # Checkpointing config
         "checkpointing": {
             "enabled": True,
+            # Add as many metrics as wanted. Max if improving means increasing, Min if contrary
             "metrics": {
-                "map": "max",         # guarda si mejora el mAP general
-                "map_50": "max",      # guarda si mejora el mAP@0.5
-                "iou": "max"          # guarda si mejora el IoU promedio
+                "map": "max",         
+                "map_50": "max",      
+                "iou": "max"          
             },
-            "save_path": "checkpoints",  # ruta relativa dentro de tempdir
-            "save_last": True            # guarda el último modelo también
+            "save_path": "checkpoints",  
+            "save_last": True           
         }
     }
 

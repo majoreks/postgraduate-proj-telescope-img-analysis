@@ -12,6 +12,8 @@ from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchmetrics.detection.iou import IntersectionOverUnion
 import os
+import shutil
+from datetime import datetime
 
 
 def train_single_epoch(model, images, targets, optimizer, device):
@@ -135,7 +137,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
                     torch.save(copy.deepcopy(model.state_dict()), ckpt_path)
                     print(f"New best '{metric_name}' = {score:.4f} → checkpoint saved in {ckpt_path}")
 
-            # --- Save last model if required ---
+        # --- Save last model if required ---
         if checkpoint_enabled and save_last:
             last_ckpt_path = os.path.join(checkpoint_dir, "last_model.pt")
             torch.save(model.state_dict(), last_ckpt_path)
@@ -143,6 +145,21 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
 
     save_model(model)
+    # Al final del training loop
+    if config.get("checkpointing", {}).get("enabled", False):
+        temp_checkpoint_dir = os.path.join(tempdir, config["checkpointing"]["save_path"])
+
+        # Creamos el directorio destino persistente: output/checkpoints/<timestamp o task>
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        final_checkpoint_dir = os.path.join(config["output_path"], "checkpoints", f"{task}_{ts}")
+        os.makedirs(final_checkpoint_dir, exist_ok=True)
+
+        for file in os.listdir(temp_checkpoint_dir):
+            src = os.path.join(temp_checkpoint_dir, file)
+            dst = os.path.join(final_checkpoint_dir, file)
+            shutil.copy(src, dst)
+
+        print(f"\n✅ Saved best checkpoints to: {final_checkpoint_dir}")
     logger.flush()
 
 
