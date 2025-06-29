@@ -117,11 +117,11 @@ def inference(config, tempdir, device):
 
     print('inference', test_data_path)
     print('-----')
-    print("📁 Directorio de datos:", test_data_path)
+    print("Directorio de datos:", test_data_path)
     if not os.path.exists(test_data_path):
-        print("❌ ERROR: El directorio no existe.")
+        print("ERROR: El directorio no existe.")
     else:
-        print("✅ El directorio existe.")
+        print("El directorio existe.")
 
     
     data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.ToTensorV2()], 
