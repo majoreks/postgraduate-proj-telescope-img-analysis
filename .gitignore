@@ -180,3 +180,4 @@ pyrightconfig.json
 
 output/
 wandb/
+model/test_checkpoint.py
