@@ -16,14 +16,25 @@ def main() -> None:
         "batch_size": 2,
         "epochs": 15,
         "data_path": "../images1000",
+        "output_path": "./output",
         "allow_splitting": True,
         "box_detections_per_img": 1000,
-        "train_test_split": [0.9, 0.1], # full dataset split in train + test
-        "train_val_split": [0.9, 0.1], # train dataset split in train + val
+        "train_test_split": [0.9, 0.1],  # full dataset split in train + test
+        "train_val_split": [0.9, 0.1],   # train dataset split in train + val
         "crop_size": 512,
-        'nms_threshold': 0.4
-    }
 
+        # Checkpointing config
+        "checkpointing": {
+            "enabled": True,
+            "metrics": {
+                "map": "max",         # guarda si mejora el mAP general
+                "map_50": "max",      # guarda si mejora el mAP@0.5
+                "iou": "max"          # guarda si mejora el IoU promedio
+            },
+            "save_path": "checkpoints",  # ruta relativa dentro de tempdir
+            "save_last": True            # guarda el último modelo también
+        }
+    }
 
     with tempfile.TemporaryDirectory() as tempdir:
     
