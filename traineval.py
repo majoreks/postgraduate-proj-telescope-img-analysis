@@ -125,7 +125,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
             for metric_name, mode in checkpoint_metrics.items():
                 score = mAPMetrics.get(metric_name)
                 if score is None:
-                    print(f"⚠️ Métrica '{metric_name}' no encontrada.")
+                    print(f"Metric '{metric_name}' not found.")
                     continue
 
                 is_better = score > best_scores[metric_name] if mode == "max" else score < best_scores[metric_name]
