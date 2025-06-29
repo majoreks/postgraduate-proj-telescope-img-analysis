@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 def voc_to_coco(boxes):
     return [[x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in boxes.cpu().numpy()]
 
-def plotFITSImageWithBoundingBoxes(image_data_, labels_ground_truth, labels_predictions, save_fig: bool = False, save_fig_sufix:str=None, title_sufix:str = None) -> None:
+def plotFITSImageWithBoundingBoxes(image_data_, labels_ground_truth, labels_predictions, output_path='output', save_fig: bool = False, save_fig_sufix:str=None, title_sufix:str = None) -> None:
     """
         PLOTS A FITS IMAGE WITH BOUNDING BOXES IN COCO FORMAT
 
@@ -64,9 +64,9 @@ def plotFITSImageWithBoundingBoxes(image_data_, labels_ground_truth, labels_pred
     #Should preserve the sky coordinates per each patch. I don't know if it's necessary right now, but for science it will definitely be interesting
     if save_fig:
         if save_fig_sufix is not None and save_fig_sufix != "":
-            filename = f'output/labels_{save_fig_sufix}.png'
+            filename = f'{output_path}/labels_{save_fig_sufix}.png'
         else:
-            filename = 'output/labels.png'
+            filename = f'{output_path}/labels.png'
         plt.savefig(filename, dpi=400)
     else:
         plt.show()
