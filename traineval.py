@@ -1,5 +1,4 @@
 import torch
-import copy
 import albumentations as A
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
@@ -11,9 +10,10 @@ from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchmetrics.detection.iou import IntersectionOverUnion
+from checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
-import shutil
-from datetime import datetime
+
+
 
 
 def train_single_epoch(model, images, targets, optimizer, device):
@@ -72,18 +72,10 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
         class_metrics=True
     )
 
-    # --- Checkpointing Setup ---
-    ckpt_cfg = config.get("checkpointing", {})
-    checkpoint_enabled = ckpt_cfg.get("enabled", False)
-    save_last = ckpt_cfg.get("save_last", True)
-    checkpoint_dir = os.path.join(tempdir, ckpt_cfg.get("save_path", "checkpoints"))
-    if checkpoint_enabled:
-        os.makedirs(checkpoint_dir, exist_ok=True)
-    checkpoint_metrics = ckpt_cfg.get("metrics", {})
-    best_scores = {
-        metric: float('-inf') if mode == "max" else float('inf')
-        for metric, mode in checkpoint_metrics.items()
-    }
+    # Checkpointing Setup
+    checkpoint_enabled, checkpoint_dir, checkpoint_metrics, best_scores = init_checkpointing(config, tempdir)
+    save_last = config.get("checkpointing", {}).get("save_last", True)
+    metric_best_epochs = {}  # [MODIFICADO] Track de mejores epochs por métrica
 
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
@@ -122,7 +114,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
         logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
         logger.step()
 
-        # --- Checkpointing per metric ---
+        # Checkpointing per metric
         if checkpoint_enabled:
             for metric_name, mode in checkpoint_metrics.items():
                 score = mAPMetrics.get(metric_name)
@@ -133,33 +125,22 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
                 is_better = score > best_scores[metric_name] if mode == "max" else score < best_scores[metric_name]
                 if is_better:
                     best_scores[metric_name] = score
-                    ckpt_path = os.path.join(checkpoint_dir, f"best_model_{metric_name}.pt")
-                    torch.save(copy.deepcopy(model.state_dict()), ckpt_path)
-                    print(f"New best '{metric_name}' = {score:.4f} → checkpoint saved in {ckpt_path}")
+                    metric_best_epochs[metric_name] = (epoch, score)
+                    save_best_checkpoint(model, metric_name, score, best_scores, mode, checkpoint_dir)
 
-        # --- Save last model if required ---
-        if checkpoint_enabled and save_last:
-            last_ckpt_path = os.path.join(checkpoint_dir, "last_model.pt")
-            torch.save(model.state_dict(), last_ckpt_path)
-            print(f"Last model saved in {last_ckpt_path}")
-
+            if save_last:
+                save_last_checkpoint(model, checkpoint_dir)
 
     save_model(model)
-    # Al final del training loop
-    if config.get("checkpointing", {}).get("enabled", False):
+
+    # Copy the best models to a persistent folder from the tempdir
+    if checkpoint_enabled:
         temp_checkpoint_dir = os.path.join(tempdir, config["checkpointing"]["save_path"])
+        persist_checkpoints(temp_checkpoint_dir, config["output_path"], task)
 
-        # Creamos el directorio destino persistente: output/checkpoints/<timestamp o task>
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        final_checkpoint_dir = os.path.join(config["output_path"], "checkpoints", f"{task}_{ts}")
-        os.makedirs(final_checkpoint_dir, exist_ok=True)
-
-        for file in os.listdir(temp_checkpoint_dir):
-            src = os.path.join(temp_checkpoint_dir, file)
-            dst = os.path.join(final_checkpoint_dir, file)
-            shutil.copy(src, dst)
-
-        print(f"\n✅ Saved best checkpoints to: {final_checkpoint_dir}")
+        # [MODIFICADO] Log resumen final de checkpoints
+        log_best_checkpoints(metric_best_epochs, logger)
+    
     logger.flush()
 
 
