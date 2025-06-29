@@ -75,7 +75,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     # Checkpointing Setup
     checkpoint_enabled, checkpoint_dir, checkpoint_metrics, best_scores = init_checkpointing(config, tempdir)
     save_last = config.get("checkpointing", {}).get("save_last", True)
-    metric_best_epochs = {}  # [MODIFICADO] Track de mejores epochs por métrica
+    metric_best_epochs = {}
 
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
@@ -114,19 +114,22 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
         logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
         logger.step()
 
-        # Checkpointing per metric
+        # OOOOJOOOO: every time a metric is uploaded, modifications to all_metrics is needed. We should improve the config and
+        # treat all the metrics in the same way (metrics.py)
+        all_metrics = {**mAPMetrics, **iouMetrics}
         if checkpoint_enabled:
             for metric_name, mode in checkpoint_metrics.items():
-                score = mAPMetrics.get(metric_name)
+                score = all_metrics.get(metric_name)
+
                 if score is None:
                     print(f"Metric '{metric_name}' not found.")
                     continue
-
+                print(f"{metric_name} : {score} and {best_scores[metric_name]}")
                 is_better = score > best_scores[metric_name] if mode == "max" else score < best_scores[metric_name]
                 if is_better:
+                    save_best_checkpoint(model, metric_name, score, best_scores, mode, checkpoint_dir)
                     best_scores[metric_name] = score
                     metric_best_epochs[metric_name] = (epoch, score)
-                    save_best_checkpoint(model, metric_name, score, best_scores, mode, checkpoint_dir)
 
             if save_last:
                 save_last_checkpoint(model, checkpoint_dir)

@@ -24,9 +24,6 @@ def init_checkpointing(config: dict, tempdir: str) -> Tuple[bool, str, dict, dic
 
 
 def save_best_checkpoint(model, metric_name: str, score: float, best_scores: Dict[str, float], mode: str, checkpoint_dir: str):
-    is_better = score > best_scores[metric_name] if mode == "max" else score < best_scores[metric_name]
-    if is_better:
-        best_scores[metric_name] = score
         ckpt_path = os.path.join(checkpoint_dir, f"best_model_{metric_name}.pt")
         torch.save(copy.deepcopy(model.state_dict()), ckpt_path)
         print(f"New best '{metric_name}' = {score:.4f} → saved to {ckpt_path}")
@@ -40,7 +37,7 @@ def save_last_checkpoint(model, checkpoint_dir: str):
 
 def persist_checkpoints(temp_checkpoint_dir: str, output_path: str, task: str):
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    final_checkpoint_dir = os.path.join(output_path, "checkpoints", f"{task}_{ts}")
+    final_checkpoint_dir = os.path.join(output_path, f"{task}_{ts}", "checkpoints")
     os.makedirs(final_checkpoint_dir, exist_ok=True)
 
     for file in os.listdir(temp_checkpoint_dir):

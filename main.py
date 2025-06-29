@@ -22,7 +22,7 @@ def main() -> None:
         "train_test_split": [0.9, 0.1],  # full dataset split in train + test
         "train_val_split": [0.9, 0.1],   # train dataset split in train + val
         "crop_size": 512,
-
+        "nms_threshold":0.3,
         # Checkpointing config
         "checkpointing": {
             "enabled": True,
