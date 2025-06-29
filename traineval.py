@@ -10,7 +10,7 @@ from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchmetrics.detection.iou import IntersectionOverUnion
-from checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
+from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
 
 
