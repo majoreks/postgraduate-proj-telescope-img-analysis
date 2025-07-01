@@ -9,11 +9,9 @@ from model.load_model import load_model
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchmetrics.detection.iou import IntersectionOverUnion
+from torchmetrics.functional.detection import intersection_over_union
 from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
-
-
 
 
 def train_single_epoch(model, images, targets, optimizer, device):
@@ -63,14 +61,10 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
-
     logger.log_model(model)
 
     mAPMetric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
     mAPMetric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
-    iou_metric = IntersectionOverUnion(
-        class_metrics=True
-    )
 
     # Checkpointing Setup
     checkpoint_enabled, checkpoint_dir, checkpoint_metrics, best_scores = init_checkpointing(config, tempdir)
@@ -95,7 +89,8 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
         logger.log_train_loss(avg_train, is_train=True)
 
         mAPMetric.reset()
-        iou_metric.reset()
+        ious_dim0 = []
+        ious_dim1 = []
 
         with torch.no_grad():
             for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
@@ -105,18 +100,27 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
                 predictions = [{k: v.detach().cpu() for k, v in pred.items()} for pred in predictions]
 
                 mAPMetric.update(predictions, targets)
-                iou_metric.update(predictions, targets)
+                for pred, target in zip(predictions, targets):
+                    iou = intersection_over_union(pred["boxes"], target["boxes"], aggregate=False)
+                    ious_dim0.append(iou.max(dim=0).values)
+                    ious_dim1.append(iou.max(dim=1).values)
+
 
         mAPMetrics = mAPMetric.compute()
-        iouMetrics = iou_metric.compute()
         mAPMetrics.pop("classes", None)
 
-        logger.log_train_loss(mAPMetrics, iouMetrics, is_train=False)
+        iou_dim0 = torch.cat(ious_dim0).mean()       # 1-D tensor of length = sum of all element-counts
+        iou_dim1 = torch.cat(ious_dim1).mean()
+
+        iou_metrics = {
+            "best_iou_per_gt": iou_dim0, "best_iou_per_prediction": iou_dim1
+        }
+        logger.log_train_loss(mAPMetrics, iou_metrics, is_train=False)
         logger.step()
 
         # OOOOJOOOO: every time a metric is uploaded, modifications to all_metrics is needed. We should improve the config and
         # treat all the metrics in the same way (metrics.py)
-        all_metrics = {**mAPMetrics, **iouMetrics}
+        all_metrics = {**mAPMetrics, **iou_metrics}
         if checkpoint_enabled:
             for metric_name, mode in checkpoint_metrics.items():
                 score = all_metrics.get(metric_name)
