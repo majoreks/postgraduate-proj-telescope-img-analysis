@@ -63,8 +63,14 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
     logger.log_model(model)
 
-    mAPMetric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
-    mAPMetric.warn_on_many_detections = False # https://stackoverflow.com/a/76957869 we have possibly more than 100 detections, metric calculation takes into account first n (by score) detections 
+    start = 0.3 * config["box_detections_per_img"]
+    end = config["box_detections_per_img"]
+    detection_thresholds = [
+        int(start),
+        int((start + end) / 2),
+        int(end)
+    ]
+    mAPMetric = MeanAveragePrecision(iou_type="bbox", max_detection_thresholds=detection_thresholds, backend='faster_coco_eval')
 
     # Checkpointing Setup
     checkpoint_enabled, checkpoint_dir, checkpoint_metrics, best_scores = init_checkpointing(config, tempdir)
