@@ -13,7 +13,7 @@ def main() -> None:
 
     config = {
         "lr": 1e-3,
-        "batch_size": 2,
+        "batch_size": 4,
         "epochs": 15,
         "data_path": "../images1000",
         "output_path": "./output",
@@ -28,9 +28,10 @@ def main() -> None:
             "enabled": True,
             # Add as many metrics as wanted. Max if improving means increasing, Min if contrary
             "metrics": {
-                "map": "max",         
-                "map_50": "max",      
-                "iou": "max"          
+                "map": "max",
+                "map_50": "max",
+                "best_iou_per_prediction": "max",
+                "best_iou_per_gt": "max"
             },
             "save_path": "checkpoints",  
             "save_last": True           
