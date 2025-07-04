@@ -4,14 +4,14 @@ from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from model.FastRCNNPredictor import FastRCNNPredictor
 from model.FasterRCNN import FasterRCNN
 from model.TwoMLPHead import TwoMLPHead
-from model.model_reader import read_model
+from model.model_reader import read_model, load_params
 
 in_size = 256*7*7
 representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 2 # object of interest + background
 
-def load_model(device: torch.device, config:dict, load_weights: bool = False) -> nn.Module:
+def load_model(device: torch.device, config:dict, load_weights: bool = False, input_path=None) -> nn.Module:
 
     box_detections_per_img= config['box_detections_per_img']
     nms_threshold = config['nms_threshold']
@@ -26,7 +26,7 @@ def load_model(device: torch.device, config:dict, load_weights: bool = False) ->
         new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         model.backbone.body.conv1 = new_conv
 
-        model = read_model(model, device)
+        params = load_params(input_path)
         model = model.to(device)
 
         return model
