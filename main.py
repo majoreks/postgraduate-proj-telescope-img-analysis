@@ -1,7 +1,6 @@
 from config.arg_reader import read_arguments
 import tempfile
-import os
-from traineval import train_model, inference
+from train.traineval import train_model, inference
 from dataset.managedataset import check_and_split
 from config.mode import Mode
 import torch
@@ -39,7 +38,6 @@ def main() -> None:
     }
 
     with tempfile.TemporaryDirectory() as tempdir:
-    
         check_and_split(config,temp_dir=tempdir, device=device)
         
         if mode == Mode.TRAIN:
