@@ -13,7 +13,7 @@ def main() -> None:
     config = {
         "lr": 1e-3,
         "batch_size": 4,
-        "epochs": 15,
+        "epochs": 200,
         "data_path": "../images1000",
         "output_path": "./output",
         "allow_splitting": True,
