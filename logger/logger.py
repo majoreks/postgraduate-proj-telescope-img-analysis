@@ -66,3 +66,6 @@ class Logger():
             wandb.log({"log/text": msg}, step=self._step)
         else:
             print(msg)
+
+    def log_early_stop(self) -> None:
+        wandb.summary.update({ "early_stop": True })
