@@ -8,7 +8,8 @@ def voc_to_coco(boxes):
 def plotFITSImageWithBoundingBoxes(
     image_data_,
     labels_ground_truth,
-    labels_predictions  = None,
+    plot_scores: bool = False,
+    labels_predictions = None,
     output_path='output',
     save_fig: bool = False,
     save_fig_sufix: str = None,
@@ -63,7 +64,11 @@ def plotFITSImageWithBoundingBoxes(
         boxes_pred = voc_to_coco(labels_predictions['boxes'])
         class_pred = labels_predictions['labels'].cpu().numpy()
 
-        for row, class_id in zip(boxes_pred, class_pred):
+        scores_pred = None
+        if plot_scores and 'scores' in labels_predictions:
+            scores_pred = labels_predictions['scores'].cpu().numpy()
+
+        for idx, (row, class_id) in enumerate(zip(boxes_pred, class_pred)):
             x, y, width, height = row
             color = pred_colors[class_id % len(pred_colors)]
             label = f"Pred Class {class_id}"
@@ -76,6 +81,19 @@ def plotFITSImageWithBoundingBoxes(
                 linestyle='--'
             )
             ax.add_patch(rect)
+
+            if scores_pred is not None:
+                score = scores_pred[idx]
+
+                text_x = x - width / 2
+                text_y = y + height + 2
+                ax.text(
+                    text_x, text_y - 2,
+                    f"{score:.2f}",
+                    fontsize=8,
+                    color=color,
+                    va='bottom',
+                )
 
             if label not in legend_elements:
                 legend_elements[label] = patches.Patch(edgecolor=color, facecolor='none', label=label, linestyle='--', linewidth=1.5)
