@@ -49,7 +49,7 @@ def calculate_bbox(row: pd.Series, scale: float = 1.0) -> pd.Series:
 
 def calculate_class(row: pd.Series, threshold: float = 0.3) -> pd.Series:
     ellipticity = row[DAT_ELLIPTICITY_KEY]
-    return pd.Series([2 if ellipticity > threshold else 1], index=CLASSES_KEYS)
+    return pd.Series([1], index=CLASSES_KEYS)
 
 def filter_outliers(df: pd.DataFrame) -> pd.DataFrame:
     valid_mask = (
