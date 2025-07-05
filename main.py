@@ -1,7 +1,6 @@
 from config.arg_reader import read_arguments
 import tempfile
-import os
-from traineval import train_model, inference
+from train.traineval import train_model, inference
 from dataset.managedataset import check_and_split
 from config.mode import Mode
 import torch
@@ -14,7 +13,7 @@ def main() -> None:
     config = {
         "lr": 1e-3,
         "batch_size": 4,
-        "epochs": 15,
+        "epochs": 200,
         "data_path": "../images1000",
         "output_path": "./output",
         "allow_splitting": True,
@@ -39,7 +38,6 @@ def main() -> None:
     }
 
     with tempfile.TemporaryDirectory() as tempdir:
-    
         check_and_split(config,temp_dir=tempdir, device=device)
         
         if mode == Mode.TRAIN:

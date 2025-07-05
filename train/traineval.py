@@ -12,6 +12,9 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchmetrics.functional.detection import intersection_over_union
 from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
+from train.EarlyStopping import EarlyStopping
+
+early_stopping_metric = "map_50"
 
 
 def train_single_epoch(model, images, targets, optimizer, device):
@@ -77,6 +80,8 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     save_last = config.get("checkpointing", {}).get("save_last", True)
     metric_best_epochs = {}
 
+    early_stopping = EarlyStopping(early_stopping_metric)
+
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
 
@@ -124,9 +129,15 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
         logger.log_train_loss(mAPMetrics, iou_metrics, is_train=False)
         logger.step()
 
+        all_metrics = {**mAPMetrics, **iou_metrics}
+
+        early_stopping.step(all_metrics)
+        if early_stopping.should_stop:
+            print(f"Early stopping: no improvement in [{early_stopping_metric}]")
+            break
+
         # OOOOJOOOO: every time a metric is uploaded, modifications to all_metrics is needed. We should improve the config and
         # treat all the metrics in the same way (metrics.py)
-        all_metrics = {**mAPMetrics, **iou_metrics}
         if checkpoint_enabled:
             for metric_name, mode in checkpoint_metrics.items():
                 score = all_metrics.get(metric_name)
