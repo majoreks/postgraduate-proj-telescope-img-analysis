@@ -92,8 +92,8 @@ class TelescopeDataset(Dataset):
         image_path = Path(self.data_path, self.images_list[idx])
         label_path = Path(self.data_path, self.labels_list[idx])
 
-        image_data = read_image(image_path, self.cache_dir)  # Shape: [H, W]
-        labels_data = read_labels(label_path)
+        image_data, pixel_scale = read_image(image_path, self.cache_dir)  # Shape: [H, W]
+        labels_data = read_labels(label_path, pixel_scale)
 
         label_data = np.array(labels_data[CLASS_KEY])
         bbox_data = np.array(labels_data[COORDINATES_KEYS], dtype=np.float32)
