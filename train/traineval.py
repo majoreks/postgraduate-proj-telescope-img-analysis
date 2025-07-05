@@ -56,8 +56,8 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     
     torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, config['train_val_split'])
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=12)
-    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn, num_workers=8) # TODO add validation
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
     logger = Logger(task, config, dev)
     model = load_model(device, config)
@@ -134,6 +134,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
         early_stopping.step(all_metrics)
         if early_stopping.should_stop:
             print(f"Early stopping: no improvement in [{early_stopping_metric}]")
+            logger.log_early_stop()
             break
 
         # OOOOJOOOO: every time a metric is uploaded, modifications to all_metrics is needed. We should improve the config and
