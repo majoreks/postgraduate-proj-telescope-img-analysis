@@ -9,7 +9,7 @@ from model.model_reader import read_model
 in_size = 256*7*7
 representation_size = 1024
 num_classes_pretrained = 91
-num_classes = 3 # stars, galaxies + background
+num_classes = 2 # object of interest + background
 
 def load_model(device: torch.device, config:dict, load_weights: bool = False) -> nn.Module:
 

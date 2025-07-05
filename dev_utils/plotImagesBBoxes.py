@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 def voc_to_coco(boxes):
     return [[x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in boxes.cpu().numpy()]
 
-def plotFITSImageWithBoundingBoxes(image_data_, labels_ground_truth, labels_predictions, output_path='output', save_fig: bool = False, save_fig_sufix:str=None, title_sufix:str = None) -> None:
+def plotFITSImageWithBoundingBoxes(image_data_, labels_ground_truth, labels_predictions = None, output_path='output', save_fig: bool = False, save_fig_sufix:str=None, title_sufix:str = None) -> None:
     """
         PLOTS A FITS IMAGE WITH BOUNDING BOXES IN COCO FORMAT
 

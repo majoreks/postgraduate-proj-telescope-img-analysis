@@ -53,8 +53,8 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     
     torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, config['train_val_split'])
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
-    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn) # TODO add validation
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, collate_fn=custom_collate_fn, num_workers=12)
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn, num_workers=8) # TODO add validation
 
     logger = Logger(task, config, dev)
     model = load_model(device, config)
