@@ -17,7 +17,7 @@ def download_model_data() -> None:
     with open(save_path, "wb") as f:
         f.write(response.content)
 
-def read_model(model: nn.Module, device: torch.device) -> nn.Module:
-    params = torch.load(save_path, map_location=device)
+def read_model(model: nn.Module, device: torch.device, path: str | None = None) -> nn.Module:
+    params = torch.load(save_path if path is None else path, map_location=device)
     model.load_state_dict(params)
     return model
