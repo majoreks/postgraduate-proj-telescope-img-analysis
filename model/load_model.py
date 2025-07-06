@@ -11,7 +11,7 @@ representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 2 # object of interest + background
 
-def load_model(device: torch.device, config:dict, load_weights: bool = False) -> nn.Module:
+def load_model(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None) -> nn.Module:
 
     box_detections_per_img= config['box_detections_per_img']
     nms_threshold = config['nms_threshold']
@@ -26,7 +26,7 @@ def load_model(device: torch.device, config:dict, load_weights: bool = False) ->
         new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         model.backbone.body.conv1 = new_conv
 
-        model = read_model(model, device)
+        model = read_model(model, device, weights_path)
         model = model.to(device)
 
         return model

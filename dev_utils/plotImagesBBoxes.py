@@ -1,3 +1,4 @@
+from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
@@ -118,7 +119,9 @@ def plotFITSImageWithBoundingBoxes(
     # Guardar o mostrar
     if save_fig:
         filename = f"{output_path}/labels_{save_fig_sufix}.png" if save_fig_sufix else f"{output_path}/labels.png"
-        plt.savefig(filename, dpi=400, bbox_inches='tight')
+        path = Path(filename)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(path, dpi=400, bbox_inches='tight')
     else:
         plt.show()
 
