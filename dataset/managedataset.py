@@ -144,12 +144,12 @@ def check_and_split(config,temp_dir, device):
                 folders = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(config["data_path"], f))]
                 if set(folders) == {"metadataless_dataset", "test_dataset", "train_dataset", "metadataless_dataset_cropped", "train_dataset_cropped", "test_dataset_cropped"}:
                     need_to_split = False
-                    print("Dataset already split into train and test folders.")
+                    print("Dataset already split into correct folders.")
 
         if need_to_split == True:
             print("Dataset not split, merging all files and splitting now...")
             split_dataset(config,temp_dir=temp_dir, device=device)
 
-        crop_dataset(config, "train_dataset")
-        crop_dataset(config, "test_dataset")
-        crop_dataset(config, "metadataless_dataset")
+            crop_dataset(config, "train_dataset")
+            crop_dataset(config, "test_dataset")
+            crop_dataset(config, "metadataless_dataset")

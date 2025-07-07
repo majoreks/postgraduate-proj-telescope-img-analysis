@@ -14,7 +14,7 @@ def main() -> None:
         "lr": 1e-3,
         "batch_size": 4,
         "epochs": 200,
-        "data_path": "../images1000",
+        "data_path": "../images1000_filtered",
         "output_path": "./output",
         "allow_splitting": True,
         "box_detections_per_img": 1000,
