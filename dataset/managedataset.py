@@ -57,11 +57,7 @@ def split_dataset(config: dict, temp_dir, device) -> None:
     train_dataset, test_dataset = torch.utils.data.random_split(joan_oro_dataset, config['train_test_split'])
     train_dataset.dataset.move_dataset_to_folder(os.path.join(config['data_path'], "train_dataset"), indexes=train_dataset.indices)
     test_dataset.dataset.move_dataset_to_folder(os.path.join(config['data_path'], "test_dataset"), indexes=test_dataset.indices)
-
-    crop_dataset(config, "train_dataset")
-    crop_dataset(config, "test_dataset")
-    crop_dataset(config, "metadataless_dataset")
-    
+   
 
 def crop_dataset(config: dict, source_folder) -> None:
     from astropy.io import fits
@@ -153,3 +149,7 @@ def check_and_split(config,temp_dir, device):
         if need_to_split == True:
             print("Dataset not split, merging all files and splitting now...")
             split_dataset(config,temp_dir=temp_dir, device=device)
+
+        crop_dataset(config, "train_dataset")
+        crop_dataset(config, "test_dataset")
+        crop_dataset(config, "metadataless_dataset")
