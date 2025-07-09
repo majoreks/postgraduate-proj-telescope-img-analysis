@@ -117,7 +117,7 @@ def crop_dataset(config: dict, source_folder) -> None:
                         header.set("WIDTH1", widths[1], "Ending width of the cropped image")
                         header.set("ORIGINAL", file, "Original file name")
 
-                        fits.writeto(Path(os.path.join(cropped_folder, f"{file[:-8]}_{n}.fits.gz")), cropped_image,header, overwrite=True)
+                        fits.writeto(Path(os.path.join(cropped_folder, f"{file[:-14]}_{n}_U_imc.fits.gz")), cropped_image,header, overwrite=True)
 
                         # Keep labels whose bounding boxes intersect with the crop rectangle
                         indexes = np.where(
@@ -128,7 +128,7 @@ def crop_dataset(config: dict, source_folder) -> None:
                         if datfilnamepresent:
                             # Get the index elements in datfile_lines
                             metadata = first_14_lines + [line for i, line in enumerate(datfile_lines) if i in indexes]
-                            cropped_datfile_path = Path(os.path.join(cropped_folder, f"{file[:-8]}_{n}_trl.dat"))
+                            cropped_datfile_path = Path(os.path.join(cropped_folder, f"{file[:-14]}_{n}_U_imc_trl.dat"))
                             with open(cropped_datfile_path, 'w') as cropped_datfile:
                                 cropped_datfile.writelines(metadata)
 
@@ -139,16 +139,21 @@ def check_and_split(config,temp_dir, device):
         data_path = config["data_path"]
         print("Listing folders in:", data_path)
         need_to_split = True
+        need_to_crop = False
         if os.path.exists(data_path):
             if len(os.listdir(data_path)) == 6:
                 folders = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(config["data_path"], f))]
                 if set(folders) == {"metadataless_dataset", "test_dataset", "train_dataset", "metadataless_dataset_cropped", "train_dataset_cropped", "test_dataset_cropped"}:
                     need_to_split = False
+                    
                     print("Dataset already split into correct folders.")
 
         if need_to_split == True:
             print("Dataset not split, merging all files and splitting now...")
             split_dataset(config,temp_dir=temp_dir, device=device)
+            need_to_crop = True
+
+        if need_to_crop == True:
 
             crop_dataset(config, "train_dataset")
             crop_dataset(config, "test_dataset")
