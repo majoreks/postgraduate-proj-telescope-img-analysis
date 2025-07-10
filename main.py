@@ -1,6 +1,6 @@
 from config.arg_reader import read_arguments
 import tempfile
-from train.traineval import train_model, inference
+from train.traineval import train_model, inference, train_experiment
 from dataset.managedataset import check_and_split
 from config.mode import Mode
 import torch
@@ -44,6 +44,8 @@ def main() -> None:
             train_model(config, tempdir, task, dev, device=device)
         elif mode == Mode.INFER:
             inference(config, tempdir, device=device)
+        elif mode == Mode.EXPERIMENT:
+            train_experiment()
 
 if __name__ == "__main__":
     main()

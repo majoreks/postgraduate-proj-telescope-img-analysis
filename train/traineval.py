@@ -253,3 +253,6 @@ def inference(config, tempdir, device, save_fig=True):
 
     #estructura de dades com s'itera
     #utilitzar aquelles que hagin anat a parar al badge de test
+
+def train_experiment():
+    print("I'm here to be developed soon")
