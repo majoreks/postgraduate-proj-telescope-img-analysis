@@ -39,6 +39,30 @@ def main() -> None:
         }
     }
 
+    sweep_config = {
+            'method': 'random',
+            'metric': {
+                'name': 'map_50',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'batch_size': {
+                    'values': [4, 8, 16]
+                },
+                'learning_rate': {
+                    'distribution': 'log_uniform_values',
+                    'min': 1e-6,
+                    'max': 1e-2
+                },
+                'nms_threshold': {
+                    'values': [0.3, 0.5, 0.7]
+                },
+                'early_stopping_patience': {
+                    'values': [0, 3, 5]
+                }
+            }
+    }
+
     with tempfile.TemporaryDirectory() as tempdir:
         check_and_split(config,temp_dir=tempdir, device=device)
         
@@ -47,8 +71,6 @@ def main() -> None:
         elif mode == Mode.INFER:
             inference(config, tempdir, device=device)
         elif mode == Mode.EXPERIMENT:
-            with open("configs/sweep_config.yaml", "r") as f:
-                sweep_config = yaml.safe_load(f)
             pprint.pprint(sweep_config)
             train_experiment()
 
