@@ -12,3 +12,4 @@ requests
 torchmetrics
 torchmetrics[detection]
 faster_coco_eval
+pyyaml
