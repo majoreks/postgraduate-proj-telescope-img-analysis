@@ -4,6 +4,8 @@ from train.traineval import train_model, inference, train_experiment
 from dataset.managedataset import check_and_split
 from config.mode import Mode
 import torch
+import yaml
+import pprint
 
 def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -45,6 +47,9 @@ def main() -> None:
         elif mode == Mode.INFER:
             inference(config, tempdir, device=device)
         elif mode == Mode.EXPERIMENT:
+            with open("configs/sweep_config.yaml", "r") as f:
+                sweep_config = yaml.safe_load(f)
+            pprint.pprint(sweep_config)
             train_experiment()
 
 if __name__ == "__main__":
