@@ -4,7 +4,6 @@ from train.traineval import train_model, inference, train_experiment
 from dataset.managedataset import check_and_split
 from config.mode import Mode
 import torch
-import yaml
 import pprint
 
 def main() -> None:
@@ -59,6 +58,9 @@ def main() -> None:
                 },
                 'early_stopping_patience': {
                     'values': [0, 3, 5]
+                },
+                'weigth_decay': {
+                    'values': [1e-5,1e-4,1e-2]
                 }
             }
     }
@@ -72,7 +74,7 @@ def main() -> None:
             inference(config, tempdir, device=device)
         elif mode == Mode.EXPERIMENT:
             pprint.pprint(sweep_config)
-            train_experiment()
+            train_experiment(config, tempdir, task, dev, sweep_config ,device=device)
 
 if __name__ == "__main__":
     main()

@@ -11,10 +11,9 @@ representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 2 # object of interest + background
 
-def load_model(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None) -> nn.Module:
+def load_model(device: torch.device,config: dict, nms_threshold: float, load_weights: bool = False, weights_path: str = None) -> nn.Module:
 
     box_detections_per_img= config['box_detections_per_img']
-    nms_threshold = config['nms_threshold']
 
     backbone = resnet_fpn_backbone("resnet50", pretrained=not load_weights)
     model = FasterRCNN(backbone, box_detections_per_img=box_detections_per_img)
