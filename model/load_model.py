@@ -11,7 +11,7 @@ representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 2 # object of interest + background
 
-def load_model(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None) -> nn.Module:
+def load_model(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None, freeze_all_backbone: bool = True) -> nn.Module:
 
     box_detections_per_img= config['box_detections_per_img']
     nms_threshold = config['nms_threshold']
@@ -41,11 +41,12 @@ def load_model(device: torch.device, config:dict, load_weights: bool = False, we
     new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True)
     model.backbone.body.conv1 = new_conv
 
-    for name, param in model.backbone.named_parameters():
-        if name.startswith("body.conv1") or name.startswith("body.layer1"):
-            param.requires_grad = True
-        else:
-            param.requires_grad = False
+    if freeze_all_backbone:
+        for name, param in model.backbone.named_parameters():
+            if name.startswith("body.conv1") or name.startswith("body.layer1"):
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
 
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
