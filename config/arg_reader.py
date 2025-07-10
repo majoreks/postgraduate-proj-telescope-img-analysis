@@ -11,7 +11,7 @@ def read_arguments() -> Mode:
         type=Mode,
         choices=list(Mode),
         required=True,
-        help="Mode to run: 'train' or 'infer'"
+        help="Mode to run: 'train','infer' or 'experiment'"
     )
     parser.add_argument(
         "--task",
