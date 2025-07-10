@@ -1,0 +1,6 @@
+# Llista de coses que s'han d'implementar
+1) Mode experiment 
+2) Funcio de training de l'experiment. 
+    Afegir les funcionalitats del wandb
+3) Config file dels parametres que volem fine-tunejar
+4) Llibreta colab ready to experiment
