@@ -28,9 +28,9 @@ class TelescopeDataset(Dataset):
             if p.stat().st_size == 1344
         ]
 
-        print("Total imágenes encontradas:", len(image_paths))
-        print("Total etiquetas encontradas:", len(label_paths))
-        print("Total etiqueta vacías:", len(empty_paths))
+        print("🔍 Total imágenes encontradas:", len(image_paths))
+        print("🔍 Total etiquetas encontradas:", len(label_paths))
+        print("🔍 Total etiqueta vacías:", len(empty_paths))
 
 
         image_map = {get_basename_prefix(p): p for p in image_paths}
