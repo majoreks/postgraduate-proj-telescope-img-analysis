@@ -74,7 +74,7 @@ def main() -> None:
         elif mode == Mode.INFER:
             inference(config, tempdir, device=device)
         elif mode == Mode.EXPERIMENT:
-            sweep_id = wandb.sweep(sweep_config, project="postgraduate-sat-object-detection")
+            sweep_id = wandb.sweep(sweep_config, project="")
             wrapper = sweep_wrapper_factory(config, sweep_config, task, dev, device, tempdir)
             wandb.agent(sweep_id, function=wrapper, count=20)
 
