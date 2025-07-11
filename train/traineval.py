@@ -255,8 +255,8 @@ def inference(config, tempdir, device, save_fig=True):
     #estructura de dades com s'itera
     #utilitzar aquelles que hagin anat a parar al badge de test
 
-def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device) -> None:
-    logger = Logger(task, config, dev)
+def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, sweep_params) -> None:
+    logger = Logger(task, sweep_params, dev)
 
     data_transforms = A.Compose([
         A.RandomRotate90(p=1),
@@ -274,12 +274,13 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device) -
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, config["train_val_split"])
 
     # Parámetros
-    batch_size = config.get("batch_size", 4)
-    lr = config.get("learning_rate", 1e-3)
-    weight_decay = config.get("weight_decay", 1e-4)
-    patience = config.get("early_stopping_patience", 0)
-    nms_thresh = config.get("nms_threshold", 0.3)
-    epochs = config.get("epochs", 200)
+    batch_size = sweep_params.get("batch_size", 4)
+    print(batch_size)
+    lr = sweep_params.get("learning_rate", 1e-3)
+    weight_decay = sweep_params.get("weight_decay", 1e-4)
+    patience = sweep_params.get("early_stopping_patience", 0)
+    nms_thresh = sweep_params.get("nms_threshold", 0.3)
+    epochs = sweep_params.get("epochs", 200)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)

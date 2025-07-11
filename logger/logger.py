@@ -19,8 +19,9 @@ class Logger():
             self.__train_loss = defaultdict(list)
 
     def __init_logger(self, task: str, config: dict) -> None:
-        wandb.login()
-        wandb.init(project=PROJECT_NAME, config=config)
+        if wandb.run is None:
+            wandb.login()
+            wandb.init(project=PROJECT_NAME, config=config)
         wandb.run.name = f'{task}-{datetime.now().strftime("%d/%m/%Y-%H:%M")}'
 
     def log_model(self, model: nn.Module) -> None:
@@ -69,3 +70,6 @@ class Logger():
 
     def log_early_stop(self) -> None:
         wandb.summary.update({ "early_stop": True })
+
+    def config_status(self) -> dict:
+        return wandb.config
