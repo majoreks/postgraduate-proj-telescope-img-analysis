@@ -18,13 +18,13 @@ class TelescopeDataset(Dataset):
         self.cache_dir = cache_dir
         self.transform = transform
 
-        image_paths = list(Path(self.data_path).rglob('*.fits.gz'))
+        image_paths = list(Path(self.data_path).rglob('*_imc.fits.gz'))
         label_paths = [
-            p for p in Path(self.data_path).rglob('*_trl.dat')
+            p for p in Path(self.data_path).rglob('*_imc_trl.dat')
             if p.stat().st_size > 1344
         ]
         empty_paths = [
-            p for p in Path(self.data_path).rglob('*_trl.dat')
+            p for p in Path(self.data_path).rglob('*_imc_trl.dat')
             if p.stat().st_size == 1344
         ]
 
