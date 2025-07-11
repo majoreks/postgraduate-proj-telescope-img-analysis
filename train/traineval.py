@@ -263,8 +263,11 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
         A.ToTensorV2()
     ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
+    train_data_path = os.path.join(config["data_path"], "train_dataset")
     dataset = TelescopeDataset(train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
+
+    print(f"[DEBUG] Dataset root path: {train_data_path}")
+    print(f"[DEBUG] Nº de muestras cargadas: {len(dataset)}")
 
     if dev:
         dataset = Subset(dataset, range(min(50, len(dataset))))
@@ -282,7 +285,7 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
     nms_thresh = sweep_params.get("nms_threshold", 0.3)
     epochs = sweep_params.get("epochs", 200)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
 
     model = load_model(device, config, nms_thresh).train()
