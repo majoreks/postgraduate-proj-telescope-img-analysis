@@ -6,6 +6,7 @@ SUFFIX_NPY = ".npy"
 SUFFIX_SCLAE = ".scale"
 
 def read_image(image_path: str, cache_dir: str) -> tuple[np.ndarray, float]: 
+    print(f"[DEBUG] Leyendo archivo: {image_path}")
     image_cached_path = Path(f"{cache_dir}/{Path(image_path).name}").with_suffix(SUFFIX_NPY)
     pixel_scale_cached_path = Path(f"{cache_dir}/{Path(image_path).name}").with_suffix(SUFFIX_SCLAE + SUFFIX_NPY)
 
