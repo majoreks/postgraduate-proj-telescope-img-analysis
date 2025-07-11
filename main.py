@@ -3,8 +3,9 @@ import tempfile
 from train.traineval import train_model, inference, train_experiment
 from dataset.managedataset import check_and_split
 from config.mode import Mode
+from hyperparameter_search.sweep_wrapper import sweep_wrapper_factory
 import torch
-import pprint
+import wandb
 
 def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -48,7 +49,7 @@ def main() -> None:
                 'batch_size': {
                     'values': [4, 8, 16]
                 },
-                'learning_rate': {
+                'lr': {
                     'distribution': 'log_uniform_values',
                     'min': 1e-6,
                     'max': 1e-2
@@ -73,8 +74,9 @@ def main() -> None:
         elif mode == Mode.INFER:
             inference(config, tempdir, device=device)
         elif mode == Mode.EXPERIMENT:
-            pprint.pprint(sweep_config)
-            train_experiment(config, tempdir, task, dev, sweep_config ,device=device)
+            sweep_id = wandb.sweep(sweep_config, project="postgraduate-sat-object-detection")
+            wrapper = sweep_wrapper_factory(config, sweep_config, task, dev, device, tempdir)
+            wandb.agent(sweep_id, function=wrapper, count=20)
 
 if __name__ == "__main__":
     main()
