@@ -34,17 +34,27 @@ class Logger():
         if self._enabled:
             label = 'training' if is_train else 'eval'
             log_data = {}
-            
+
             for k, v in loss_dict.items():
+                # 🔧 Solución robusta: convierte todo a tensor si no lo es
+                if not isinstance(v, torch.Tensor):
+                    v = torch.tensor(v)
+
                 if v.numel() == 1:
                     log_data[f'{label}/{k}'] = v.item()
                 else:
                     for i, val in enumerate(v.tolist()):
                         log_data[f'{label}/{k}_{i}'] = val
-            wandb.log(log_data, step = self._step)
+
+            wandb.log(log_data, step=self._step)
+
         else:
             aggregated_loss_dict = self.__train_loss if is_train else self.__eval_loss
+
             for k, v in loss_dict.items():
+                if not isinstance(v, torch.Tensor):
+                    v = torch.tensor(v)
+
                 if v.numel() == 1:
                     aggregated_loss_dict[k].append(v.item())
                 else:
