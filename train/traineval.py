@@ -46,11 +46,9 @@ def eval_single_epoch(model, images, device):
 
 def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> None:
 
-    # data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
-    data_transforms = A.Compose([A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
+    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-
-    train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
+    train_data_path = os.path.join(config["data_path"], "train_dataset")
     joan_oro_dataset = TelescopeDataset(data_path=train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     if dev:
         joan_oro_dataset = Subset(joan_oro_dataset, range(min(50, len(joan_oro_dataset))))
@@ -173,7 +171,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
 def inference(config, tempdir, device, save_fig=True):
     
-    test_data_path = os.path.join(config["data_path"], "test_dataset_cropped")
+    test_data_path = os.path.join(config["data_path"], "test_dataset")
 
     print('inference', test_data_path)
     print('-----')
