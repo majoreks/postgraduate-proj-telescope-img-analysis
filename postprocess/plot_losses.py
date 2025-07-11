@@ -1,7 +1,10 @@
+import matplotlib
+matplotlib.use("Agg")  # Evita errores al usar GUI fuera del hilo principal
 import matplotlib.pyplot as plt
 import math
+import os
 
-def plot_losses(loss_history, fname, save_plot = False, is_loss = True) -> None:
+def plot_losses(loss_history, fname, save_plot = True, is_loss = True) -> None:
     num_losses = len(loss_history)
     cols = 2  # or 3 if you prefer more compact layout
     rows = math.ceil(num_losses / cols)
@@ -24,6 +27,7 @@ def plot_losses(loss_history, fname, save_plot = False, is_loss = True) -> None:
     fig.suptitle("Training loss components over time" if is_loss else "Eval metric components over time", fontsize=16)
 
     if save_plot:
+        os.makedirs("output", exist_ok=True)
         plt.savefig(f'output/{fname}', dpi=400)
-    else:
-        plt.show()
+    # Elimina plt.show() para evitar GUI
+    plt.close(fig)
