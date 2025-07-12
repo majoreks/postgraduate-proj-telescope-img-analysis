@@ -53,9 +53,6 @@ def main() -> None:
                     'min': 1e-6,
                     'max': 1e-2
                 },
-                'nms_threshold': {
-                    'values': [0.3, 0.5, 0.7]
-                },
                 'early_stopping_patience': {
                     'values': [0, 3, 5]
                 },
