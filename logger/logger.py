@@ -19,6 +19,11 @@ class Logger():
             self.__train_loss = defaultdict(list)
 
     def __init_logger(self, task: str, config: dict) -> None:
+        # For the experiment mode to run
+        if wandb.run is not None and wandb.run._settings._run_id is not None:
+            return
+        
+        # For the train mode to run
         wandb.login()
         wandb.init(project=PROJECT_NAME, config=config)
         wandb.run.name = f'{task}-{datetime.now().strftime("%d/%m/%Y-%H:%M")}'
@@ -33,17 +38,27 @@ class Logger():
         if self._enabled:
             label = 'training' if is_train else 'eval'
             log_data = {}
-            
+
             for k, v in loss_dict.items():
+                # 🔧 Solución robusta: convierte todo a tensor si no lo es
+                if not isinstance(v, torch.Tensor):
+                    v = torch.tensor(v)
+
                 if v.numel() == 1:
                     log_data[f'{label}/{k}'] = v.item()
                 else:
                     for i, val in enumerate(v.tolist()):
                         log_data[f'{label}/{k}_{i}'] = val
-            wandb.log(log_data, step = self._step)
+
+            wandb.log(log_data, step=self._step)
+
         else:
             aggregated_loss_dict = self.__train_loss if is_train else self.__eval_loss
+
             for k, v in loss_dict.items():
+                if not isinstance(v, torch.Tensor):
+                    v = torch.tensor(v)
+
                 if v.numel() == 1:
                     aggregated_loss_dict[k].append(v.item())
                 else:
@@ -69,3 +84,6 @@ class Logger():
 
     def log_early_stop(self) -> None:
         wandb.summary.update({ "early_stop": True })
+
+    def config_status(self) -> dict:
+        return wandb.config
