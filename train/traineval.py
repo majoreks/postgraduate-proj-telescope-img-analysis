@@ -279,11 +279,21 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
     # Parámetros
     batch_size = sweep_params.get("batch_size", 4)
     print(batch_size)
-    lr = sweep_params.get("learning_rate", 1e-3)
+    lr = sweep_params.get("lr", 1e-3)
     weight_decay = sweep_params.get("weight_decay", 1e-4)
     patience = sweep_params.get("early_stopping_patience", 0)
     nms_thresh = sweep_params.get("nms_threshold", 0.3)
     epochs = sweep_params.get("epochs", 200)
+
+    print(f"""
+        Sweep Parameters:
+        - batch_size              = {batch_size}
+        - learning_rate (lr)      = {lr}
+        - weight_decay            = {weight_decay}
+        - early_stopping_patience = {patience}
+        - nms_threshold           = {nms_thresh}
+        - epochs                  = {epochs}
+    """)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
