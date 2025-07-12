@@ -323,7 +323,6 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
     lr = sweep_params.get("lr", 1e-3)
     weight_decay = sweep_params.get("weight_decay", 1e-4)
     patience = sweep_params.get("early_stopping_patience", 0)
-    epochs = sweep_params.get("epochs", 200)
 
     print(f"""
         Sweep Parameters:
@@ -331,11 +330,7 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
         - learning_rate (lr)      = {lr}
         - weight_decay            = {weight_decay}
         - early_stopping_patience = {patience}
-        - epochs                  = {epochs}
     """)
-
-    if len(train_dataset) == 0:
-        raise ValueError("train_dataset está vacío. Verifica el proceso de carga y split.")
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
@@ -364,7 +359,7 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
 
     early_stopping_metric = config.get("checkpointing", {}).get("early_stopping_metric", "map_50")
     early_stopping = EarlyStopping(early_stopping_metric, patience=patience)
-
+    epochs = config['epochs']
     for epoch in range(epochs):
         print(f"\nEpoch {epoch + 1}/{epochs}")
         train_losses = {}
