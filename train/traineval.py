@@ -6,6 +6,8 @@ from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
 from logger.logger import Logger
 from model.load_model import load_model
+from model.load_model_resnet18 import load_model_resnet_18
+from model.load_model_v2 import load_model_v2
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -60,7 +62,8 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
     logger = Logger(task, config, dev)
-    model = load_model(device, config)
+    # model = load_model(device, config, freeze_all_backbone=False, fully_untrained=True)
+    model = load_model_v2(device, config)
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
@@ -172,6 +175,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 def inference(config, tempdir, device, save_fig=True):
     
     test_data_path = os.path.join(config["data_path"], "test_dataset")
+    test_run_dir = '/home/szymon/code/posgrado/postgraduate-proj-telescope-img-analysis/output/fasterrcnn-resnet50-fpn-v2-all-unfrozen_20250711_094707'
 
     print('inference', test_data_path)
     print('-----')
@@ -190,9 +194,9 @@ def inference(config, tempdir, device, save_fig=True):
     dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
-    download_model_data()
-    model = load_model(device, config=config, load_weights=True)
-    model = read_model(model, device)
+    # download_model_data()
+    model = load_model_v2(device, config=config, load_weights=True, weights_path=test_run_dir + '/checkpoints/best_model_map_50.pt')
+    # model = read_model(model, device)
     model.eval()
 
     print(f"Número de muestras cargadas: {len(dataset)}")
@@ -226,7 +230,7 @@ def inference(config, tempdir, device, save_fig=True):
 
             # Saves the inference plotted image
             if save_fig:
-                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=f"{idx}_{filename}", title_sufix=filename)              
+                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=f"{idx}_{filename}", title_sufix=filename, output_path=test_run_dir + '/images_inference')              
 
             # Almacenar resultados
             results.append({
