@@ -298,7 +298,9 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
 
-    model = load_model(device, config, nms_thresh).train()
+    model = load_model_v2(device, config)
+
+    model = model.train()
     optimizer = torch.optim.Adam(
         list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()),
         lr=lr,
