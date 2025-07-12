@@ -2,6 +2,7 @@ import os
 import torch
 from dataset.telescope_dataset import TelescopeDataset
 from pathlib import Path
+from dataset.managedataset import getStridedVector
 
 def split_dataset(config: dict, temp_dir, device) -> None:
 
