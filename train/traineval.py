@@ -171,7 +171,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
 def inference(config, tempdir, device, save_fig=True):
     
-    test_data_path = os.path.join(config["data_path"], "test_dataset")
+    test_data_path = os.path.join(config["data_path"], "test_dataset_cropped")
 
     print('inference', test_data_path)
     print('-----')
