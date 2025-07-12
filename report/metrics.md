@@ -42,17 +42,22 @@ Mean Average Precision (mAP) and Mean Average Recall (mAR) extend IoU-based eval
 
 #### Precision
 Precision is a key evaluation metric that measures the correctness of the model’s positive predictions by determining the proportion of true objects among all detected ones. It reflects the model’s effectiveness at filtering out false positives—higher precision implies the model makes confident, trustworthy detections with few incorrect alarms.
+
 $$
 precision = \frac{TP}{TP + FP}
 $$
-By using torchmetric's implementation of MeanAveragePrecision, we get mAP at different thresholds of IoU, in particular at 50, 75 and average of all thresholds as well as for different sizes of the objects, however due to the nature of the dataset where the overwhelming number of objects are very small, we mostly ignore those metrics.
+
+By using torchmetrics’ implementation of `MeanAveragePrecision`, we get mAP at different IoU thresholds, in particular at 50, 75, and the average of all thresholds, as well as for different object sizes, however, due to the dataset’s nature, where the overwhelming number of objects are very small, we mostly ignore those metrics.
 
 #### Recall
-Recall called also sensitivity or the true positive rate is metric used for gauging a model’s performance, particularly in object detection. It quantifies the model’s ability to find every relevant object in an image, effectively measuring how comprehensive its detections are. A high recall score means the model succeeds at detecting the vast majority of true objects with few misses.
+Recall, also called sensitivity or the true positive rate, is a metric used for gauging a model’s performance, particularly in object detection. It quantifies the model’s ability to find every relevant object in an image, effectively measuring how comprehensive its detections are. A high recall score means the model succeeds at detecting the vast majority of true objects with few misses.
+
 $$
 recall = \frac{TP}{TP + FN}
 $$
-Similarly to precision, by using torchmetric's solution we get mAR at different thresholds of detected objects. We define it as 3 equal steps from the maximum detections in an image, where the maximum is predefined as hyperparameter. Also similarily to precision we get recall at different sizes, however we ignore those metrics.
+
+Similarly to precision, by using torchmetrics’ solution, we get mAR at different detection thresholds (defined by maximum number of detected objects). We define it as three equal steps from the maximum detections per image, where the maximum is predefined as a hyperparameter. Also, similarly to precision, we get recall at different object sizes, however, we ignore those metrics.
+
 
 ## Main metric
 
