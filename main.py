@@ -36,6 +36,32 @@ def main() -> None:
             "save_last": True           
         }
     }
+    sweep_config = {
+            'method': 'random',
+            'metric': {
+                'name': 'map_50',
+                'goal': 'maximize'
+            },
+            'parameters': {
+                'batch_size': {
+                    'values': [4, 8, 16]
+                },
+                'lr': {
+                    'distribution': 'log_uniform_values',
+                    'min': 1e-6,
+                    'max': 1e-2
+                },
+                'nms_threshold': {
+                    'values': [0.3, 0.5, 0.7]
+                },
+                'early_stopping_patience': {
+                    'values': [0, 3, 5]
+                },
+                'weigth_decay': {
+                    'values': [1e-5,1e-4,1e-2]
+                }
+            }
+    }
 
     with tempfile.TemporaryDirectory() as tempdir:
         check_and_split(config,temp_dir=tempdir, device=device)
@@ -44,6 +70,10 @@ def main() -> None:
             train_model(config, tempdir, task, dev, device=device)
         elif mode == Mode.INFER:
             inference(config, tempdir, device=device)
+        elif mode == Mode.EXPERIMENT:
+            sweep_id = wandb.sweep(sweep_config, project="postgraduate-sat-object-detection")
+            wrapper = sweep_wrapper_factory(config, sweep_config, task, dev, device, tempdir)
+            wandb.agent(sweep_id, function=wrapper, count=20)
 
 if __name__ == "__main__":
     main()
