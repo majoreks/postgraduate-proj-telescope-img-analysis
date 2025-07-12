@@ -305,7 +305,7 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
         A.ToTensorV2()
     ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    train_data_path = os.path.join(config["data_path"], "train_dataset")
+    train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
     dataset = TelescopeDataset(train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
 
     print(f"[DEBUG] Dataset root path: {train_data_path}")
