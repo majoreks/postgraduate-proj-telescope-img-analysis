@@ -19,9 +19,13 @@ class Logger():
             self.__train_loss = defaultdict(list)
 
     def __init_logger(self, task: str, config: dict) -> None:
-        if wandb.run is None:
-            wandb.login()
-            wandb.init(project=PROJECT_NAME, config=config)
+        # For the experiment mode to run
+        if wandb.run is not None and wandb.run._settings._run_id is not None:
+            return
+        
+        # For the train mode to run
+        wandb.login()
+        wandb.init(project=PROJECT_NAME, config=config)
         wandb.run.name = f'{task}-{datetime.now().strftime("%d/%m/%Y-%H:%M")}'
 
     def log_model(self, model: nn.Module) -> None:
