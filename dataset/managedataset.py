@@ -117,20 +117,26 @@ def crop_dataset(config: dict, source_folder) -> None:
                         header.set("WIDTH1", widths[1], "Ending width of the cropped image")
                         header.set("ORIGINAL", file, "Original file name")
 
-                        fits.writeto(Path(os.path.join(cropped_folder, f"{file[:-14]}_{n}_U_imc.fits.gz")), cropped_image,header, overwrite=True)
+                        new_labels = []
+                        for line in datfile_lines:
+                            parts = line.split()
+                            xy = (float(parts[0]), float(parts[1]))
+                            if (widths[0] <= xy[0] <= widths[1]) and (heights[0] <= xy[1] <= heights[1]):
+                                parts[0] = str(xy[0] - widths[0])
+                                parts[1] = str(xy[1] - heights[0])
+                                new_labels.append('  '.join(parts)+ '\n')
 
-                        # Keep labels whose bounding boxes intersect with the crop rectangle
-                        indexes = np.where(
-                            (labels['x_min'] < widths[1]) & (labels['x_max'] > widths[0]) &
-                            (labels['y_min'] < heights[1]) & (labels['y_max'] > heights[0])
-                        )[0]
 
-                        if datfilnamepresent:
-                            # Get the index elements in datfile_lines
-                            metadata = first_14_lines + [line for i, line in enumerate(datfile_lines) if i in indexes]
-                            cropped_datfile_path = Path(os.path.join(cropped_folder, f"{file[:-14]}_{n}_U_imc_trl.dat"))
-                            with open(cropped_datfile_path, 'w') as cropped_datfile:
-                                cropped_datfile.writelines(metadata)
+                        if len(new_labels) > 0:
+
+                            fits.writeto(Path(os.path.join(cropped_folder, f"{file[:-14]}_{n}_U_imc.fits.gz")), cropped_image,header, overwrite=True)
+                            if datfilnamepresent:
+                                # Get the index elements in datfile_lines
+                                # metadata = first_14_lines + [line for i, line in enumerate(datfile_lines) if i in indexes]
+                                metadata = first_14_lines + [line for i, line in enumerate(new_labels)]
+                                cropped_datfile_path = Path(os.path.join(cropped_folder, f"{file[:-14]}_{n}_U_imc_trl.dat"))
+                                with open(cropped_datfile_path, 'w', newline='\n') as cropped_datfile:
+                                    cropped_datfile.writelines(metadata)
 
 
 def check_and_split(config,temp_dir, device):
