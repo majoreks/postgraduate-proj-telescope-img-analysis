@@ -3,6 +3,8 @@ import torch
 from dataset.telescope_dataset import TelescopeDataset
 from pathlib import Path
 from dataset.get_strided_vector import getStridedVector
+import numpy as np
+from dataset.labels_reader import read_labels
 
 def split_dataset(config: dict, temp_dir, device) -> None:
 
@@ -127,10 +129,14 @@ def check_and_split(config,temp_dir, device):
         print("Listing folders in:", data_path)
         need_to_split = True
         need_to_crop = False
+        print(f"el deta_path es {data_path}")
+        print(f"el deta_path existe? {os.path.exists(data_path)}")
         if os.path.exists(data_path):
-            if len(os.listdir(data_path)) == 3:
+            if len(os.listdir(data_path)) >= 3:
                 folders = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(config["data_path"], f))]
-                if set(folders) == {"metadataless_dataset", "test_dataset", "train_dataset"}:
+                print(f"La variables sel(folfers) es de la forma {set(folders)}")
+                required_folders = {"metadataless_dataset", "test_dataset", "train_dataset"}
+                if required_folders.issubset(set(folders)):
                     need_to_split = False
                     print("Dataset already split into train and test folders.")
         

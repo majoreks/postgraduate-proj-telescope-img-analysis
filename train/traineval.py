@@ -305,7 +305,7 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
         A.ToTensorV2()
     ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
+    train_data_path = os.path.join(config["data_path"], "train_dataset")
     dataset = TelescopeDataset(train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
 
     print(f"[DEBUG] Dataset root path: {train_data_path}")
@@ -333,6 +333,9 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
         - early_stopping_patience = {patience}
         - epochs                  = {epochs}
     """)
+
+    if len(train_dataset) == 0:
+        raise ValueError("train_dataset está vacío. Verifica el proceso de carga y split.")
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=2)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
