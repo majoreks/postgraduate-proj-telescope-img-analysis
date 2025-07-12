@@ -6,6 +6,7 @@ from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
 from logger.logger import Logger
 from model.load_model import load_model
+from model.load_model_v2 import load_model_v2
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -60,7 +61,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
     logger = Logger(task, config, dev)
-    model = load_model(device, config)
+    model = load_model_v2(device, config)
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
