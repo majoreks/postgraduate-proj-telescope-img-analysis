@@ -18,6 +18,11 @@ The first set of experiments was to establish the importance of using pretrained
     # new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True) # applicable when using pretrianed weights
     model.backbone.body.conv1 = new_conv
     ```
+- Similarly the box predictor is swapped out to accomodate for different number of classes in our dataset compared to the original ImageNet dataset (2 classes in our case; object of interest and background).
+    ```py
+    FastRCNNPredictor(in_features, 2) # object of interest + background
+    ```
+    in particular this means that even in cases of loading pretrained weights for the whole network the box predictor is initialised without any weights since it needs to be set up for the correct number of classes.
 
 #### Hypothesis
 The hypothesis for this set of experiments was that using pretrained weights would impove metrics of the model as well as allow faster convergence of the model enabling us to run more experiments in shorter period of time.
