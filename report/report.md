@@ -174,8 +174,8 @@ The model of this project is trained with a [dataset of 299 images](https://cola
 
 Even though the dataset has been reduced to retain only reliable labels, there are still plenty of extreme outliers that heavily skew the data. The diagrams below show histograms and boxplots of object sizes with and without outliers
 ![alt text](media/data_object-distribution-hist.png)
-![alt text](media/data_object-distribution-boxplot.png)
-In both cases it can be seen that there are extreme outliers heavily skewing the data beyond it’s otherwise normal distribution.
+![alt text](media/data_object-distribution-boxplot.png)   
+In both cases it can be seen that there are extreme outliers heavily skewing the data beyond it’s otherwise close to normal distribution.
 
 
 Different IA models with the MODELS 
@@ -297,16 +297,222 @@ The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing
 
     * `weight_decay`: \[1e-5, 1e-4, 1e-2\]
 
-# 5\. EXPERIMENTS {#5.-experiments}
+# Loss criterion and evaluation metrics
+## Loss criterion
+In this chapter, we introduce the concept of a loss criterion as the guiding signal that steers an object‐detection model toward better performance. At its core, a loss function measures the gap between the model’s predictions (both “what” is in the image and “where” it is) and the ground‐truth annotations. By assigning a numerical penalty to errors in classification and localization, the loss criterion translates raw mistakes into gradients that update the network’s weights.   
 
-## 4.1 Planned experiments
+Loss calculation is handled by FasterRCNN internals out of the box without any particular changes for the purposes of this project.
 
-Explain here the context of all the experiments planned and performed
+### loss_rpn_box_reg
+Measures how well the RPN’s proposed anchors are localized (i.e. shifted and scaled) to better fit ground-truth boxes. Calculated using smooth L $_{1}$ loss
 
-| Model  | Trained weights  | Backbone architecture | Modification  |  |
-| :---- | :---- | :---- | :---- | :---- |
-| Faster R-CNN v1 |  **ResNet backbones** on COCO dataset | ResNet-18 ResNet-34 ResNet-50 ResNet-101 ResNet-152 ¿? | NMS Cropping Checkpoints Early stopping |  |
-| Faster R-CNN v2 |  |  |  |  |
+$$
+\ell=\begin{cases} 0.5(x-y)^2,\ if\ |x-y|<1\\|x-y|-0.5,\ otherwise  \end{cases}
+$$
+### loss_objectness
+Measures how well the RPN (Region Proposal Network) distinguishes “object” vs. “background” for each anchor. Calculated using binary cross-entropy on each anchor’s predicted objectness score 
+$$
+\ell​=−\frac{1}{N}\sum_{i=1}^{N}[y\log{p}+(1−y)\log{(1−p)}]
+$$
+### loss_classifier
+Measures how well the final detection head assigns each proposed RoI to one of the KK object classes (or background). Calculated using multiclass cross-entropy over $K+1$ outputs (one per class plus background)
+$$
+\ell = -\sum_{c=0}^{K} \mathbf{1}\{c = c^*\}\,\log p_{c}
+$$
+### loss_box_reg
+Measures how accurately the final head refines each positive RoI’s box to match the ground-truth. Calculated by using smooth L $_{1}$ loss on the 4-parameter offsets for the correct class of each positive RoI. 
+$$
+\ell = \sum_{i\in{x,y,w,h}}​smooth_{L_{1}}​(t_{i}​−t_{i}^{∗}​)
+$$
+
+## Evaluation metrics
+In this chapter, we introduce the key metrics that have been used to assess the performance of our object detection network and. In object detection, metrics should focus on both the proper alignment of predicted bounding boxes relative to the ground truth and the correct classification of objects. The latter challenge is simplified in this project, as the problem has been reduced from a multi-class to a single-class scenario, defining only background and object-of-interest categories.
+
+We utilize the `torchmetrics` package to ensure consistency and reproducibility, minimize development time, and delegate edge-case handling to well-tested implementations. This approach provides easy access to object detection and classification metrics, such as Intersection over Union (IoU), precision, and recall.
+
+### Metrics rundown
+Using `MeanAveragePrecision` and `intersection_over_union` the following metrics are calculated to evaluate performance of the model. 
+
+#### IoU related metrics
+Intersection over Union (IoU) metrics quantify the degree of overlap between predicted and ground truth bounding boxes. IoU itself yields a quantitative measure of how closely the model’s predicted box matches the true object position. A larger IoU value reflects tighter overlap between the prediction and ground-truth box, indicating more accurate localization. The `intersection_over_union` function computes the IoU between each pair of predicted and ground truth boxes. In particular:
+```py
+intersection_over_union(pred["boxes"], target["boxes"], aggregate=False)
+```
+returns `N x M` matrix of IoU scores where `N` is the number of predicted boxes and `M` is the number of target boxes such that each entry (i, j) is   
+$$
+\mathrm{IoU_{ij}} = \frac{area(\;pred_{\text{i}}\;\cap\; gt_{\text{j}})}{area(\;pred_{\text{i}} \;\cup\; gt_{\text{j}})}
+$$
+
+where
+- $pred_{\mathrm{i}}$ is the $i$-th predicted bounding box
+- $gt_{\mathrm{j}}$ is the $j$-th ground-truth bounding box
+- $\cap$ denotes the geometric intersection of the two boxes
+- $\cup$ denotes their union
+- $area()$ indicates the area of the region
+
+![alt text](media/1_Fh2VtPW6NNOvTPZ7ZWG3kQ.webp)
+
+
+Using the matrix described above, we focus on the following 2 metrics
+
+##### best_iou_per_gt
+
+The `best_iou_per_gt` metric measures, for each ground-truth box, the highest IoU achieved by any predicted box and then averages these maxima across all ground-truths. Concretely, for each ground-truth in a batch we take the max over the IoU matrix’s columns (`iou.max(dim=0)`), concatenate these values, and compute the mean—yielding a single value that reflects how well the model covers true objects on average. This behavior is analogous to recall, since it indicates the degree to which real objects are met by at least one prediction, but it operates as a continuous, threshold-free measure of localization quality.
+
+##### best_iou_per_prediction
+
+The `best_iou_per_prediction` metric quantifies, for each predicted box, the highest IoU with any ground-truth box, then averages these values across all predictions. Practically, we take the max over the IoU matrix’s rows (`iou.max(dim=1)`), aggregate them over the batch, and compute the mean—providing insight into how precisely the model’s detections align with actual objects. This mirrors precision, as it reflects how many predictions are accurate, yet it remains a soft measure of overlap without requiring an IoU threshold to binarize true positives.
+
+#### Precision and recall related metrics
+
+Mean Average Precision (mAP) and Mean Average Recall (mAR) extend IoU-based evaluation to capture both the trade-off between false positives and true positives and the model’s ability to find all objects. Using `torchmetrics.detection.mean_ap.MeanAveragePrecision`, predictions and ground-truths are aggregated to compute metrics at multiple IoU thresholds (by default COCO’s from 0.50 to 0.95 with step of 0.05). Mean Average Recall (mAR) is similarly derived by measuring recall at fixed numbers of detections per image (e.g., 1, 10, 100) across the same IoU thresholds and averaging it. Precision together with Recall describe the model’s effectiveness at producing correct positive detections and at identifying all true objects.
+
+##### Precision
+Precision is a key evaluation metric that measures the correctness of the model’s positive predictions by determining the proportion of true objects among all detected ones. It reflects the model’s effectiveness at filtering out false positives—higher precision implies the model makes confident, trustworthy detections with few incorrect alarms.
+
+$$
+precision = \frac{TP}{TP + FP}
+$$
+
+By using torchmetrics’ implementation of `MeanAveragePrecision`, we get mAP at different IoU thresholds, in particular at 50, 75, and the average of all thresholds, as well as for different object sizes, however, due to the dataset’s nature, where the overwhelming number of objects are very small, we mostly ignore those metrics.
+
+##### Recall
+Recall, also called sensitivity or the true positive rate, is a metric used for gauging a model’s performance, particularly in object detection. It quantifies the model’s ability to find every relevant object in an image, effectively measuring how comprehensive its detections are. A high recall score means the model succeeds at detecting the vast majority of true objects with few misses.
+
+$$
+recall = \frac{TP}{TP + FN}
+$$
+
+Similarly to precision, by using torchmetrics’ solution, we get mAR at different detection thresholds (defined by maximum number of detected objects). We define it as three equal steps from the maximum detections per image, where the maximum is predefined as a hyperparameter. Also, similarly to precision, we get recall at different object sizes, however, we ignore those metrics.
+
+
+### Key metric
+The key metric selected for this project has been mAP at 0.5 IoU threshold. This threshold ensures detected boxes match the objects of genuine scientific interest without imposing overly restrictive requirements, as it allows for minor localization variance while requiring meaningful overlap. By focusing on mAP at 0.5 threshold, we also reduce sensitivity to annotation inconsistencies described in the previous section so that our evaluation reflects true detection capability instead of artifacts arising from imperfect labels.
+
+# Model experiments
+In this chapter, we describe our approach to identifying an optimal detection architecture for a dataset dominated by numerous small objects. Our entry point was the two-stage Faster R-CNN framework, selected for its modularity and strong track record in general-purpose object detection. From this baseline, we conducted a series of controlled experiments to understand how architectural and training choices impact performance on our problem, inference speed, model complexity and training time. Key factors explored include:
+- Backbone variants: We compared different ResNets to assess if smaller backbone networks would be sufficient for our relatively simple images.
+- We evaluated both the original Faster R-CNN (“v1”) and its refined “v2” variant.
+- Pretraining and transfer learning: All backbones have the possibility of initializing with ImageNet-pretrained weights, then fine-tuning on our target data if needed.
+- Layer freezing strategies: We experimented with different approach to which layers should be frozen and unfrozen to see how it would affect model's performance and training speed.
+
+## Preliminary experiments
+### Pretrained weights
+The first set of experiments was to establish the importance of using pretrained weights. Since we're using well established network, such as FasterRCNN and even more popular backbone in Resnet we have availability of pretrained weights that could serve as starting point.   
+
+#### Notes 
+- Note that in all tests regarding pretrained weights all layers were unfrozen.
+- Note that in each of the cases the first layer of the backbone network is swapped out to accomodate for images in our dataset having only 1 channel instead of 3. 
+    ```py
+    old_conv = model.backbone.body.conv1
+    new_conv = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+    # new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True) # applicable when using pretrianed weights
+    model.backbone.body.conv1 = new_conv
+    ```
+- Similarly the box predictor is swapped out to accomodate for different number of classes in our dataset compared to the original ImageNet dataset (2 classes in our case; object of interest and background).
+    ```py
+    FastRCNNPredictor(in_features, 2) # object of interest + background
+    ```
+    in particular this means that even in cases of loading pretrained weights for the whole network the box predictor is initialised without any weights since it needs to be set up for the correct number of classes.
+
+#### Hypothesis
+The hypothesis for this set of experiments was that using pretrained weights would impove metrics of the model as well as allow faster convergence of the model enabling us to run more experiments in shorter period of time.
+
+#### Setup
+In each of the setups defualt FasterRCNN with ResNet 50 backbone was used. In one experiment we used pretrained weights for the whole network, in another pretrained weights only for the backbone and in the last test we used no pretrained weights at all.   
+
+#### Results
+- _backbone-test_resnet50-12/07/2025-06:00_ - only backbone pretrained weights
+- _updated-labels-network-v1-trian-from-scratch-10/07/2025-12:51_ - no pretrained weights used
+- _updated-labels-network-v1-all-unfrozen-10/07/2025-00:24_ - all available pretrained weights   
+
+![alt text](media/exp_pretrained-weights_loss.png)
+![alt text](media/exp_pretrained-weights_iou_per-per-pred.png) ![alt text](media/exp_pretrained-weights_iou_per-per-gt.png) ![alt text](media/exp_pretrained_weights_map_50.png)
+Model that was not usign any pretrained weights has performed by far the worst being unable to gain any performance in the first 30 epochs besides slight improvement in terms of IoU per ground truth and per prediction. Models using pretrained weights for the backbone only and for the whole network performed very similarly, especially in terms of _map_50_ and best IoU per ground truth.
+
+#### Conclusions
+Given obtained results it could be concluded that the most important aspect of the network is using good pretrained weights for the backbone of the model in order to get useful representations out of the image and using pretrained weights for later parts of the network is not as important, however is not harmful either.
+
+### Layer freezing
+Having established importance of using pretrained weights, most importantly in the backbone, next set of experiments had to do with how to deal with pretrained backbone. The goal was to compare behaviour of the network during training with the backbone network partially frozen and fully unfrozen.    
+
+#### Hypothesis
+The idea with this experiment was to see if it would be enough to use pretrained network and only fine tune later layers or due to the very different nature of the images there would be substantial improvement if all of the layers were unfrozen.
+
+#### Setup
+In the partially frozen experiment, only the first layer was unfrozen to accomodate for the fact that our dataset consisted of 1 channel images, compared to RGB (3 channels) images that the ResNets are typically trained with.  
+
+#### Results
+![alt text](media/exp_layer-freezing_loss.png)
+![alt text](media/exp_layer-freezing_iou-per-pred.png) ![alt text](media/exp_layer-freezing_iou-per-gt.png) ![alt text](media/exp_layer-freezing_map-50.png)
+Training the model with all layers unfrozen has vastly outperformed model with backbone partially frozen in all metrics.
+
+#### Conclusions
+Given obtained results, the conclusion has been that given the nature of the images in the dataset being different from images from ImageNet dataset, unfreezing all layers of the backbone is hugely beneficial to the performance of the network by enabling it to learn better representations of the images and thus proposing better bounding boxes.
+
+### Backbone architecture
+In this stage of experiments we explore backbone architecture choices among different ResNets. We tested networks of varying depth, all initialized with weights pretrained on ImagNet, while noting that not all of tested variants provided pretrained weights for the full detection network. We then evaluate how differences in depth and feature map resolution affect the model’s ability to locate small objects and its overall processing speed.  
+
+#### ResNet architecture
+ResNet is a deep convolutional network architecture that introduces residual, or skip, connections to help train very deep models. In each residual block the input is added directly to the output of a few stacked convolutional layers, letting the network learn only the “residual” needed to improve performance. This design mitigates vanishing‐gradient issues and allows networks with dozens or even hundreds of layers to converge faster and achieve higher accuracy.  
+
+Below diagram depicts ResNet block and ResNet(18) architecture
+![alt text](media/resnet-block.svg) ![alt text](media/resnet18-90-1.svg)  
+By configuring different numbers of channels and residual blocks in the module, we can create different ResNet models, such as the deeper 152-layer ResNet-152
+
+#### Hypothesis
+The goal fo this experiment was to verify if, given relatively simple images as shown in previous chapters, smaller ResNet would be sufficient for solving the problem.
+
+#### Setup
+FasterRCNN network would be trained for limited number of epochs (60 epochs, down from default 200, both cases using early stopping mechanisms) with different ResNets, ResNet18, ResNet34, ResNet50 and ResNet101 _[4]_. In all cases ResNet backbone would be initialised with pretrained weights whereas the rest of the network would have default weights.
+
+#### Results
+![alt text](media/exp_backbone-architechture_loss.png) ![alt text](media/exp_backbone-architechture_iou-per-pred.png) ![alt text](media/exp_backbone-architechture_iou-per-gt.png)
+ ![alt text](media/exp_backbone-architechture_map-50.png) 
+Considering _mAP_50_ metric, ResNet18 has performed worse than other networks, whereas ResNets34, 50 and 101 have performed at similar levels without any advantages of one over the others. 
+
+| backbone ResNet     | Number of parameters (total) |
+|------------|----------------------|
+| ResNet18  | 28.27 M               |
+| ResNet34 | 38.37 M               |
+| ResNet50 | 41.29 M               |
+| ResNet101 | 60.23 M               |
+
+#### Conclusions
+In practice it has been experienced that ResNet18 has performed worse than other networks even tho the images are relatively simple. It has also been observed that increasing the size of the network beyond ResNet34 doesn't necessarily yield noticeably better results on the validation metrics.  
+Due to availability of weights for the whole network with ResNet50 it has been decided to proceed with that network in spite of there seemingly being 
+
+### FasterRCNN v1 vs v2 (`fasterrcnn_resnet50_fpn_v2`)
+In this stage we compare the original Faster RCNN implementation (v1) against its refined iteration (v2) to see if there would be benefits for our problem from using v2 version. Importantly, there are available weights for pretrained network with ResNet50 backbone.   
+Main differences in the v2 implementation used in this in project is addition of extra convolutional layer in RPNHead before final objectness‐score and box‐regression convolutions giving and different implementation of Box head, which is a network that takes each RoI’s pooled feature map and turns it into a fixed-length vector representation for downstream classification and bounding-box regression. In particular in v1 verison the network is simpler, having just two fully connected layers whereas in v2 we use more complex network with convolutional layers that is followed by fully connected layers which potentially gives more spatial processing to the box head.
+
+#### Hypothesis
+Given more complex network the goal of the experiment was to verify if it would improve performance of the network with respect to _mAP_50_ metric. 
+
+#### Setup
+In this experiment both networks were trained using ResNet50 backbone and pretrained weights for the whole network for both v1 and v2 cases (`https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth` and `https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth` respectively).
+
+#### Results
+![alt text](media/exp_faster-rcnn-v_loss.png) ![alt text](media/exp_faster-rcnn-v_best-per-pred.png) ![alt text](media/exp_faster-rcnn-v_best-per-gt.png) ![alt text](media/exp_faster-rcnn-v_map-50.png)
+The main apparent difference between using v2 model instead of v1 according to the experimet is that the v2 model achieves higher results faster than the v1 counterpart. The final difference between max _mAP_50_ between both models was $0.87$ for v2 and $0.862$ for v1, however v1 model needed 75 epochs whereas v2 model achieved $0.87$ _mAP_50_ in 30 epochs.  
+Even though it took less epochs for for the v2 model to achieve high metric reuslt, the time was similar due to increased complexity of the v2 model and thus each epoch taking longer to train.
+
+| Network     | Number of parameters (total) |
+|------------|----------------------|
+| ResNet50, v1 | 41.29 M               |
+| ResNet50, v2  | 43.25 M               |
+
+#### Conclusions
+According to the experiment the v2 model does give a boost in performance compared to the v1 model, it also seems to converge faster (in terms of epochs) at the cost of each epoch being more costly in terms of time.
+
+## Conclusions
+Series of experiments has highlighted the need of using pretrained weights, most importantly for the backbone to be able to effectively train the full network. It was also shown that having pretrained weights for the whole network is not as important as it is for just the backbone. Experiments have also shown that unfreezing all layers of the network, in particular including all layers of the backbone, greatly increases performance of the whole network and it's ability to trian.  
+The choice of backbone also seems to play an important role where ResNet18 seems to be too small of a network while any backbone ResNet above or equal to ResNet34 seems to be sufficiently big for the problem.   
+Finally the choice of v2 network seems to increase the speed (in terms of epochs of training) at which the network can converge and increases performance of the model during early epochs of the training while also enabling to model to achieve higher maximum results.  
+
+Taking all of the above into consideration it has been decided to use the v2 of FasterRCNN network with all pretrained weights and all layers unfrozen as the model.  
+
+It should be noted that all of the experiments have been performed using the same hyperparameters which might skew the results. In ideal scenario each network could undergo hyperparameter search and then the results of those would be compared.
 
 ## 5.2 Hyperparameter search experiment {#5.2-hyperparameter-search-experiment}
 
@@ -551,3 +757,13 @@ Next steps
 \[Xiao, 2025\] Y. Xiao, Y. Guo, Q. Pang, X. Yang, Z. Zhao, and X. Yin, “STar-DETR: A Lightweight Real-Time Detection Transformer for Space Targets in Optical Sensor Systems,” Sensors, vol. 25, no. 4, p. 1146, Feb. 2025, doi: 10.3390/s25041146.
 
 \[Zhang, 2025\] Zhang, D., Feng, T., Xue, L., Wang, Y., Dong, Y., & Tang, J. (2025). Parameter-efficient fine-tuning for foundation models. arXiv preprint arXiv:2501.13787.  
+
+1. https://medium.com/@abhishekjainindore24/fast-rcnn-4fbe954294ef 
+2. Girshick, R. (2015). Fast R-CNN. arXiv preprint arXiv:1504.08083. https://arxiv.org/abs/1504.08083 
+3. Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. arXiv preprint arXiv:1506.01497. https://arxiv.org/abs/1506.01497
+4. https://medium.com/@henriquevedoveli/metrics-matter-a-deep-dive-into-object-detection-evaluation-ef01385ec62
+5. https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173
+1. Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. arXiv preprint areXiv:1506.01497. https://arxiv.org/abs/1506.01497
+2. PyTorch. (n.d.). torchvision.models.detection.fasterrcnn_resnet50_fpn_v2 [Documentation]. Torchvision main documentation. Retrieved July 13, 2025, from https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html
+3. Li, Y., Xie, S., Chen, X., Dollar, P., He, K., & Girshick, R. (2021). Benchmarking Detection Transfer Learning with Vision Transformers. arXiv preprint arXiv:2111.11429. https://arxiv.org/abs/2111.11429
+4. He, K., Zhang, X., Ren, S., & Sun, J. (2015). Deep Residual Learning for Image Recognition. arXiv preprint arXiv:1512.03385. https://arxiv.org/abs/1512.03385
