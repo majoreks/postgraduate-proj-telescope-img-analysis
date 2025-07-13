@@ -11,6 +11,8 @@ Once requirements are installed, the main part of the project can be executed vi
 
 Project can be run in train mode and inference mode.
 ### Training
+Additionally to requirements specified above, user should be logged into wandb locally for logging purposes (if not dev run).
+
 ```bash
 python main.py --mode train --task <task-name> [--dev]
 ```
