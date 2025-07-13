@@ -204,13 +204,14 @@ Points not relevant. Saturated objects.
 In case any image is found without ground truth, it is set apart from the training dataset, so they still can be used for inference. Right after, the images are hard splitted as 81% train, 9% validation, and 10% test.
 
 In the cleaned dataset the average size of an object is 319.46 pixels² which gives an average ratio of object to the image of 0.00001899 with around 345 objects per image on average. 
-In order to reduce computation resources, as well as reduce the number of objects per image and increase the relative size of object to the image, the images are split into 512x512 pixel images (configurable), and information on the cropping coordinates is added to the product metadata. A “cropped” version of the ground truth is also generated including only the entries in the cropped region, removing any position offset. If no entries are available at a given crop, neither the cropped image or the cropped ground truth are saved.
+In order to reduce computation resources, as well as reduce the number of objects per image and increase the relative size of object to the image, the images are split into 512x512 pixel images (configurable), and information on the cropping coordinates is added to the product metadata. A “cropped” version of the ground truth is also generated including only the entries in the cropped region, removing any position offset. If no entries are available at a given crop, neither the cropped image or the cropped ground truth are saved. Such cropping should not negatively affect the information in the image since the objects themselves are not affected by the global context and are relevant only in their local surroundings.
 
 After this operation the average size of an object stays nearly the same at 319.48 pixels² (difference most likely coming from edge cases handling), however the average ratio of an object to an image increases to 0.00121871 and the average number of objects per image drops down to around 48.
 
 # 3\. Working environment
-
 The project was developed on local machines. Training and experiments were done using both local consumer machine with GPU (RTX 4070 Ti), Google Colab and Google Compute Engine to be able to use more powerful machines and perform different experiments in parallel.
+
+Wandb was used for logging purposes. Train runs by default are logged to common wandb project where they can be inspected and compared. 
 
 # 4\. System architecture {#4.-system-architecture}
 
@@ -297,7 +298,7 @@ The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing
 
     * `weight_decay`: \[1e-5, 1e-4, 1e-2\]
 
-# Loss criterion and evaluation metrics
+# 5\. Loss criterion and evaluation metrics
 ## Loss criterion
 In this chapter, we introduce the concept of a loss criterion as the guiding signal that steers an object‐detection model toward better performance. At its core, a loss function measures the gap between the model’s predictions (both “what” is in the image and “where” it is) and the ground‐truth annotations. By assigning a numerical penalty to errors in classification and localization, the loss criterion translates raw mistakes into gradients that update the network’s weights.   
 
