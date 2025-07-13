@@ -26,4 +26,4 @@ python main.py --mode infer --task <task-name>
 In order to run inference instead of training, `--mode` should be set to `infer`, `--task` flag is still required, however has no real effect so can have any value. Model weights are automatically downloaded by the inference script, path to test images is found in data_path configured in config file and then looking inside `test_dataset` directory inside of directory indicated by data_path
 
 ## Report
-[link to report in the repo]
+[Report link](https://github.com/majoreks/postgraduate-proj-telescope-img-analysis/blob/main/report/report.md) (report/report.md)
