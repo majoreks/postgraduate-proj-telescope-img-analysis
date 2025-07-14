@@ -489,23 +489,21 @@ Even though it took less epochs for for the v2 model to achieve high metric reus
 According to the experiment the v2 model does give a boost in performance compared to the v1 model, it also seems to converge faster (in terms of epochs) at the cost of each epoch being more costly in terms of time.
 
 
-## 6.5 Effect of Non Maximum Suppression Threshold on Object Detection {#6.2-effect-of-non-maximum-suppression-threshold-on-object-detection}
+## 6.5 Effect of Non Maximum Suppression Threshold on Object Detection
 
 To visualize the effect of non-maximum suppression in the telescope images, the test dataset was analyzed with 3 threshold values (0.3, 0.5 and 0.7) that are represented in the following images from top to bottom. 
 
 In the following noisy image, it can be seen how by increasing the NMS threshold increases the number of predictions in the same object, clearly seen in the object cluster at (x,y) \~ (110,50), (250, 0), and (500, 0).
 
-| ![][image31] |
-| :---- |
-| ![][image32] |
-| ![][image33] |
+| ![](media/noisy03.png) |
+| ![](media/noisy05.png) |
+| ![](media/noisy07.png) |
 
 The following example, less noisier, also shows how reducing the NMS threshold results in less redundant objects detected, such as in (x,y) \~ (220, 480\) or in (450,25).
 
-| ![][image34] |
-| :---- |
-| ![][image35] |
-| ![][image36] |
+| ![](media/clean03.png) |
+| ![](media/clean05.png) |
+| ![](media/clean07.png) |
 
 ## 6.6 Hyperparameter search experiment
 
