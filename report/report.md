@@ -177,36 +177,16 @@ Even though the dataset has been reduced to retain only reliable labels, there a
 ![alt text](media/data_object-distribution-boxplot.png)   
 In both cases it can be seen that there are extreme outliers heavily skewing the data beyond it’s otherwise close to normal distribution.
 
-
-Different IA models with the MODELS 
-
-Methodology 
-
-DATA preparation. → CRIS  
-GROUND TRUTH → repetition, decisions taken, reduced labelled dataset.   
-…. This is the data that we have to train.  
-	Talk abou the croppings (train, test, validation)
-
-→ not technical, natural language as possible, puting some examples  
-Problemm references, not using deep learning, selling the problem, how difficult it is  
-Points not relevant. Saturated objects.
-
-* **Ground Truth (GT) improvement**
-
-  * Manually cleaned GT annotations
-
-  * Filtered void, incomplete, and duplicate entries
-
-  * Verified catalog presence and object count per image
-
 ### 2.3.2 Image selection, splitting, and cropping
 
 In case any image is found without ground truth, it is set apart from the training dataset, so they still can be used for inference. Right after, the images are hard splitted as 81% train, 9% validation, and 10% test.
 
-In the cleaned dataset the average size of an object is 319.46 pixels² which gives an average ratio of object to the image of 0.00001899 with around 345 objects per image on average. 
-In order to reduce computation resources, as well as reduce the number of objects per image and increase the relative size of object to the image, the images are split into 512x512 pixel images (configurable), and information on the cropping coordinates is added to the product metadata. A “cropped” version of the ground truth is also generated including only the entries in the cropped region, removing any position offset. If no entries are available at a given crop, neither the cropped image or the cropped ground truth are saved. Such cropping should not negatively affect the information in the image since the objects themselves are not affected by the global context and are relevant only in their local surroundings.
+In the cleaned dataset the average size of an object is 319.46 pixels² which gives an average ratio of object to the image of 0.00001899 with around 345 objects per image on average. In order to reduce computation resources, as well as reduce the number of objects per image and increase the relative size of objects to the image, the images are split into 512x512 pixel images (configurable), and information on the cropping coordinates is added to the product metadata. A “cropped” version of the ground truth is also generated including only the entries in the cropped region, removing any position offset. If no entries are available at a given crop, neither the cropped image or the cropped ground truth are saved. Such cropping should not negatively affect the information in the image since the objects themselves are not affected by the global context and are relevant only in their local surroundings.
 
 After this operation the average size of an object stays nearly the same at 319.48 pixels² (difference most likely coming from edge cases handling), however the average ratio of an object to an image increases to 0.00121871 and the average number of objects per image drops down to around 48.
+
+After the hard cropping, a total of 1728 images were generated for training, 192 for validation, and 187 for test. Note that these numbers do not match the percentages mentioned above because the crops removed for lacking objects inside.
+
 
 # 3 Working environment
 The project was developed on local machines. Training and experiments were done using both local consumer machine with GPU (RTX 4070 Ti), Google Colab and Google Compute Engine to be able to use more powerful machines and perform different experiments in parallel.
@@ -241,8 +221,6 @@ After evaluating a wide range of models, Faster R-CNN was selected as the archit
 We acknowledge that in a professional setting, the choice of Faster R-CNN would benefit from further refinement. Several models specifically designed for astronomical applications, such as AstroYOLO, PSDetNet, or Pi-AstroDeconv (as explained before) have shown promising performance in recent literature. In this sense, the selection of Faster R-CNN should be viewed as a solid academic baseline rather than an optimal solution.   
 That said, Faster R-CNN is a robust and flexible architecture and it has also been successfully adopted in published astronomical research. For instance, CLARAN (Wu et al., 2018\) \[1\] applies a Faster R-CNN variant to classify complex radio morphologies, while Burke et al. (2019) \[2\] use a Mask R-CNN (built on Faster R-CNN) for deblending and classifying blended sources in deep-sky surveys. These examples demonstrate that, despite being a general-purpose model, Faster R-CNN remains competitive choice for object detection and segmentation in astronomy
 
-Maximum number of objects detected increased\!
-
 ## 4.2 Adapting RGB pre-trained Models for Monochromatic inputs
 
 Object detection models are generally trained with general purpose RGB images. However, the telescope images are monochromatic and might not even be in the Red, Green or Blue channels. Several techniques can be applied to adapt a RGB network to a monochromatic image:
@@ -250,8 +228,6 @@ Object detection models are generally trained with general purpose RGB images. H
 * Replicating 3 times the original image to have a 3 channel image.  
 * Modify the input CNN to have 1 input and use as weights the average of the original 3-channel input CNN.  
 * Modify the input CNN to have 1 input, randomly initialize the weights, and train it from scratch during fine tuning. 
-
-
 
 ## 4.3 Fine tuning strategies for specific object detection
 
@@ -265,8 +241,6 @@ Fine tuning strategies might include:
 * Additive Parameter-Efficient Fine-Tuning, which introduces bottleneck layers in the pretrained model, and only these layers are trained.  
 * Reparametrization using techniques such as Low-Rank Adaptation, that allow to represent the current parameters into a lower dimensional form so to find which parameters need to be retuned, reducing the number of parameters to be retuned up to 99% \[Zhang, 2025\].  
   
-
-
 ## 4.4 Data augmentation
 
 Data augmentation is conducted using the Albumentations library, which allows to crop, rotate, zoom, etc. not only images, but also bounding boxes and masks. The library can also discard invalid bounding boxes (those out of a cropping, for instance).
@@ -275,7 +249,13 @@ For data augmentation, originally images were cropped to get 1 image of 512x512 
 
 ## 4.5 Non Maximum Suppression Threshold adjustment
 
-The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing the number of regions of interest proposed by the region proposal network. The algorithm is based on the Intersection over Union metric (IoU) as the intersection of two bounding boxes divided by their union. If the value is over the given threshold (0.5 by default), the two boxes are considered to be covering the same object, and the smaller one is chosen. The threshold can be changed by modifying the variable model.roi\_heads.nms\_thresh. If objects tend to be too close, the NMS algorithm might propose just one region for the two objects. Furthermore, experiments in this project showed that noisier images tend to show more proposed ROIs over the same object, so the NMS threshold should be adjusted.
+The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing the number of regions of interest proposed by the region proposal network. The algorithm is based on the Intersection over Union metric (IoU) as the intersection of two bounding boxes divided by their union. If the value is over the given threshold (0.5 by default), the two boxes are considered to be covering the same object, and the smaller one is chosen. The threshold can be changed by modifying the variable:
+
+```py
+model.roi\_heads.nms\_thresh 
+```
+
+If objects tend to be too close, the NMS algorithm might propose just one region for the two objects. Furthermore, experiments in this project showed that noisier images tend to show more proposed ROIs over the same object, so the NMS threshold should be adjusted.
 
 ## 4.6 Checkpoints and Early Stopping
 
@@ -295,7 +275,11 @@ The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing
 
 ## 4.8 Other Modifications implemented to the models
 
-Faster R-CNN has a default maximum number of objects per image to 100, which was set to 1000 since some 512x512 crops contained more than 200.
+Faster R-CNN has a default maximum number of objects per image to 100, which was set to 1000 since some 512x512 crops contained more than 200 using the input parameter:
+
+```py
+box_detections_per_img=1000
+```
 
 # 5 Loss criterion and evaluation metrics
 ## 5.1 Loss criterion
@@ -303,23 +287,23 @@ In this chapter, we introduce the concept of a loss criterion as the guiding sig
 
 Loss calculation is handled by FasterRCNN internals out of the box without any particular changes for the purposes of this project.
 
-### 5.1.1 loss_rpn_box_reg
+### loss_rpn_box_reg
 Measures how well the RPN’s proposed anchors are localized (i.e. shifted and scaled) to better fit ground-truth boxes. Calculated using smooth L $_{1}$ loss
 
 $$
 \ell=\begin{cases} 0.5(x-y)^2,\ if\ |x-y|<1\\|x-y|-0.5,\ otherwise  \end{cases}
 $$
-### 5.1.2 loss_objectness
+### loss_objectness
 Measures how well the RPN (Region Proposal Network) distinguishes “object” vs. “background” for each anchor. Calculated using binary cross-entropy on each anchor’s predicted objectness score 
 $$
 \ell​=−\frac{1}{N}\sum_{i=1}^{N}[y\log{p}+(1−y)\log{(1−p)}]
 $$
-### 5.1.3 loss_classifier
+### loss_classifier
 Measures how well the final detection head assigns each proposed RoI to one of the KK object classes (or background). Calculated using multiclass cross-entropy over $K+1$ outputs (one per class plus background)
 $$
 \ell = -\sum_{c=0}^{K} \mathbf{1}\{c = c^*\}\,\log p_{c}
 $$
-### 5.1.4 loss_box_reg
+### loss_box_reg
 Measures how accurately the final head refines each positive RoI’s box to match the ground-truth. Calculated by using smooth L $_{1}$ loss on the 4-parameter offsets for the correct class of each positive RoI. 
 $$
 \ell = \sum_{i\in{x,y,w,h}}​smooth_{L_{1}}​(t_{i}​−t_{i}^{∗}​)
@@ -339,6 +323,7 @@ Intersection over Union (IoU) metrics quantify the degree of overlap between pre
 intersection_over_union(pred["boxes"], target["boxes"], aggregate=False)
 ```
 returns `N x M` matrix of IoU scores where `N` is the number of predicted boxes and `M` is the number of target boxes such that each entry (i, j) is   
+
 $$
 \mathrm{IoU_{ij}} = \frac{area(\;pred_{\text{i}}\;\cap\; gt_{\text{j}})}{area(\;pred_{\text{i}} \;\cup\; gt_{\text{j}})}
 $$
@@ -355,11 +340,11 @@ where
 
 Using the matrix described above, we focus on the following 2 metrics
 
-##### 5.2.1.1.1 best_iou_per_gt
+##### best_iou_per_gt
 
 The `best_iou_per_gt` metric measures, for each ground-truth box, the highest IoU achieved by any predicted box and then averages these maxima across all ground-truths. Concretely, for each ground-truth in a batch we take the max over the IoU matrix’s columns (`iou.max(dim=0)`), concatenate these values, and compute the mean—yielding a single value that reflects how well the model covers true objects on average. This behavior is analogous to recall, since it indicates the degree to which real objects are met by at least one prediction, but it operates as a continuous, threshold-free measure of localization quality.
 
-##### 5.2.1.1.2 best_iou_per_prediction
+##### best_iou_per_prediction
 
 The `best_iou_per_prediction` metric quantifies, for each predicted box, the highest IoU with any ground-truth box, then averages these values across all predictions. Practically, we take the max over the IoU matrix’s rows (`iou.max(dim=1)`), aggregate them over the batch, and compute the mean—providing insight into how precisely the model’s detections align with actual objects. This mirrors precision, as it reflects how many predictions are accurate, yet it remains a soft measure of overlap without requiring an IoU threshold to binarize true positives.
 
@@ -367,7 +352,7 @@ The `best_iou_per_prediction` metric quantifies, for each predicted box, the hig
 
 Mean Average Precision (mAP) and Mean Average Recall (mAR) extend IoU-based evaluation to capture both the trade-off between false positives and true positives and the model’s ability to find all objects. Using `torchmetrics.detection.mean_ap.MeanAveragePrecision`, predictions and ground-truths are aggregated to compute metrics at multiple IoU thresholds (by default COCO’s from 0.50 to 0.95 with step of 0.05). Mean Average Recall (mAR) is similarly derived by measuring recall at fixed numbers of detections per image (e.g., 1, 10, 100) across the same IoU thresholds and averaging it. Precision together with Recall describe the model’s effectiveness at producing correct positive detections and at identifying all true objects.
 
-##### 5.2.1.2.1 Precision
+##### Precision
 Precision is a key evaluation metric that measures the correctness of the model’s positive predictions by determining the proportion of true objects among all detected ones. It reflects the model’s effectiveness at filtering out false positives—higher precision implies the model makes confident, trustworthy detections with few incorrect alarms.
 
 $$
@@ -376,7 +361,7 @@ $$
 
 By using torchmetrics’ implementation of `MeanAveragePrecision`, we get mAP at different IoU thresholds, in particular at 50, 75, and the average of all thresholds, as well as for different object sizes, however, due to the dataset’s nature, where the overwhelming number of objects are very small, we mostly ignore those metrics.
 
-##### 5.2.1.2.2 Recall
+##### Recall
 Recall, also called sensitivity or the true positive rate, is a metric used for gauging a model’s performance, particularly in object detection. It quantifies the model’s ability to find every relevant object in an image, effectively measuring how comprehensive its detections are. A high recall score means the model succeeds at detecting the vast majority of true objects with few misses.
 
 $$
@@ -384,7 +369,6 @@ recall = \frac{TP}{TP + FN}
 $$
 
 Similarly to precision, by using torchmetrics’ solution, we get mAR at different detection thresholds (defined by maximum number of detected objects). We define it as three equal steps from the maximum detections per image, where the maximum is predefined as a hyperparameter. Also, similarly to precision, we get recall at different object sizes, however, we ignore those metrics.
-
 
 ### 5.2.2 Key metric
 The key metric selected for this project has been mAP at 0.5 IoU threshold. This threshold ensures detected boxes match the objects of genuine scientific interest without imposing overly restrictive requirements, as it allows for minor localization variance while requiring meaningful overlap. By focusing on mAP at 0.5 threshold, we also reduce sensitivity to annotation inconsistencies described in the previous section so that our evaluation reflects true detection capability instead of artifacts arising from imperfect labels.
@@ -396,11 +380,10 @@ In this chapter, we describe our approach to identifying an optimal detection ar
 - Pretraining and transfer learning: All backbones have the possibility of initializing with ImageNet-pretrained weights, then fine-tuning on our target data if needed.
 - Layer freezing strategies: We experimented with different approach to which layers should be frozen and unfrozen to see how it would affect model's performance and training speed.
 
-## 6.1 Preliminary experiments
-### 6.1.1 Pretrained weights
+## 6.1 Pretrained weights
 The first set of experiments was to establish the importance of using pretrained weights. Since we're using well established network, such as FasterRCNN and even more popular backbone in Resnet we have availability of pretrained weights that could serve as starting point.   
 
-#### 6.1.1.1 Notes 
+### 6.1.1 Notes 
 - Note that in all tests regarding pretrained weights all layers were unfrozen.
 - Note that in each of the cases the first layer of the backbone network is swapped out to accomodate for images in our dataset having only 1 channel instead of 3. 
     ```py
@@ -415,13 +398,13 @@ The first set of experiments was to establish the importance of using pretrained
     ```
     in particular this means that even in cases of loading pretrained weights for the whole network the box predictor is initialised without any weights since it needs to be set up for the correct number of classes.
 
-#### 6.1.1.2 Hypothesis
+### 6.1.2 Hypothesis
 The hypothesis for this set of experiments was that using pretrained weights would impove metrics of the model as well as allow faster convergence of the model enabling us to run more experiments in shorter period of time.
 
-#### 6.1.1.3 Setup
+### 6.1.3 Setup
 In each of the setups defualt FasterRCNN with ResNet 50 backbone was used. In one experiment we used pretrained weights for the whole network, in another pretrained weights only for the backbone and in the last test we used no pretrained weights at all.   
 
-#### 6.1.1.4 Results
+### 6.1.4 Results
 - _backbone-test_resnet50-12/07/2025-06:00_ - only backbone pretrained weights
 - _updated-labels-network-v1-trian-from-scratch-10/07/2025-12:51_ - no pretrained weights used
 - _updated-labels-network-v1-all-unfrozen-10/07/2025-00:24_ - all available pretrained weights   
@@ -430,43 +413,43 @@ In each of the setups defualt FasterRCNN with ResNet 50 backbone was used. In on
 ![alt text](media/exp_pretrained-weights_iou_per-per-pred.png) ![alt text](media/exp_pretrained-weights_iou_per-per-gt.png) ![alt text](media/exp_pretrained_weights_map_50.png)
 Model that was not usign any pretrained weights has performed by far the worst being unable to gain any performance in the first 30 epochs besides slight improvement in terms of IoU per ground truth and per prediction. Models using pretrained weights for the backbone only and for the whole network performed very similarly, especially in terms of _map_50_ and best IoU per ground truth.
 
-#### 6.1.1.5 Conclusions
+### 6.1.5 Conclusions
 Given obtained results it could be concluded that the most important aspect of the network is using good pretrained weights for the backbone of the model in order to get useful representations out of the image and using pretrained weights for later parts of the network is not as important, however is not harmful either.
 
-### 6.1.2 Layer freezing
+## 6.2 Layer freezing
 Having established importance of using pretrained weights, most importantly in the backbone, next set of experiments had to do with how to deal with pretrained backbone. The goal was to compare behaviour of the network during training with the backbone network partially frozen and fully unfrozen.    
 
-#### 6.1.2.1 Hypothesis
+### 6.2.1 Hypothesis
 The idea with this experiment was to see if it would be enough to use pretrained network and only fine tune later layers or due to the very different nature of the images there would be substantial improvement if all of the layers were unfrozen.
 
-#### 6.1.2.2 Setup
+### 6.2.2 Setup
 In the partially frozen experiment, only the first layer was unfrozen to accomodate for the fact that our dataset consisted of 1 channel images, compared to RGB (3 channels) images that the ResNets are typically trained with.  
 
-#### 6.1.2.3 Results
+### 6.2.3 Results
 ![alt text](media/exp_layer-freezing_loss.png)
 ![alt text](media/exp_layer-freezing_iou-per-pred.png) ![alt text](media/exp_layer-freezing_iou-per-gt.png) ![alt text](media/exp_layer-freezing_map-50.png)
 Training the model with all layers unfrozen has vastly outperformed model with backbone partially frozen in all metrics.
 
-#### 6.1.2.4 Conclusions
+### 6.2.4 Conclusions
 Given obtained results, the conclusion has been that given the nature of the images in the dataset being different from images from ImageNet dataset, unfreezing all layers of the backbone is hugely beneficial to the performance of the network by enabling it to learn better representations of the images and thus proposing better bounding boxes.
 
-### 6.1.3 Backbone architecture
+## 6.3 Backbone architecture
 In this stage of experiments we explore backbone architecture choices among different ResNets. We tested networks of varying depth, all initialized with weights pretrained on ImagNet, while noting that not all of tested variants provided pretrained weights for the full detection network. We then evaluate how differences in depth and feature map resolution affect the model’s ability to locate small objects and its overall processing speed.  
 
-#### 6.1.3.1 ResNet architecture
+### 6.3.1 ResNet architecture
 ResNet is a deep convolutional network architecture that introduces residual, or skip, connections to help train very deep models. In each residual block the input is added directly to the output of a few stacked convolutional layers, letting the network learn only the “residual” needed to improve performance. This design mitigates vanishing‐gradient issues and allows networks with dozens or even hundreds of layers to converge faster and achieve higher accuracy.  
 
 Below diagram depicts ResNet block and ResNet(18) architecture
 ![alt text](media/resnet-block.svg) ![alt text](media/resnet18-90-1.svg)  
 By configuring different numbers of channels and residual blocks in the module, we can create different ResNet models, such as the deeper 152-layer ResNet-152
 
-#### 6.1.3.2 Hypothesis
+### 6.3.2 Hypothesis
 The goal fo this experiment was to verify if, given relatively simple images as shown in previous chapters, smaller ResNet would be sufficient for solving the problem.
 
-#### 6.1.3.3 Setup
+### 6.3.3 Setup
 FasterRCNN network would be trained for limited number of epochs (60 epochs, down from default 200, both cases using early stopping mechanisms) with different ResNets, ResNet18, ResNet34, ResNet50 and ResNet101 _[4]_. In all cases ResNet backbone would be initialised with pretrained weights whereas the rest of the network would have default weights.
 
-#### 6.1.3.4 Results
+### 6.3.4 Results
 ![alt text](media/exp_backbone-architechture_loss.png) ![alt text](media/exp_backbone-architechture_iou-per-pred.png) ![alt text](media/exp_backbone-architechture_iou-per-gt.png)
  ![alt text](media/exp_backbone-architechture_map-50.png) 
 Considering _mAP_50_ metric, ResNet18 has performed worse than other networks, whereas ResNets34, 50 and 101 have performed at similar levels without any advantages of one over the others. 
@@ -478,21 +461,21 @@ Considering _mAP_50_ metric, ResNet18 has performed worse than other networks, w
 | ResNet50 | 41.29 M               |
 | ResNet101 | 60.23 M               |
 
-#### 6.1.3.5 Conclusions
+### 6.3.5 Conclusions
 In practice it has been experienced that ResNet18 has performed worse than other networks even tho the images are relatively simple. It has also been observed that increasing the size of the network beyond ResNet34 doesn't necessarily yield noticeably better results on the validation metrics.  
 Due to availability of weights for the whole network with ResNet50 it has been decided to proceed with that network in spite of there seemingly being 
 
-### 6.1.4 FasterRCNN v1 vs v2 (`fasterrcnn_resnet50_fpn_v2`)
+## 6.4 FasterRCNN v1 vs v2 (`fasterrcnn_resnet50_fpn_v2`)
 In this stage we compare the original Faster RCNN implementation (v1) against its refined iteration (v2) to see if there would be benefits for our problem from using v2 version. Importantly, there are available weights for pretrained network with ResNet50 backbone.   
 Main differences in the v2 implementation used in this in project is addition of extra convolutional layer in RPNHead before final objectness‐score and box‐regression convolutions giving and different implementation of Box head, which is a network that takes each RoI’s pooled feature map and turns it into a fixed-length vector representation for downstream classification and bounding-box regression. In particular in v1 verison the network is simpler, having just two fully connected layers whereas in v2 we use more complex network with convolutional layers that is followed by fully connected layers which potentially gives more spatial processing to the box head.
 
-#### 6.1.4.1 Hypothesis
+### 6.4.1 Hypothesis
 Given more complex network the goal of the experiment was to verify if it would improve performance of the network with respect to _mAP_50_ metric. 
 
-#### 6.1.4.2 Setup
+### 6.4.2 Setup
 In this experiment both networks were trained using ResNet50 backbone and pretrained weights for the whole network for both v1 and v2 cases (`https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth` and `https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth` respectively).
 
-#### 6.1.4.3 Results
+### 6.4.3 Results
 ![alt text](media/exp_faster-rcnn-v_loss.png) ![alt text](media/exp_faster-rcnn-v_best-per-pred.png) ![alt text](media/exp_faster-rcnn-v_best-per-gt.png) ![alt text](media/exp_faster-rcnn-v_map-50.png)
 The main apparent difference between using v2 model instead of v1 according to the experimet is that the v2 model achieves higher results faster than the v1 counterpart. The final difference between max _mAP_50_ between both models was $0.87$ for v2 and $0.862$ for v1, however v1 model needed 75 epochs whereas v2 model achieved $0.87$ _mAP_50_ in 30 epochs.  
 Even though it took less epochs for for the v2 model to achieve high metric reuslt, the time was similar due to increased complexity of the v2 model and thus each epoch taking longer to train.
@@ -502,19 +485,11 @@ Even though it took less epochs for for the v2 model to achieve high metric reus
 | ResNet50, v1 | 41.29 M               |
 | ResNet50, v2  | 43.25 M               |
 
-#### 6.1.4.4 Conclusions
+### 6.4.4 Conclusions
 According to the experiment the v2 model does give a boost in performance compared to the v1 model, it also seems to converge faster (in terms of epochs) at the cost of each epoch being more costly in terms of time.
 
-### 6.1.5 Conclusions
-Series of experiments has highlighted the need of using pretrained weights, most importantly for the backbone to be able to effectively train the full network. It was also shown that having pretrained weights for the whole network is not as important as it is for just the backbone. Experiments have also shown that unfreezing all layers of the network, in particular including all layers of the backbone, greatly increases performance of the whole network and it's ability to trian.  
-The choice of backbone also seems to play an important role where ResNet18 seems to be too small of a network while any backbone ResNet above or equal to ResNet34 seems to be sufficiently big for the problem.   
-Finally the choice of v2 network seems to increase the speed (in terms of epochs of training) at which the network can converge and increases performance of the model during early epochs of the training while also enabling to model to achieve higher maximum results.  
 
-Taking all of the above into consideration it has been decided to use the v2 of FasterRCNN network with all pretrained weights and all layers unfrozen as the model.  
-
-It should be noted that all of the experiments have been performed using the same hyperparameters which might skew the results. In ideal scenario each network could undergo hyperparameter search and then the results of those would be compared.
-
-## 6.2 Effect of Non Maximum Suppression Threshold on Object Detection {#6.2-effect-of-non-maximum-suppression-threshold-on-object-detection}
+## 6.5 Effect of Non Maximum Suppression Threshold on Object Detection {#6.2-effect-of-non-maximum-suppression-threshold-on-object-detection}
 
 To visualize the effect of non-maximum suppression in the telescope images, the test dataset was analyzed with 3 threshold values (0.3, 0.5 and 0.7) that are represented in the following images from top to bottom. 
 
@@ -532,7 +507,7 @@ The following example, less noisier, also shows how reducing the NMS threshold r
 | ![][image35] |
 | ![][image36] |
 
-## 6.3 Hyperparameter search experiment
+## 6.6 Hyperparameter search experiment
 
 Weights & Biases (W\&B) provides several methods to perform systematic hyperparameter search, each with its own underlying mechanism. Since we already use W\&B to track our model training, metrics, and artifacts, it was a natural choice to also leverage its integrated *sweeps* functionality to automate and manage our hyperparameter experiments. 
 
@@ -543,7 +518,7 @@ Setting up a sweep in W\&B requires defining three main components: (1) the **ob
 
 In the following sections, we provide more details on the three key components mentioned above—(1) the optimization metric, (2) the hyperparameter space, and (3) the search strategy—as applied to our specific experimental setup.
 
-### 6.3.1 Optimization metric and hyperparameter space
+### 6.6.1 Optimization metric and hyperparameter space
 
 In our experiments, the objective metric selected for optimization was mean Average Precision at IoU \= 0.5 (`map_50`). This metric is standard in object detection tasks and captures both classification accuracy and spatial alignment between predicted and ground-truth bounding boxes. We chose `map_50` specifically because it provides a balanced signal in the presence of fuzzy or ambiguous object boundaries, which are common in astronomical imagery.
 
@@ -558,7 +533,7 @@ The hyperparameter space was designed to explore a range of values that are know
 * `early_stopping_patience`: values of 0, 3, and 5  
   This parameter controls how many epochs without improvement are tolerated before stopping. Exploring different values allows us to assess the sensitivity of training time and convergence to early-stopping aggressiveness.
 
-### 6.3.2 Search strategies
+### 6.6.2 Search strategies
 
 W\&B sweeps support several **hyperparameter search strategies**, allowing users to choose how parameter combinations are selected and evaluated during experimentation. Below we summarize the most common search strategies supported by W\&B.
 
@@ -572,7 +547,7 @@ While all search strategies aim to optimize model performance by tuning hyperpar
 
 In our case, we selected **Random Search** as a pragmatic strategy for conducting an initial exploratory sweep. Given the computational cost of each training run (approximately two hours due to the size and complexity of the astronomical image dataset), it was important to adopt a method that could explore the space effectively without requiring prior assumptions about parameter importance or the use of a surrogate model. The goal of this sweep is not to find the global optimum, but rather to gather early insights into the sensitivity and interaction of key hyperparameters within our specific detection task.
 
-### 6.3.3 Implementation
+### 6.6.3 Implementation
 
 Experiments were launched programmatically using wandb.agent, which executes multiple runs by sampling random configurations from the defined space. Each run is handled by a dynamically created wrapper function (sweep\_wrapper), responsible for initializing the W\&B session, extracting the current hyperparameter values, and invoking the training routine (train\_experiment) with those parameters.
 
@@ -581,6 +556,18 @@ To safeguard compute time and prevent inefficient runs, we implemented a custom 
 This mechanism is implemented via the make\_speed\_guard function, which tracks the average training speed from the start of the run. If the iteration rate drops below a defined threshold (set to 0.8 it/s, based on empirical observations of typical training speeds), the run is automatically aborted. A message is logged to W\&B indicating the stop reason ("slow\_speed\_global"), and the process is cleanly terminated. This ensures that compute resources are not wasted on unproductive configurations.
 
 The speed guard is injected into the training loop via the on\_batch\_end callback, and is evaluated once per batch. 
+
+
+## 6.7 Conclusions
+Series of experiments has highlighted the need of using pretrained weights, most importantly for the backbone to be able to effectively train the full network. It was also shown that having pretrained weights for the whole network is not as important as it is for just the backbone. Experiments have also shown that unfreezing all layers of the network, in particular including all layers of the backbone, greatly increases performance of the whole network and it's ability to trian.  
+The choice of backbone also seems to play an important role where ResNet18 seems to be too small of a network while any backbone ResNet above or equal to ResNet34 seems to be sufficiently big for the problem.   
+Finally the choice of v2 network seems to increase the speed (in terms of epochs of training) at which the network can converge and increases performance of the model during early epochs of the training while also enabling to model to achieve higher maximum results.  
+
+Taking all of the above into consideration it has been decided to use the v2 of FasterRCNN network with all pretrained weights and all layers unfrozen as the model.  
+
+It should be noted that all of the experiments have been performed using the same hyperparameters which might skew the results. In ideal scenario each network could undergo hyperparameter search and then the results of those would be compared.
+
+The NMS experiment showed that reducing the NMS threshold might impact possitively in the system performance.
 
 # 7 Results
 
