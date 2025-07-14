@@ -605,7 +605,7 @@ with the following hyperparams:
 
 and training metrics:
 
-| ![](media/OverallSweepMetrics.png) |
+| ![](media/Best sweep metrics.png) |
 
 After comparing the three sweep configurations (`glad sweep 9`, `floral sweep 29`, and `morning sweep 4`), **`glad sweep 9`** stands out as the most balanced and effective setup.
 
