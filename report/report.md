@@ -149,9 +149,23 @@ Taking into account the previous issues a pre-processing of the data was done a 
 
 Examples of the labels after the 1 by 1 inspection:
 
-| ESO, example of a saturated object | Profiles of the normalized flux |
-| ----- | :---- |
-| ![][image15] | ![][image16]![][image17] |
+
+
+<table>
+  <tr>
+    <th style="text-align:center">ESO, example of a saturated object</th>
+    <th style="text-align:center">Profiles of the normalized flux</th>
+  </tr>
+  <tr>
+    <td style="vertical-align:top; text-align:center">
+      <img src="media/saturation.PNG" width="400"/>
+    </td>
+    <td style="vertical-align:top; text-align:center">
+      <img src="media/nearly_saturated_profile.PNG" width="300"/><br/>
+      <img src="media/super_saturated_profile.PNG" width="300"/>
+    </td>
+  </tr>
+</table>
 
 | ESO, COMET | TRACE | GALAXY | ESO |
 | :---- | :---- | :---- | ----- |
