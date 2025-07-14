@@ -107,11 +107,12 @@ Examples of defects and **variability** of the data:
 
 Different illumination patterns and “contrast” between images due to different exposition time, different filters and different background illumination (sky luminosity counts). If the moon is near, or the object is near the twilight it can affect the background counts.
 
-| Saturated objects may appear | Gradient in the background  illumination | A trace from a comet | A galaxy with high ellipticity |
-| :---- | :---- | :---- | :---- |
-| ![][image5] | ![][image6] | ![][image7] | ![][image8] |
+| Saturated objects may appear | Gradient in the background illumination | A trace from a comet | A galaxy with high ellipticity |
+|:-----------------------------:|:----------------------------------------:|:---------------------:|:-----------------------------:|
+| ![](media/ESO_2.PNG) | ![](media/2_gradient.PNG) | ![](media/2_comet.png) | ![](media/2_galaxy.PNG) |
 
-| A big galaxy with high elipticity and different size | Different background and appearance of the object due to the use of two different filters |
+
+| A big galaxy with high elipticity and different sizes | | A big galaxy with high elipticity and different sizes |Different background and appearance of the object due to the use of two different filters |Different background and appearance of the object due to the use of two different filters |
 | ----- | ----- |
 | ![][image9] | ![][image10] |
 
