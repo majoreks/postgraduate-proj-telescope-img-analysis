@@ -290,6 +290,8 @@ Measures how well the RPN’s proposed anchors are localized (i.e. shifted and s
 
 $$
 \ell = 0.5(x-y)^2,\ if\ |x-y|\lt1\ \\
+$$
+$$
 \ell = |x-y|-0.5, \ otherwise
 $$
 
