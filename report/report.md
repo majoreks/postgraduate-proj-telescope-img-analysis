@@ -123,7 +123,7 @@ After the observation campaign in the telescope, images are processed with a pro
 
 ![][image11]
 
-This catalogue has astronomical information about the observed objects such as luminosity, position in the sky, ellipticity of the objects, etc. As other telescopes over the world, it follows the sextractor format \[ref 3\]. However, there are some issues regarding this file:
+This catalogue has astronomical information about the observed objects such as luminosity, position in the sky, ellipticity of the objects, , and other astrophysical features. As other telescopes over the world, it follows the unified sextractor format \[ref 3\]. However, there are some potential issues related to this file when handling a huge amount of data:
 
 **Incorrect or incomplete annotations**, including:
 
@@ -131,9 +131,10 @@ This catalogue has astronomical information about the observed objects such as l
 2. Poorly defined bounding boxes, especially for medium and large objects.  
 3. **Mismanaged or missing metadata**, which prevented automation of tasks such as duplicate detection and **labels with semantic or spatial errors**, which negatively impacted training and metric evaluation.
 
-| Example of issue 2\) | Example of issue 2\) | Example of issue 3\) |
-| :---- | :---- | :---- |
-| ![][image12] | ![][image13] | ![][image14] |
+| Example of issue 2) | Example of issue 2) | Example of issue 3) |
+|:-------------------:|:-------------------:|:-------------------:|
+| ![](media/halfBB.png) | ![](media/KO_few_BB.png) | ![](media/not_understandable.png) |
+
 
 ## 2.3 Dataset Preprocessing Procedure
 
