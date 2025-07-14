@@ -62,9 +62,9 @@
 
 # 
 
-# 1 INTRODUCTION
+# 1 Introduction
 
-## 1.1 Motivation: PROBLEM TO SOLVE
+## 1.1 Motivation: Problem to solve
 
 We have used Artificial Intelligence and DL algorithms to solve the problem of **automatic detection of relevant astrophysical objects (such as stars, galaxies, or cosmic structures)** in telescope images from Joan Oró in the Montsec Observatory \[ref 1\] — a task that is **highly challenging due to the variability, noise, and complexity of the data**.
 
@@ -81,7 +81,7 @@ Using **deep learning object detection models** (Faster R-CNN with ResNet backbo
 * Evaluating predictions using robust metrics (mAP, IoU),  
 * Automatically adjusting to different detection thresholds (via NMS and hyperparameter tuning).
 
-# 2 JOAN ORÓ TELESCOPE DATASET
+# 2 Joan Oró Telescope Dataset
 
 The Team has worked with a set of **astronomical images**, both **raw** and **pre-processed**, with the goal of detecting **relevant astrophysical objects**, such as **stars**, **galaxies**, or other celestial bodies.
 
@@ -179,13 +179,11 @@ In both cases it can be seen that there are extreme outliers heavily skewing the
 
 ### 2.3.2 Image selection, splitting, and cropping
 
-In case any image is found without ground truth, it is set apart from the training dataset, so they still can be used for inference. Right after, the images are hard splitted as 81% train, 9% validation, and 10% test.
-
 In the cleaned dataset the average size of an object is 319.46 pixels² which gives an average ratio of object to the image of 0.00001899 with around 345 objects per image on average. In order to reduce computation resources, as well as reduce the number of objects per image and increase the relative size of objects to the image, the images are split into 512x512 pixel images (configurable), and information on the cropping coordinates is added to the product metadata. A “cropped” version of the ground truth is also generated including only the entries in the cropped region, removing any position offset. If no entries are available at a given crop, neither the cropped image or the cropped ground truth are saved. Such cropping should not negatively affect the information in the image since the objects themselves are not affected by the global context and are relevant only in their local surroundings.
 
 After this operation the average size of an object stays nearly the same at 319.48 pixels² (difference most likely coming from edge cases handling), however the average ratio of an object to an image increases to 0.00121871 and the average number of objects per image drops down to around 48.
 
-After the hard cropping, a total of 1728 images were generated for training, 192 for validation, and 187 for test. Note that these numbers do not match the percentages mentioned above because the crops removed for lacking objects inside.
+In case any image is found without ground truth, it is set apart from the training dataset, so they still can be used for inference. Right after, the images are hard splitted as 81% train, 9% validation, and 10% test. After the hard cropping, a total of 1728 images were generated for training, 192 for validation, and 187 for test. Note that these numbers do not match the percentages mentioned above because the crops removed for lacking objects inside.
 
 
 # 3 Working environment
@@ -607,7 +605,7 @@ WIP (no results until the sweep is done)
 * Results visualized and compared across architectures and settings
 
 
-# 9 CONCLUSIONS
+# 8 Conclusions
 
 IMAGES SHOWING THE RESULTS  
 	Same dataset with differents amount of data → try with differents croppings \[see what happens\]
