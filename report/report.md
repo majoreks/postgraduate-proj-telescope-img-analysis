@@ -537,6 +537,8 @@ The hyperparameter space was designed to explore a range of values that are know
 * `early_stopping_patience`: values of 0, 3, and 5  
   This parameter controls how many epochs without improvement are tolerated before stopping. Exploring different values allows us to assess the sensitivity of training time and convergence to early-stopping aggressiveness.
 
+The NMS threshold was setted to its default value of 0.5.
+
 ### 6.6.2 Search strategies
 
 W\&B sweeps support several **hyperparameter search strategies**, allowing users to choose how parameter combinations are selected and evaluated during experimentation. Below we summarize the most common search strategies supported by W\&B.
@@ -560,6 +562,58 @@ To safeguard compute time and prevent inefficient runs, we implemented a custom 
 This mechanism is implemented via the make\_speed\_guard function, which tracks the average training speed from the start of the run. If the iteration rate drops below a defined threshold (set to 0.8 it/s, based on empirical observations of typical training speeds), the run is automatically aborted. A message is logged to W\&B indicating the stop reason ("slow\_speed\_global"), and the process is cleanly terminated. This ensures that compute resources are not wasted on unproductive configurations.
 
 The speed guard is injected into the training loop via the on\_batch\_end callback, and is evaluated once per batch. 
+
+### 6.6.4 Results
+
+After 1080 minutes, 30 consecutive attemps were performed: 13 of them ended succesfully while the remaining 17 were aborted following the logic explained before. The impact on the `map_50` is summarized in the following figure:
+
+| ![](media/OverallSweepMetrics.png) |
+
+The top 3 sweeps resulted:
+
+| ![](media/Best3Sweeps.png) |
+
+with the following hyperparams:
+
+**glad sweep 9**
+
+- `batch_size`: **4**  
+- `learning_rate`: **0.0013667879172987514**  
+- `weight_decay`: **5e-05**  
+- `early_stopping_patience`: **12**  
+- **mAP@50 achieved**: **0.844**
+
+---
+
+**floral sweep 29**
+
+- `batch_size`: **4**  
+- `learning_rate`: **0.0003166274749696138**  
+- `weight_decay`: **0.0001**  
+- `early_stopping_patience`: **5**  
+- **mAP@50 achieved**: **0.838**
+
+---
+
+**morning sweep 4**
+
+- `batch_size`: **4**  
+- `learning_rate`: **0.0013667879172987514**  
+- `weight_decay`: **5e-05**  
+- `early_stopping_patience`: **12**  
+- **mAP@50 achieved**: **0.824**
+
+and training metrics:
+
+| ![](media/OverallSweepMetrics.png) |
+
+After comparing the three sweep configurations (`glad sweep 9`, `floral sweep 29`, and `morning sweep 4`), **`glad sweep 9`** stands out as the most balanced and effective setup.
+
+Although `floral sweep 29` exhibits the lowest training losses across most components (`loss_rpn_box_reg`, `loss_box_reg`, `loss_classifier`, and `loss_objectness`), this did **not** translate into the highest validation performance. In contrast, `glad sweep 9` achieved the **highest mAP@50 score of 0.844**, outperforming the others in terms of generalization.
+
+Additionally, the loss curves of  are smooth and stable, indicating consistent convergence without signs of overfitting or underfitting. Indeed,  `glad sweep 9` has the same hyperparameter configuration as `morning sweep 4`, except for the early stopping patience, which suggests that **early stopping was better tuned in `glad sweep 9`**.
+
+In summary, **`glad sweep 9` is the best candidate**, as it strikes the most effective balance between training stability and validation performance.
 
 
 ## 6.7 Conclusions
