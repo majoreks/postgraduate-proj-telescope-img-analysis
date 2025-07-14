@@ -250,7 +250,7 @@ For data augmentation, originally images were cropped to get 1 image of 512x512 
 The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing the number of regions of interest proposed by the region proposal network. The algorithm is based on the Intersection over Union metric (IoU) as the intersection of two bounding boxes divided by their union. If the value is over the given threshold (0.5 by default), the two boxes are considered to be covering the same object, and the smaller one is chosen. The threshold can be changed by modifying the variable:
 
 ```py
-model.roi\_heads.nms\_thresh 
+model.roi_heads.nms_thresh 
 ```
 
 If objects tend to be too close, the NMS algorithm might propose just one region for the two objects. Furthermore, experiments in this project showed that noisier images tend to show more proposed ROIs over the same object, so the NMS threshold should be adjusted.
@@ -625,7 +625,8 @@ Comment as an expert to tell about the quality metrics (not in the report) → q
 
 \[3\_cris\] Bertin, E., & Arnouts, S. (n.d.). *SExtractor Configuration Guide*. Retrieved from [https://sextractor.readthedocs.io/en/latest/Config.html](https://sextractor.readthedocs.io/en/latest/Config.html)
 
-\[1\] Wu, C., Wong, O. I., Rudnick, L., Shabala, S. S., Alger, M. J., Banfield, J. K., Ong, C. S., White, S. V., Garon, A. F., Norris, R. P., Andernach, H., Tate, J., Lukic, V., Tang, H., Schawinski, K., & Diakogiannis, F. I. (2018). Radio Galaxy Zoo: CLARAN – A deep learning classifier for radio morphologies. Monthly Notices of the Royal Astronomical Society, 482(1), 1211–1230. https://doi.org/10.1093/mnras/sty2646  
+\[1\] Wu, C., Wong, O. I., Rudnick, L., Shabala, S. S., Alger, M. J., Banfield, J. K., Ong, C. S., White, S. V., Garon, A. F., Norris, R. P., Andernach, H., Tate, J., Lukic, V., Tang, H., Schawinski, K., & Diakogiannis, F. I. (2018). Radio Galaxy Zoo: CLARAN – A deep learning classifier for radio morphologies. Monthly Notices of the Royal Astronomical Society, 482(1), 1211–1230. https://doi.org/10.1093/mnras/sty2646
+
 \[2\]  Burke, C. J., Aleo, P. D., Chen, Y.-C., Liu, X., Peterson, J. R., Sembroski, G. H., & Lin, J. Y.-Y. (2019). Deblending and classifying astronomical sources with Mask R-CNN deep learning. Monthly Notices of the Royal Astronomical Society, 490(3), 3952–3965. [https://doi.org/10.1093/mnras/stz2845](https://doi.org/10.1093/mnras/stz2845)
 
 \[3\] Sortino, R., Magro, D., Fiameni, G., Sciacca, E., Riggi, S., DeMarco, A., Spampinato, C., Hopkins, A. M., Bufano, F., Schillirò, F., Bordiu, C., & Pino, C. (2023). Radio astronomical images object detection and segmentation: A benchmark on deep learning methods. Experimental Astronomy, 56(1), 293–331. [https://doi.org/10.1007/s10686-023-09893-w](https://doi.org/10.1007/s10686-023-09893-w)
