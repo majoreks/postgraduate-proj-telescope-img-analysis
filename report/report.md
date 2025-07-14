@@ -289,7 +289,7 @@ Loss calculation is handled by FasterRCNN internals out of the box without any p
 Measures how well the RPN’s proposed anchors are localized (i.e. shifted and scaled) to better fit ground-truth boxes. Calculated using smooth L1 loss
 
 $$
-\ell = \begin{cases} 0.5(x-y)^2,\ if\ |x-y|<1\\|x-y|-0.5,\ otherwise \end{cases}
+\ell = \begin{cases} 0.5(x-y)^2,\ if\ |x-y|\lt1\\|x-y|-0.5,\ otherwise \end{cases}
 $$
 
 ### loss_objectness
