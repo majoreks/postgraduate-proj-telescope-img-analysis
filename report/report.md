@@ -286,23 +286,29 @@ In this chapter, we introduce the concept of a loss criterion as the guiding sig
 Loss calculation is handled by FasterRCNN internals out of the box without any particular changes for the purposes of this project.
 
 ### loss_rpn_box_reg
-Measures how well the RPN’s proposed anchors are localized (i.e. shifted and scaled) to better fit ground-truth boxes. Calculated using smooth L $_{1}$ loss
+Measures how well the RPN’s proposed anchors are localized (i.e. shifted and scaled) to better fit ground-truth boxes. Calculated using smooth L1 loss
 
 $$
-\ell=\begin{cases} 0.5(x-y)^2,\ if\ |x-y|<1\\|x-y|-0.5,\ otherwise  \end{cases}
+\ell = \begin{cases} 0.5(x-y)^2,\ if\ |x-y|<1\\|x-y|-0.5,\ otherwise \end{cases}
 $$
+
 ### loss_objectness
 Measures how well the RPN (Region Proposal Network) distinguishes “object” vs. “background” for each anchor. Calculated using binary cross-entropy on each anchor’s predicted objectness score 
+
 $$
 \ell​=−\frac{1}{N}\sum_{i=1}^{N}[y\log{p}+(1−y)\log{(1−p)}]
 $$
+
 ### loss_classifier
 Measures how well the final detection head assigns each proposed RoI to one of the KK object classes (or background). Calculated using multiclass cross-entropy over $K+1$ outputs (one per class plus background)
+
 $$
 \ell = -\sum_{c=0}^{K} \mathbf{1}\{c = c^*\}\,\log p_{c}
 $$
+
 ### loss_box_reg
-Measures how accurately the final head refines each positive RoI’s box to match the ground-truth. Calculated by using smooth L $_{1}$ loss on the 4-parameter offsets for the correct class of each positive RoI. 
+Measures how accurately the final head refines each positive RoI’s box to match the ground-truth. Calculated by using smooth L1 loss on the 4-parameter offsets for the correct class of each positive RoI.  
+
 $$
 \ell = \sum_{i\in{x,y,w,h}}​smooth_{L_{1}}​(t_{i}​−t_{i}^{∗}​)
 $$
