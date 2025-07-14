@@ -173,7 +173,21 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
 def inference(config, tempdir, device, save_fig=True):
     
+    data_transforms = A.Compose([A.ToTensorV2()], 
+                                 bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
+                                                          filter_invalid_bboxes=True))
+
+    
+    # torch.manual_seed(42*42)
+    # test_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
+    # dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
+    # _ , t_dataset = torch.utils.data.random_split(dataset, config['train_val_split'])
+    # test_loader = DataLoader(t_dataset, batch_size=1, collate_fn=custom_collate_fn)
+
     test_data_path = os.path.join(config["data_path"], "test_dataset_cropped")
+    dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
+    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
+
 
     print('inference', test_data_path)
     print('-----')
@@ -183,14 +197,6 @@ def inference(config, tempdir, device, save_fig=True):
     else:
         print("El directorio existe.")
 
-    
-    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.ToTensorV2()], 
-                                 bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
-                                                          filter_invalid_bboxes=True))
-
-
-    dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
-    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     # download_model_data()
     # model = load_model(device, config=config, load_weights=True)
@@ -282,6 +288,17 @@ def inference(config, tempdir, device, save_fig=True):
     output_path = os.path.join(tempdir, "results.pt")
     torch.save(results, output_path)
     print(f"\nResultados guardados en: {output_path}")
+
+    # import matplotlib.pyplot as plt
+    # import numpy as np
+    # plt.figure(figsize=(10, 5))
+    # plt.hist(np.asarray(BBpredictions)-np.asarray(BBtargets), bins=50, alpha=0.5, label='BB Targets', color='blue')
+    # plt.title('Histogram of #N Predicted Bounding Boxes - #N Ground Truth Bouding Boxes')
+    # plt.grid()
+    # plt.xlabel('Difference (Predicted - Ground Truth)')
+    # plt.ylabel('Frequency')
+    # plt.savefig(os.path.join(config['output_path'], "histogram_BB_predictions_vs_targets.png"))
+    # plt.close()
 
     #avaluar el model sobre les dades de test:
         #1. filtrar objecte dataset a la regió test del dataset (szimon to harmonize)
