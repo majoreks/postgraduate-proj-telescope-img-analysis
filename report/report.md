@@ -267,7 +267,6 @@ If objects tend to be too close, the NMS algorithm might propose just one region
 
 * `batch_size`: \[4, 8, 16\]
 * `learning_rate`: log-uniform \[1e-6 to 1e-2\]
-* `nms_threshold`: \[0.3, 0.5, 0.7\]
 * `early_stopping_patience`: \[0, 3, 5\]
 * `weight_decay`: \[1e-5, 1e-4, 1e-2\]
 
