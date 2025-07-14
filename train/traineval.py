@@ -6,7 +6,7 @@ from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
 from logger.logger import Logger
 from model.load_model import load_model
-from model.load_model_v2 import load_model_v2
+from model.load_model_v2 import load_model_v2, read_model_v2
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -14,7 +14,6 @@ from torchmetrics.functional.detection import intersection_over_union
 from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
 from train.EarlyStopping import EarlyStopping
-from postprocess.metrics import compute_confusion_matrix, plot_confusion_matrix
 
 
 early_stopping_metric = "map_50"
@@ -194,8 +193,12 @@ def inference(config, tempdir, device, save_fig=True):
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
     # download_model_data()
-    model = load_model(device, config=config, load_weights=True)
-    model = read_model(model, device)
+    # model = load_model(device, config=config, load_weights=True)
+    # model = read_model(model, device)
+
+    model = load_model_v2(device, config)
+    model = read_model_v2(model, device)
+
 
     nms_threshold  = config['nms_threshold']
     model.roi_heads.nms_thresh = nms_threshold

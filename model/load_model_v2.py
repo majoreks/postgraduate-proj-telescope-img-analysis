@@ -8,6 +8,9 @@ from model.FasterRCNN import FasterRCNN
 from model.TwoMLPHead import TwoMLPHead
 from model.model_reader import read_model
 
+save_path = 'output/model/model_weights.pt'
+
+
 in_size = 256*7*7
 representation_size = 1024
 num_classes_pretrained = 91
@@ -67,4 +70,9 @@ def load_model_v2(device: torch.device, config:dict, load_weights: bool = False,
 
     model = model.to(device)
     
+    return model
+
+def read_model_v2(model: nn.Module, device: torch.device, path: str | None = None) -> nn.Module:
+    params = torch.load(save_path if path is None else path, map_location=device)
+    model.load_state_dict(params)
     return model
