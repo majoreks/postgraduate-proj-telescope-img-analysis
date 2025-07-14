@@ -147,8 +147,7 @@ Taking into account the previous issues a pre-processing of the data was done a 
 * Correction or removal of faulty bounding boxes.  
 * Skip objects that saturate the detector and cannot be considered ***relevant objects*** or ***scientific objects,*** which will be labelled as ESO (example of saturated object).
 
-Examples of the labels after the 1 by 1 inspection:
-
+Examples of the labels linked to the image files after a 1 by 1 inspection of the images:
 
 
 <table>
@@ -166,6 +165,9 @@ Examples of the labels after the 1 by 1 inspection:
     </td>
   </tr>
 </table>
+
+In the following table labels are summarized to illustrate variability of the data. 
+
 | ESO, COMET | TRACE | GALAXY | ESO |
 |:----------:|:-----:|:------:|:---:|
 | ![](media/ESO_comet.png) | ![](media/trace_2.png) | ![](media/spiral_galaxy.png) | ![](media/burned_det.PNG) |
@@ -174,7 +176,7 @@ Examples of the labels after the 1 by 1 inspection:
 
 | BINARY | LIGHT |
 | :---- | :---- |
-| ![][image26] | ![][image27] |
+| ![](binary_ESO.png) | ![](media/light_2.png) |
 
 This processing gives as a result a generation of a **clean, high-quality dataset** with [labels associated to the file](https://drive.google.com/drive/folders/1bJ2Juznn3Gzg7jkGEJmCCFB1bcMXFdFk?usp=drive_link), in order to filter datasets and being able to generate controlled and labelled ground truth to perform the experiments:
 
