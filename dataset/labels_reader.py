@@ -61,8 +61,8 @@ def read_labels(labels_path: str, pixel_scale: float) -> pd.DataFrame:
     labels_df = labels_df[(labels_df[DAT_FLAGS_KEY] == 0) & (labels_df[DAT_FLUX_KEY] != 99.0) & (labels_df[DAT_FLUX_KEY] > 0) & (labels_df[DAT_FLUX_KEY] < 50000)]
 
     if len(labels_df) > 0:
-        labels_df[COORDINATES_KEYS] = labels_df.apply(calculate_bbox, axis=1, pixel_scale=pixel_scale)
-        labels_df[CLASSES_KEYS] = labels_df.apply(calculate_class, axis=1)
+        labels_df.loc[:, COORDINATES_KEYS] = labels_df.apply(calculate_bbox, axis=1, pixel_scale=pixel_scale)
+        labels_df.loc[:, CLASSES_KEYS] = labels_df.apply(calculate_class, axis=1)
 
     else:
         labels_df[[*COORDINATES_KEYS, *CLASSES_KEYS]] = None

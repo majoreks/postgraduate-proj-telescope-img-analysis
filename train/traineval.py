@@ -182,7 +182,7 @@ def inference(config, tempdir, device, save_fig=True):
         print("El directorio existe.")
 
     
-    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.ToTensorV2()], 
+    data_transforms = A.Compose([A.ToTensorV2()], 
                                  bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
                                                           filter_invalid_bboxes=True))
 
@@ -193,6 +193,10 @@ def inference(config, tempdir, device, save_fig=True):
     download_model_data()
     model = load_model(device, config=config, load_weights=True)
     model = read_model(model, device)
+
+    nms_threshold  =config['nms_threshold']
+    model.roi_heads.nms_thresh = nms_threshold
+
     model.eval()
 
     print(f"Número de muestras cargadas: {len(dataset)}")
@@ -226,7 +230,12 @@ def inference(config, tempdir, device, save_fig=True):
 
             # Saves the inference plotted image
             if save_fig:
-                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=f"{idx}_{filename}", title_sufix=filename)              
+                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, 
+                                               labels_ground_truth=ground_truth, 
+                                               save_fig=True, 
+                                               save_fig_sufix=f"{idx}_{filename}", 
+                                               output_path=config["output_path"],
+                                               title_sufix=filename)              
 
             # Almacenar resultados
             results.append({
