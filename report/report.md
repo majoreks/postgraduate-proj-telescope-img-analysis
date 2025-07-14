@@ -166,11 +166,11 @@ Examples of the labels after the 1 by 1 inspection:
     </td>
   </tr>
 </table>
-
 | ESO, COMET | TRACE | GALAXY | ESO |
-| :---- | :---- | :---- | ----- |
-| ![][image18] | ![][image19] | ![][image20] | ![][image21] |
-| ![][image22] | ![][image23] | ![][image24] | ![][image25] |
+|:----------:|:-----:|:------:|:---:|
+| ![](media/ESO_comet.png) | ![](media/trace_2.png) | ![](media/spiral_galaxy.png) | ![](media/burned_det.PNG) |
+| ![](media/comet_2.png) | ![](media/traza_duda.png) | ![](media/BBsize_OK_galaxy.PNG) | ![](media/perfect_definitionofBB_3.png) |
+
 
 | BINARY | LIGHT |
 | :---- | :---- |
