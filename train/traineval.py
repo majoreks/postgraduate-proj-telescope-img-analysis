@@ -14,6 +14,8 @@ from torchmetrics.functional.detection import intersection_over_union
 from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
 from train.EarlyStopping import EarlyStopping
+from postprocess.metrics import compute_confusion_matrix, plot_confusion_matrix
+
 
 early_stopping_metric = "map_50"
 
@@ -191,14 +193,32 @@ def inference(config, tempdir, device, save_fig=True):
     dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
-    download_model_data()
+    # download_model_data()
     model = load_model(device, config=config, load_weights=True)
     model = read_model(model, device)
+
+    nms_threshold  = config['nms_threshold']
+    model.roi_heads.nms_thresh = nms_threshold
+
     model.eval()
 
     print(f"Número de muestras cargadas: {len(dataset)}")
 
+    start = 0.3 * config["box_detections_per_img"]
+    end = config["box_detections_per_img"]
+    detection_thresholds = [
+        int(start),
+        int((start + end) / 2),
+        int(end)
+    ]
+    mAPMetric = MeanAveragePrecision(iou_type="bbox", max_detection_thresholds=detection_thresholds, backend='faster_coco_eval')
+    mAPMetric.reset()
+    ious_dim0 = []
+    ious_dim1 = []
+
     results = []
+    BBtargets = []
+    BBpredictions = []
 
     with torch.no_grad():
         for idx, (images, targets) in enumerate(test_loader):
@@ -215,6 +235,12 @@ def inference(config, tempdir, device, save_fig=True):
 
             # Obtener predicciones del modelo
             predictions, _ = model(images, targets)
+            mAPMetric.update(predictions, targets)
+
+            for pred, target in zip(predictions, targets):
+                iou = intersection_over_union(pred["boxes"], target["boxes"], aggregate=False)
+                ious_dim0.append(iou.max(dim=0).values)
+                ious_dim1.append(iou.max(dim=1).values)
 
             # Aux variables
             image=images[0].cpu().numpy()
@@ -224,6 +250,9 @@ def inference(config, tempdir, device, save_fig=True):
 
             # Print results from the model
             print(f"[{idx}] Image {filename} GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
+
+            BBtargets.append(len(targets[0]['boxes']))
+            BBpredictions.append(len(predictions[0]['boxes']))
 
             # Saves the inference plotted image
             if save_fig:
@@ -237,6 +266,14 @@ def inference(config, tempdir, device, save_fig=True):
                 'prediction': prediction,  # dict con 'boxes', 'labels', 'scores'
                 'filename': filename  # nombre del archivo de imagen
             })
+
+    mAPMetrics = mAPMetric.compute()
+    mAPMetrics.pop("classes", None)
+
+    iou_dim0 = torch.cat(ious_dim0).mean()       # 1-D tensor of length = sum of all element-counts
+    iou_dim1 = torch.cat(ious_dim1).mean()
+
+    print(f"Inference completed. mAP Metrics: {mAPMetrics}, IOU Metrics: {iou_dim0}, {iou_dim1}")
 
     # Opcional: guardar en disco como torch.save
     output_path = os.path.join(tempdir, "results.pt")
