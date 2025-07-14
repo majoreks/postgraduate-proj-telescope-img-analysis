@@ -101,8 +101,9 @@ The dataset has two big blocks: the *.fits* images and the ground truth, which i
 Examples of defects and **variability** of the data:
 
 | A satellite can be detected | Depending on the readout, different regions of the detector can have different biases | Example of fringes due to illumination in the background or filter defect | Examples of fringes II |
-| ----- | ----- | ----- | ----- |
-| ![][image1] | ![][image2] | ![][image3] | ![][image4] |
+|:----------------------------:|:--------------------------------------------------------:|:--------------------------------------------------------------:|:---------------------:|
+| ![satellite](media/1_sat.png) | ![zones](media/2_zones.PNG) | ![fringes](media/3_fringes.PNG) | ![pattern](media/pattern4.PNG) |
+
 
 Different illumination patterns and “contrast” between images due to different exposition time, different filters and different background illumination (sky luminosity counts). If the moon is near, or the object is near the twilight it can affect the background counts.
 
