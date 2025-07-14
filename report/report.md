@@ -187,7 +187,7 @@ In case any image is found without ground truth, it is set apart from the traini
 
 
 # 3 Working environment
-The project was developed on local machines. Training and experiments were done using both local consumer machine with GPU (RTX 4070 Ti), Google Colab and Google Compute Engine to be able to use more powerful machines and perform different experiments in parallel.
+The project was developed on local machines. Training and experiments were done using both local consumer machines with GPU RTX 4070 Ti and GPU NVIDIA GeForce RTX 4070 Ti Supe (respectively), Google Colab and Google Compute Engine to be able to use more powerful machines and perform different experiments in parallel.
 
 Wandb was used for logging purposes. Train runs by default are logged to common wandb project where they can be inspected and compared. 
 
