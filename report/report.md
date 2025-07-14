@@ -580,7 +580,7 @@ with the following hyperparams:
 - `batch_size`: **4**  
 - `learning_rate`: **0.0013667879172987514**  
 - `weight_decay`: **5e-05**  
-- `early_stopping_patience`: **12**  
+- `early_stopping_patience`: **5**  
 - **mAP@50 achieved**: **0.844**
 
 ---
