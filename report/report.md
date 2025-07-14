@@ -112,13 +112,14 @@ Different illumination patterns and “contrast” between images due to differe
 | ![](media/ESO_2.PNG) | ![](media/2_gradient.PNG) | ![](media/2_comet.png) | ![](media/2_galaxy.PNG) |
 
 
-| A big galaxy with high elipticity and different sizes | | A big galaxy with high elipticity and different sizes |Different background and appearance of the object due to the use of two different filters |Different background and appearance of the object due to the use of two different filters |
-| ----- | ----- |
-| ![][image9] | ![][image10] |
+| A big galaxy with high ellipticity and different sizes | A big galaxy with high ellipticity and different sizes | Different background and appearance of the object due to the use of two different filters | Different background and appearance of the object due to the use of two different filters |
+|:------------------------------------------------------:|:------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|
+| ![](media/Gal_1.PNG) | ![](media/gal_2.PNG) | ![](media/gal_3.PNG) | ![](media/gal_4.PNG) |
+
 
 ## 2.2 Ground truth characteristics
 
-After the observation, images are processed with a professional pipeline in the telescope and every image acquires (or should be paired to) its catalogue, a .dat file that is saved with the image. 
+After the observation campaign in the telescope, images are processed with a professional pipeline in the telescope and every image acquires (or should be paired to) its catalogue, a .dat file that is saved together with the image and will be provided later as a dataset. 
 
 ![][image11]
 
