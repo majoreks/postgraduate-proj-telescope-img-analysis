@@ -245,15 +245,7 @@ Data augmentation is conducted using the Albumentations library, which allows to
 
 For data augmentation, originally images were cropped to get 1 image of 512x512 pixels ensuring at least one bounding box,, and  then randomly rotated from 0º to 270º in steps of 90º. After many images were discarded from manual filtering, the images were hard cropped into subimages of 512x512 to overcome the drastic decrease of useful data.
 
-## 4.5 Non Maximum Suppression Threshold adjustment
 
-The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing the number of regions of interest proposed by the region proposal network. The algorithm is based on the Intersection over Union metric (IoU) as the intersection of two bounding boxes divided by their union. If the value is over the given threshold (0.5 by default), the two boxes are considered to be covering the same object, and the smaller one is chosen. The threshold can be changed by modifying the variable:
-
-```py
-model.roi_heads.nms_thresh 
-```
-
-If objects tend to be too close, the NMS algorithm might propose just one region for the two objects. Furthermore, experiments in this project showed that noisier images tend to show more proposed ROIs over the same object, so the NMS threshold should be adjusted.
 
 ## 4.6 Checkpoints and Early Stopping
 
@@ -497,19 +489,45 @@ According to the experiment the v2 model does give a boost in performance compar
 
 ## 6.5 Effect of Non Maximum Suppression Threshold on Object Detection
 
-To visualize the effect of non-maximum suppression in the telescope images, the test dataset was analyzed with 3 threshold values (0.3, 0.5 and 0.7) that are represented in the following images from top to bottom. 
+The Non-Maximum Suppresion (NMS) algorithm threshold is responsible for reducing the number of regions of interest proposed by the region proposal network. The algorithm is based on the Intersection over Union metric (IoU) as the intersection of two bounding boxes divided by their union. If the value is over the given threshold (0.5 by default), the two boxes are considered to be covering the same object, and the smaller one is chosen. The threshold can be changed by modifying the variable:
 
-In the following noisy image, it can be seen how by increasing the NMS threshold increases the number of predictions in the same object, clearly seen in the object cluster at (x,y) \~ (110,50), (250, 0), and (500, 0).
+```py
+model.roi_heads.nms_thresh 
+```
+If objects tend to be too close, the NMS algorithm might propose just one region for the two objects. Furthermore, experiments in this project showed that noisier images tend to show more proposed ROIs over the same object, so the NMS threshold should be adjusted.
 
-| ![](media/noisy03.png) |
-| ![](media/noisy05.png) |
-| ![](media/noisy07.png) |
+### 6.5.1 Hypothesis
 
-The following example, less noisier, also shows how reducing the NMS threshold results in less redundant objects detected, such as in (x,y) \~ (220, 480\) or in (450,25).
+Reducing the threshold implies that less overlapping is required to reduce two bounding boxes. There will be less duplicated boxes but we risk to miss objects close together.
 
-| ![](media/clean03.png) |
-| ![](media/clean05.png) |
-| ![](media/clean07.png) |
+### 6.5.2 Setup
+
+The v1 network with ResNet50 is used. To visualize the effect of non-maximum suppression in the telescope images, the test dataset is analyzed with 3 threshold values (0.3, 0.5 and 0.7) that are represented in the following images from top to bottom. 
+
+### 6.5.3 Results
+
+In the following noisy image, it can be seen how by increasing the NMS threshold increases the number of predictions in the same object, clearly seen in the object clusters at (x,y) \~ (110,50), (250, 0), and (500, 0).
+<figure>
+  <div align="center">
+    <img src ="media/noisy03.png" width="33%" /><img src ="media/noisy05.png" width="33%" /><img src ="media/noisy07.png" width="33%" />
+  </div>
+  <figcaption align="center">From left to right, NMS threshold = 0.3, 0.5, and 0.7, respectively. Check the object cluster at (x,y) \~ (110,50) Bottom-Left, (250, 0) Bottom-Center, and (500, 0) Bottom-Right.</figcaption>
+</figure>
+
+
+The following example, less noisier, also shows how reducing the NMS threshold results in less redundant objects detected, such as in (x,y) \~ (220, 480) Top-Center, or in (450,25) Bottom-Right.
+
+<figure>
+  <div align="center">
+    <img src ="media/clean03.png" width="33%" /><img src ="media/clean05.png" width="33%" /><img src ="media/clean07.png" width="33%" />
+  </div>
+  <figcaption align="center">From left to right, NMS threshold = 0.3, 0.5, and 0.7, respectively. Check the object cluster at (x,y) \~ (220, 480) or in (450,25).</figcaption>
+</figure>
+
+### 6.5.4 Conclusions
+
+Decreasing the threshold to 0.3 reduces the number of redundant regions of interest but does not seem to 
+
 
 ## 6.6 Hyperparameter search experiment
 
