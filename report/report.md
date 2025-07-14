@@ -578,8 +578,8 @@ with the following hyperparams:
 **glad sweep 9**
 
 - `batch_size`: **4**  
-- `learning_rate`: **0.0013667879172987514**  
-- `weight_decay`: **5e-05**  
+- `learning_rate`: **0.0003166274749696138**  
+- `weight_decay`: **0.0001**  
 - `early_stopping_patience`: **5**  
 - **mAP@50 achieved**: **0.844**
 
@@ -588,9 +588,9 @@ with the following hyperparams:
 **floral sweep 29**
 
 - `batch_size`: **4**  
-- `learning_rate`: **0.0003166274749696138**  
-- `weight_decay`: **0.0001**  
-- `early_stopping_patience`: **5**  
+- `learning_rate`: **7.211259175962656e-05**  
+- `weight_decay`: **0**  
+- `early_stopping_patience`: **10**  
 - **mAP@50 achieved**: **0.838**
 
 ---
@@ -603,17 +603,13 @@ with the following hyperparams:
 - `early_stopping_patience`: **12**  
 - **mAP@50 achieved**: **0.824**
 
+---
+
 and training metrics:
 
 | ![](media/Best_training_metrics.png) |
 
-After comparing the three sweep configurations (`glad sweep 9`, `floral sweep 29`, and `morning sweep 4`), **`glad sweep 9`** stands out as the most balanced and effective setup.
-
-Although `floral sweep 29` exhibits the lowest training losses across most components (`loss_rpn_box_reg`, `loss_box_reg`, `loss_classifier`, and `loss_objectness`), this did **not** translate into the highest validation performance. In contrast, `glad sweep 9` achieved the **highest mAP@50 score of 0.844**, outperforming the others in terms of generalization.
-
-Additionally, the loss curves of  are smooth and stable, indicating consistent convergence without signs of overfitting or underfitting. Indeed,  `glad sweep 9` has the same hyperparameter configuration as `morning sweep 4`, except for the early stopping patience, which suggests that **early stopping was better tuned in `glad sweep 9`**.
-
-In summary, **`glad sweep 9` is the best candidate**, as it strikes the most effective balance between training stability and validation performance.
+FINISH CONCLUSION
 
 
 ## 6.7 Conclusions
