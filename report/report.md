@@ -133,7 +133,7 @@ The dataset originally consisted on 1000 images. From there, 414 had to be remov
 |:----------------------------:|:--------------------------------------------------------:|:--------------------------------------------------------------:|:---------------------:|
 | ![satellite](media/1_sat.png) | ![zones](media/Gal_1.PNG) | ![fringes](media/2_gradient.PNG) | ![pattern](media/2_zones.PNG) |
 
-# 2.3 Dataset 
+## 2.3 Dataset 
 
 The average size of an object is 319.46 pixels² which gives an average ratio of object to the image of 0.00001899 with around 345 objects per image on average. In order to reduce computation resources, homogenize the image sizes, reduce the number of objects per image, increase the relative size of objects to the image, and make use of all parts of the images, the images are split into 512x512 pixel images (configurable), and information on the cropping coordinates is added to the product metadata. A “cropped” version of the ground truth is also generated including only the entries in the cropped region, removing any position offset. If no entries are available at a given crop, neither the cropped image or the cropped ground truth are saved. Such cropping should not negatively affect the information in the image since the objects themselves are not affected by the global context and are relevant only in their local surroundings.
 
