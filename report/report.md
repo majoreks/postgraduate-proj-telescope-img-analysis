@@ -824,15 +824,15 @@ Comment as an expert to tell about the quality metrics (not in the report) → q
 
 \[18\] Zhang, D., Feng, T., Xue, L., Wang, Y., Dong, Y., & Tang, J. (2025). Parameter-efficient fine-tuning for foundation models. *arXiv preprint* arXiv:2501.13787
 
-\[19\] https://medium.com/@abhishekjainindore24/fast-rcnn-4fbe954294ef
+\[19\] Jain, A. (2025, February 26). Fast RCNN. Medium. Retrieved July 15, 2025, from https://medium.com/@abhishekjainindore24/fast-rcnn-4fbe954294ef
 
 \[20\] Girshick, R. (2015). Fast R-CNN. *arXiv preprint* arXiv:1504.08083
 
 \[21\] Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. *arXiv preprint* arXiv:1506.01497
 
-\[22\] https://medium.com/@henriquevedoveli/metrics-matter-a-deep-dive-into-object-detection-evaluation-ef01385ec62
+\[22\] Vedoveli, H. (2023, September 15). Metrics Matter: A Deep Dive into Object Detection Evaluation. Medium. Retrieved July 15, 2025, from https://medium.com/@henriquevedoveli/metrics-matter-a-deep-dive-into-object-detection-evaluation-ef01385ec62
 
-\[23\] https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173
+\[23\] Hui, J. (2018, March 6). mAP (mean Average Precision) for Object Detection. Medium. Retrieved July 15, 2025, from https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173
 
 \[24\] PyTorch. (n.d.). torchvision.models.detection.fasterrcnn_resnet50_fpn_v2 [Documentation]. Retrieved July 13, 2025, from https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html
 
