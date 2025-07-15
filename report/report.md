@@ -176,21 +176,21 @@ In the following table labels are summarized to illustrate variability of the da
 
 | BINARY | LIGHT |
 | :---- | :---- |
-| ![](binary_ESO.png) | ![](media/light_2.png) |
+| ![](media/binary_ESO.png) | ![](media/light_2.PNG) |
 
 This processing gives as a result a generation of a **clean, high-quality dataset** with [labels associated to the file](https://drive.google.com/drive/folders/1bJ2Juznn3Gzg7jkGEJmCCFB1bcMXFdFk?usp=drive_link), in order to filter datasets and being able to generate controlled and labelled ground truth to perform the experiments:
 
-![][image28]
+![][media/label_file.png] 
 
 In the following graph, the variance of the images is summarized ([script](https://colab.research.google.com/drive/1Zildsp_DplN5QcJmf9-2w8AyHPB6686q?usp=drive_link)):
 
-![][image29]
+![](media/abundanceOfImages.png)
 
-To avoid dealing with variability of the objects, [some datasets were prepared](https://colab.research.google.com/drive/1r49XJp1SminHT5qjxWdTCSZ7A8Eq813h?usp=drive_link), selecting the labels OK, OK and ESO.
+In order to **just take into account images with relevant objects** we only include in the model exploration and training a clean dataset. To do so, [some datasets were prepared](https://colab.research.google.com/drive/1r49XJp1SminHT5qjxWdTCSZ7A8Eq813h?usp=drive_link), selecting the labels OK, OK and ESO among the 1000 images that were obtained by Joan Oro's telescope repository. 
 
-The model of this project is trained with a [dataset of 299 images](https://colab.research.google.com/drive/1r49XJp1SminHT5qjxWdTCSZ7A8Eq813h?usp=drive_link) with reliable labels such as this image and to generate it we have filtered the images with no saturated objects and no weird features excluding galaxies, comets, or binary systems to make sure that the model learn how to differentiate a star from the background, and so, is capable to detect **relevant objects**.
+The model of this project has been trained with a [dataset of 299 images](https://colab.research.google.com/drive/1r49XJp1SminHT5qjxWdTCSZ7A8Eq813h?usp=drive_link) with reliable labels such as this image and to generate it we have filtered the images with no saturated objects and no weird features excluding galaxies, comets, or binary systems to make sure that the model learn how to differentiate a star from the background, and so, is capable to detect **relevant objects**.
 
-![][image30]
+![][media/nice_detection1]
 
 Even though the dataset has been reduced to retain only reliable labels, there are still plenty of extreme outliers that heavily skew the data. The diagrams below show histograms and boxplots of object sizes with and without outliers
 ![alt text](media/data_object-distribution-hist.png)
