@@ -129,7 +129,7 @@ The dataset originally consisted on 1000 images. From there, 414 had to be remov
 * images with a first plane of galaxies.
 * iamges with missing or incomplete ground truth.
 
-| A satellite crossing teh image | A galaxy with fringes in the background and different biases (rectangl) | Luminosity gradiend | Luminosity gradient overlapped with different biases |
+| A satellite crossing the image | A galaxy with fringes in the background and different biases (rectangles) | Luminosity gradient | Luminosity gradient overlapped with different biases |
 |:----------------------------:|:--------------------------------------------------------:|:--------------------------------------------------------------:|:---------------------:|
 | ![satellite](media/1_sat.png) | ![zones](media/Gal_1.PNG) | ![fringes](media/2_gradient.PNG) | ![pattern](media/2_zones.PNG) |
 
