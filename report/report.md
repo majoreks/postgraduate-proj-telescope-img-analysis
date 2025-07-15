@@ -810,28 +810,32 @@ Comment as an expert to tell about the quality metrics (not in the report) → q
 
 \[8\] Falkner, S., Klein, A., & Hutter, F. (2018). *BOHB: Robust and Efficient Hyperparameter Optimization at Scale*. In Proceedings of the 35th International Conference on Machine Learning (ICML 2018). [https://arxiv.org/abs/1807.01774](https://arxiv.org/abs/1807.01774)
 
-\[Farias, 2020\] H. Farias, D. Ortiz, G. Damke, M. Jaque Arancibia, and M. Solar, “Mask galaxy: Morphological segmentation of galaxies,” Astronomy and Computing, vol. 33, p. 100420, Oct. 2020, doi: 10.1016/j.ascom.2020.100420.
+\[10\] Y. He, J. Wu, W. Wang, B. Jiang, and Y. Zhang, “AstroYOLO: A hybrid CNN–Transformer deep-learning object-detection model for blue horizontal-branch stars,” Publications of the Astronomical Society of Japan, vol. 75, no. 6, pp. 1311–1323, Oct. 2023, doi: 10.1093/pasj/psad071.
 
-\[He, 2023\] Y. He, J. Wu, W. Wang, B. Jiang, and Y. Zhang, “AstroYOLO: A hybrid CNN–Transformer deep-learning object-detection model for blue horizontal-branch stars,” Publications of the Astronomical Society of Japan, vol. 75, no. 6, pp. 1311–1323, Oct. 2023, doi: 10.1093/pasj/psad071.
+\[11\] M. Long, X. Jiarong, D. Jiangbin, Z. Jiayao, W. Xiaotian, and Z. Yu, “Astronomical Pointlike Source Detection via Deep Feature Matching,” ApJS, vol. 276, no. 1, p. 4, Dec. 2024, doi: 10.3847/1538-4365/ad9244.
 
-\[Long, 2024\] M. Long, X. Jiarong, D. Jiangbin, Z. Jiayao, W. Xiaotian, and Z. Yu, “Astronomical Pointlike Source Detection via Deep Feature Matching,” ApJS, vol. 276, no. 1, p. 4, Dec. 2024, doi: 10.3847/1538-4365/ad9244.
+\[12\] K. Min, G.-H. Lee, and S.-W. Lee, “Attentional feature pyramid network for small object detection,” Neural Networks, vol. 155, pp. 439–450, Nov. 2022, doi: 10.1016/j.neunet.2022.08.029.
 
-\[Min, 2022\] K. Min, G.-H. Lee, and S.-W. Lee, “Attentional feature pyramid network for small object detection,” Neural Networks, vol. 155, pp. 439–450, Nov. 2022, doi: 10.1016/j.neunet.2022.08.029.
+\[13\] X. Wang, G. Wei, S. Chen, and J. Liu, “An efficient weakly semi-supervised method for object automated annotation,” Multimed Tools Appl, vol. 83, no. 3, pp. 9417–9440, June 2023, doi: 10.1007/s11042-023-15305-0.
 
-\[Wang, 2023\] X. Wang, G. Wei, S. Chen, and J. Liu, “An efficient weakly semi-supervised method for object automated annotation,” Multimed Tools Appl, vol. 83, no. 3, pp. 9417–9440, June 2023, doi: 10.1007/s11042-023-15305-0.
+\[14\] T. Wu, “A Supernova Detection Implementation based on Faster R-CNN,” 2020 International Conference on Big Data \&amp; Artificial Intelligence \&amp; Software Engineering (ICBASE). IEEE, pp. 390–393, Oct. 2020\. doi: 10.1109/icbase51474.2020.00089.
 
-\[Wu, 2020\] T. Wu, “A Supernova Detection Implementation based on Faster R-CNN,” 2020 International Conference on Big Data \&amp; Artificial Intelligence \&amp; Software Engineering (ICBASE). IEEE, pp. 390–393, Oct. 2020\. doi: 10.1109/icbase51474.2020.00089.
+\[15\] Y. Xiao, Y. Guo, Q. Pang, X. Yang, Z. Zhao, and X. Yin, “STar-DETR: A Lightweight Real-Time Detection Transformer for Space Targets in Optical Sensor Systems,” Sensors, vol. 25, no. 4, p. 1146, Feb. 2025, doi: 10.3390/s25041146.
 
-\[Xiao, 2025\] Y. Xiao, Y. Guo, Q. Pang, X. Yang, Z. Zhao, and X. Yin, “STar-DETR: A Lightweight Real-Time Detection Transformer for Space Targets in Optical Sensor Systems,” Sensors, vol. 25, no. 4, p. 1146, Feb. 2025, doi: 10.3390/s25041146.
+\[16\] Zhang, D., Feng, T., Xue, L., Wang, Y., Dong, Y., & Tang, J. (2025). Parameter-efficient fine-tuning for foundation models. arXiv preprint arXiv:2501.13787.  
 
-\[Zhang, 2025\] Zhang, D., Feng, T., Xue, L., Wang, Y., Dong, Y., & Tang, J. (2025). Parameter-efficient fine-tuning for foundation models. arXiv preprint arXiv:2501.13787.  
+\[17\] https://medium.com/@abhishekjainindore24/fast-rcnn-4fbe954294ef 
 
-1. https://medium.com/@abhishekjainindore24/fast-rcnn-4fbe954294ef 
-2. Girshick, R. (2015). Fast R-CNN. arXiv preprint arXiv:1504.08083. https://arxiv.org/abs/1504.08083 
-3. Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. arXiv preprint arXiv:1506.01497. https://arxiv.org/abs/1506.01497
-4. https://medium.com/@henriquevedoveli/metrics-matter-a-deep-dive-into-object-detection-evaluation-ef01385ec62
-5. https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173
-1. Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. arXiv preprint areXiv:1506.01497. https://arxiv.org/abs/1506.01497
-2. PyTorch. (n.d.). torchvision.models.detection.fasterrcnn_resnet50_fpn_v2 [Documentation]. Torchvision main documentation. Retrieved July 13, 2025, from https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html
-3. Li, Y., Xie, S., Chen, X., Dollar, P., He, K., & Girshick, R. (2021). Benchmarking Detection Transfer Learning with Vision Transformers. arXiv preprint arXiv:2111.11429. https://arxiv.org/abs/2111.11429
-4. He, K., Zhang, X., Ren, S., & Sun, J. (2015). Deep Residual Learning for Image Recognition. arXiv preprint arXiv:1512.03385. https://arxiv.org/abs/1512.03385
+\[18\] Girshick, R. (2015). Fast R-CNN. arXiv preprint arXiv:1504.08083. https://arxiv.org/abs/1504.08083 
+
+\[19\] Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. arXiv preprint arXiv:1506.01497. https://arxiv.org/abs/1506.01497
+
+\[20\] https://medium.com/@henriquevedoveli/metrics-matter-a-deep-dive-into-object-detection-evaluation-ef01385ec62
+
+\[21\] https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173
+
+\[23\] PyTorch. (n.d.). torchvision.models.detection.fasterrcnn_resnet50_fpn_v2 [Documentation]. Torchvision main documentation. Retrieved July 13, 2025, from https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html
+
+\[24\] Li, Y., Xie, S., Chen, X., Dollar, P., He, K., & Girshick, R. (2021). Benchmarking Detection Transfer Learning with Vision Transformers. arXiv preprint arXiv:2111.11429. https://arxiv.org/abs/2111.11429
+
+\[25\] He, K., Zhang, X., Ren, S., & Sun, J. (2015). Deep Residual Learning for Image Recognition. arXiv preprint arXiv:1512.03385. https://arxiv.org/abs/1512.03385
