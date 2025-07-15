@@ -502,7 +502,7 @@ Reducing the threshold implies that less overlapping is required to reduce two b
 
 ### 6.5.2 Setup
 
-The v1 network with ResNet50 is used. To visualize the effect of non-maximum suppression in the telescope images, the test dataset is analyzed with 3 threshold values (0.3, 0.5 and 0.7) that are represented in the following images from top to bottom. 
+The v2 network with ResNet50 is used. To visualize the effect of non-maximum suppression in the telescope images, the test dataset is analyzed with 5 NMS threshold values (0.3, 0.4, 0.5, 0.6 and 0.7). Metrics are computed for all 5 cases, and figures are plot for cases 0.3, 0.5 and 0.7. 
 
 ### 6.5.3 Results
 
@@ -524,9 +524,21 @@ The following example, less noisier, also shows how reducing the NMS threshold r
   <figcaption align="center">From left to right, NMS threshold = 0.3, 0.5, and 0.7, respectively. Check the object cluster at (x,y) \~ (220, 480) or in (450,25).</figcaption>
 </figure>
 
+
+| NMS Threshold | mAP@50 | best_iou_per_gt | best_iou_per_prediction |
+|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
+| 0.3    | 0.8878    | 0.7563    |0.6412    |
+| 0.4    | 0.8945    | 0.7592    |0.6279    |
+| 0.5    | 0.8927    | 0.7625    |0.6152    |
+| 0.6    | 0.8967    | 0.7649    |0.6005    |
+| 0.7    | 0.8893   | 0.7677    |0.5799    |
+
+The results show that the mAP@50 has a peak value between 0.5 and 0.7. best_iou_per_gt, which behaves analogously to recall, increases as NMS Threshold increases; that is, it indicates that the degree to which real objects are met by at least one prediction increases as more bounding boxes are present. On the contrary, best_iou_per_prediction, which behaves analogously to precission, decreases as NMS Threshold increases; that is, it indicates that the predictions that are accurate decrease as more bounding boxes are present. However, an NMS value around 0.3 seems to visually achieve better results wiht a lower number of object multidetections. Some objects not present in the ground truth are detected, which contributes negatively to the metrics eventhough the model is detectingh the objects properly.
+
+
 ### 6.5.4 Conclusions
 
-Decreasing the threshold to 0.3 reduces the number of redundant regions of interest but does not seem to 
+Decreasing the NMS threshold reduces the number of redundant regions of interest but misses some objects. According to mAP@50 metric, the optimum value is around 0.6.
 
 
 ## 6.6 Hyperparameter search experiment
@@ -625,9 +637,24 @@ with the following hyperparams:
 
 and training metrics:
 
-| ![](media/Best_training_metrics.png) |
+![](media/Best_training_metrics.png)
 
-FINISH CONCLUSION
+
+The model obtained proposes more detections than the specified by the ground truth. The following figure is an histogram of the number of predictions minus the number of ground truth objects. The histogram is clearly biases and skewed positively.
+
+![](media/histogram_BB_predictions_vs_targets.png)
+
+This does not imply that these are false detections; on the contrary, new objects are detected as can be seen in the next figures, where multiple new objects are detected. These detections seem to match reality, but since they do not match the ground truth. Metrics are impacted negatively eventhough visually the model seems to generalize well. No false detection seem to happen with respect to objects present in the images, but some objects are detected multiple times, which implies that the NMS threshold should be adjusted.
+
+<figure>
+  <div align="center">
+    <img src ="media/labels_2_TJO2459810_59700_2_U_imc.png" width="33%" /><img src ="media/labels_11_TJO2459820_55570_3_U_imc.png" width="33%" /><img src ="media/labels_37_TJO2459838_47861_1_U_imc.png" width="33%" />
+  </div>
+  <figcaption align="center">3 examples infered from the validation dataset with NMS=0.3.</figcaption>
+</figure>
+
+
+
 
 
 ## 6.7 Conclusions
@@ -639,7 +666,7 @@ Taking all of the above into consideration it has been decided to use the v2 of 
 
 It should be noted that all of the experiments have been performed using the same hyperparameters which might skew the results. In ideal scenario each network could undergo hyperparameter search and then the results of those would be compared.
 
-The NMS experiment showed that reducing the NMS threshold might impact possitively in the system performance.
+The NMS experiment showed that adjusting the NMS threshold might impact possitively in the system performance.
 
 # 7 Results
 
