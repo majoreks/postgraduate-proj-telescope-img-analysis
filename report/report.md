@@ -92,7 +92,7 @@ The Team has worked with a set of **astronomical images** professionally **pre-p
 Joan Oró telescope images are monochromatic and are stored in FITS format. Each file includes embedded metadata with information such as exposure time, or the telescope poyinting direction. Images size is 1024x1024 pixels or 2048x2048 pixels deppending on the file. Deppending on how dark the night, the turbulence condtions of the atmosphere, the proximity to the moon and the exposition time, images can be more or less noisier as shown in the next figure.
 
 <p>
-  <img src="media/nice_det_3.png" alt="Lower noise image" height="500" />
+  <img src="media/nice_det_3.PNG" alt="Lower noise image" height="500" />
   <img src="media/binary_ESO.png" alt="Higher noise image" height="500" />
 </p>
 
