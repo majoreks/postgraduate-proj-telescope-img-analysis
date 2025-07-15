@@ -122,9 +122,11 @@ Different illumination patterns and “contrast” between images due to differe
 
 After the observation campaign in the telescope, images are processed with a professional pipeline in the telescope and every image acquires (or should be paired to) its catalogue, a .dat file that is saved together with the image and will be provided later as a dataset. 
 
+This catalogue has astronomical information about the observed objects such as luminosity, position in the sky, ellipticity of the objects, , and other astrophysical features. As other telescopes over the world, it follows the unified sextractor format \[ref 3\]. However, there are some potential issues related to this file when handling a huge amount of data:
+
 ![dat_file](media/dat_file.png)
 
-This catalogue has astronomical information about the observed objects such as luminosity, position in the sky, ellipticity of the objects, , and other astrophysical features. As other telescopes over the world, it follows the unified sextractor format \[ref 3\]. However, there are some potential issues related to this file when handling a huge amount of data:
+From this data we get the information to get the relevant objects form the image. In order to do so we .... pipeline and a sentence
 
 **Incorrect or incomplete annotations**, including:
 
