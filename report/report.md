@@ -434,8 +434,16 @@ In each of the setups defualt FasterRCNN with ResNet 50 backbone was used. In on
 - _updated-labels-network-v1-trian-from-scratch-10/07/2025-12:51_ - no pretrained weights used
 - _updated-labels-network-v1-all-unfrozen-10/07/2025-00:24_ - all available pretrained weights   
 
-![alt text](media/exp_pretrained-weights_loss.png)
-![alt text](media/exp_pretrained-weights_iou_per-per-pred.png) ![alt text](media/exp_pretrained-weights_iou_per-per-gt.png) ![alt text](media/exp_pretrained_weights_map_50.png)
+<p>
+  <img src="media/exp_pretrained-weights_loss.png" alt="Loss over time" width="96.5%" />
+</p>
+<p>
+  <img src="media/exp_pretrained-weights_iou_per-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="media/exp_pretrained-weights_iou_per-per-gt.png" alt="IoU per ground truth" width="48%" />
+</p>
+<p>
+  <img src="media/exp_pretrained_weights_map_50.png" alt="mAP@0.5 over time" width="48%" />
+</p>
 Model that was not usign any pretrained weights has performed by far the worst being unable to gain any performance in the first 30 epochs besides slight improvement in terms of IoU per ground truth and per prediction. Models using pretrained weights for the backbone only and for the whole network performed very similarly, especially in terms of _map_50_ and best IoU per ground truth.
 
 ### 6.1.5 Conclusions
@@ -451,8 +459,16 @@ The idea with this experiment was to see if it would be enough to use pretrained
 In the partially frozen experiment, only the first layer was unfrozen to accomodate for the fact that our dataset consisted of 1 channel images, compared to RGB (3 channels) images that the ResNets are typically trained with.  
 
 ### 6.2.3 Results
-![alt text](media/exp_layer-freezing_loss.png)
-![alt text](media/exp_layer-freezing_iou-per-pred.png) ![alt text](media/exp_layer-freezing_iou-per-gt.png) ![alt text](media/exp_layer-freezing_map-50.png)
+<p>
+  <img src="media/exp_layer-freezing_loss.png" alt="Loss over time" width="96.5%" />
+</p>
+<p>
+  <img src="media/exp_layer-freezing_iou-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="media/exp_layer-freezing_iou-per-gt.png" alt="IoU per ground truth" width="48%" />
+</p>
+<p>
+  <img src="media/exp_layer-freezing_map-50.png" alt="mAP@0.5 over time" width="48%" />
+</p>
 Training the model with all layers unfrozen has vastly outperformed model with backbone partially frozen in all metrics.
 
 ### 6.2.4 Conclusions
@@ -475,8 +491,16 @@ The goal fo this experiment was to verify if, given relatively simple images as 
 FasterRCNN network would be trained for limited number of epochs (60 epochs, down from default 200, both cases using early stopping mechanisms) with different ResNets, ResNet18, ResNet34, ResNet50 and ResNet101 _[4]_. In all cases ResNet backbone would be initialised with pretrained weights whereas the rest of the network would have default weights.
 
 ### 6.3.4 Results
-![alt text](media/exp_backbone-architechture_loss.png) ![alt text](media/exp_backbone-architechture_iou-per-pred.png) ![alt text](media/exp_backbone-architechture_iou-per-gt.png)
- ![alt text](media/exp_backbone-architechture_map-50.png) 
+<p>
+  <img src="media/exp_backbone-architechture_loss.png" alt="Loss over time" width="96.5%" />
+</p>
+<p>
+  <img src="media/exp_backbone-architechture_iou-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="media/exp_backbone-architechture_iou-per-gt.png" alt="IoU per ground truth" width="48%" />
+</p>
+<p>
+  <img src="media/exp_backbone-architechture_map-50.png" alt="mAP@0.5 over time" width="48%" />
+</p>
 Considering _mAP_50_ metric, ResNet18 has performed worse than other networks, whereas ResNets34, 50 and 101 have performed at similar levels without any advantages of one over the others. 
 
 | backbone ResNet     | Number of parameters (total) |
@@ -501,7 +525,16 @@ Given more complex network the goal of the experiment was to verify if it would 
 In this experiment both networks were trained using ResNet50 backbone and pretrained weights for the whole network for both v1 and v2 cases (`https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth` and `https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth` respectively).
 
 ### 6.4.3 Results
-![alt text](media/exp_faster-rcnn-v_loss.png) ![alt text](media/exp_faster-rcnn-v_best-per-pred.png) ![alt text](media/exp_faster-rcnn-v_best-per-gt.png) ![alt text](media/exp_faster-rcnn-v_map-50.png)
+<p>
+  <img src="media/exp_faster-rcnn-v_loss.png" alt="Loss over time" width="96.5%" />
+</p>
+<p>
+  <img src="media/exp_faster-rcnn-v_best-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="media/exp_faster-rcnn-v_best-per-gt.png" alt="IoU per ground truth" width="48%" />
+</p>
+<p>
+  <img src="media/exp_faster-rcnn-v_map-50.png" alt="mAP@0.5 over time" width="48%" />
+</p>
 The main apparent difference between using v2 model instead of v1 according to the experimet is that the v2 model achieves higher results faster than the v1 counterpart. The final difference between max _mAP_50_ between both models was $0.87$ for v2 and $0.862$ for v1, however v1 model needed 75 epochs whereas v2 model achieved $0.87$ _mAP_50_ in 30 epochs.  
 Even though it took less epochs for for the v2 model to achieve high metric reuslt, the time was similar due to increased complexity of the v2 model and thus each epoch taking longer to train.
 
