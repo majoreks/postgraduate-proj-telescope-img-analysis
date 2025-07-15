@@ -96,11 +96,11 @@ Joan Oró telescope images are monochromatic and are stored in FITS format. Each
   <img src="media/binary_ESO.png" alt="Higher noise image" height="500" />
 </p>
 
-Ground truth is obtainesd from the "catalogue" data, plain text files that include among other astrophysical parameters the AR and DEC coordinates in the image of each catalogued astronomical object that should be present in the image, their apparent magnitude, radius and ellipticity, and flags from post processing, as shown in the following figure.
+Ground truth is obtained from the "catalogue" data, plain text files that are the result of a professional data processing from the observations taken from the telescope during one night. This file includes, among other astrophysical parameters the AR and DEC and X,Y coordinates in the image of each catalogued astronomical object that should be present in the image, their apparent magnitude, radius and ellipticity, and flags from post processing, as shown in the following figure.
 
 ![dat_file](media/dat_file.png)
 
-Objects non observable in the image can befiltered by removing objects with non-zero flags, or flux radius equal to 99. Afterwards, the box size is computed using the center of the object, its apparent radii, the ellipticity, and the FWHM (Full Widht Half Maximum, a parameter to define the width of a gaussian function) obtainedfrom the catalog, and the pixel scale obtained from the image metadata. The oordinates of the boxes are obtained as:
+Objects non observable in the image can befiltered by removing objects with non-zero flags, or flux radius equal to 99. Afterwards, the box size is computed using the center of the object, its apparent radii, the ellipticity, and the FWHM (Full Widht Half Maximum, a parameter to define the width of a gaussian function) obtained from the catalogue, and the pixel scale obtained from the image metadata. The oordinates of the boxes are obtained as:
 
 ```py
 radius = fhwm_world / pixel_scale * 2
