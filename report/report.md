@@ -665,35 +665,11 @@ The top 3 sweeps resulted:
 
 with the following hyperparams:
 
-**glad sweep 9**
-
-- `batch_size`: **4**  
-- `learning_rate`: **0.0003166274749696138**  
-- `weight_decay`: **0.0001**  
-- `early_stopping_patience`: **5**  
-- **mAP@50 achieved**: **0.844**
-
----
-
-**floral sweep 29**
-
-- `batch_size`: **4**  
-- `learning_rate`: **7.211259175962656e-05**  
-- `weight_decay`: **0**  
-- `early_stopping_patience`: **10**  
-- **mAP@50 achieved**: **0.838**
-
----
-
-**morning sweep 4**
-
-- `batch_size`: **4**  
-- `learning_rate`: **0.0013667879172987514**  
-- `weight_decay`: **5e-05**  
-- `early_stopping_patience`: **12**  
-- **mAP@50 achieved**: **0.824**
-
----
+| Name            | Batch Size | Learning Rate         | Weight Decay | Early Stopping Patience | mAP@50 |
+|-----------------|------------|------------------------|--------------|--------------------------|--------|
+| glad sweep 9    | 4          | 0.0003166274749696138  | 0.0001       | 5                        | 0.844  |
+| floral sweep 29 | 4          | 7.211259175962656e-05  | 0            | 10                       | 0.838  |
+| morning sweep 4 | 4          | 0.0013667879172987514  | 5e-05        | 12                       | 0.824  |
 
 and training metrics:
 
