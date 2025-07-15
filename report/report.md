@@ -128,6 +128,14 @@ This catalogue has astronomical information about the observed objects such as l
 
 From this data we get the information to get the relevant objects form the image. In order to do so we .... pipeline and a sentence
 
+
+
+## 2.3 Dataset Preprocessing Procedure
+
+### 2.3.1 Manual cleaning and curation of the dataset
+
+Taking into account the previous issues a pre-processing of the data was done a manual clearing and curation of the dataset.
+
 **Incorrect or incomplete annotations**, including:
 
 1. Images without catalogs, or with empty or inconsistent catalogs.  
@@ -137,13 +145,6 @@ From this data we get the information to get the relevant objects form the image
 | Example of issue 2) | Example of issue 2) | Example of issue 3) |
 |:-------------------:|:-------------------:|:-------------------:|
 | ![](media/halfBB.png) | ![](media/KO_few_BB.png) | ![](media/not_understandable.png) |
-
-
-## 2.3 Dataset Preprocessing Procedure
-
-### 2.3.1 Manual cleaning and curation of the dataset
-
-Taking into account the previous issues a pre-processing of the data was done a manual clearing and curation of the dataset.
 
 * Individual review of hundreds of images to label the images.  
 * Identification of duplicates using metadata and visual content.  
