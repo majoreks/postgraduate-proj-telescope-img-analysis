@@ -285,9 +285,13 @@ For data augmentation, originally images were cropped to get 1 image of 512x512 
 
 * **Checkpoints & Early Stopping**
 
-  * Implemented checkpoint saving
-  * Considered early stopping (optional, based on wandb config)  
-  * 
+The training pipeline integrates early stopping and checkpointing to ensure efficient and effective model training. Early stopping halts training when a chosen validation metric stops improving, while checkpointing saves the best-performing models based on one or more metrics. This combination preserves optimal results and avoids unnecessary computation.
+
+  * The EarlyStopping mechanism monitors a selected validation metric during training (defined by early_stopping_metric). It tracks the best value seen so far and stops training if there is no significant improvement—greater than min_delta—for a specified number of consecutive epochs (patience). In each epoch, the metric is updated via early_stopping.step(all_metrics), and if the stopping condition is met, training halts early, preserving computational resources and avoiding overfitting.
+
+  * The checkpointing mechanism monitors multiple evaluation metrics during training and selectively saves model checkpoints based on improvements in those metrics. For each metric defined in checkpoint_metrics, it compares the current value (score) with the best value seen so far (best_scores). If the new value is better—based on whether the metric is to be maximized or minimized—it updates the best score and saves a new checkpoint via save_best_checkpoint.
+
+  Additionally, if save_last is enabled, it always saves the most recent model at each epoch using save_last_checkpoint. After training concludes, it copies all best checkpoints from the temporary directory to a persistent output location and logs a summary of the best-performing epochs per metric using log_best_checkpoints.
 
 ## 4.7 Other Modifications implemented to the models
 
