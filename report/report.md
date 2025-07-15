@@ -664,6 +664,8 @@ and training metrics:
 
 ![](media/Best_training_metrics.png)
 
+The experiment **glad-sweep-9** stands out as the most effective configuration, achieving the highest mAP@50 (0.844) while maintaining low and stable training losses across all key components. Its moderate learning rate enables efficient convergence with a short early stopping patience (5), indicating a well-balanced training dynamic. Although **floral-sweep-29** exhibits slightly lower loss values, its performance is marginally lower (mAP@50 of 0.838) and the slower convergence suggests potential underfitting due to a very low learning rate. **Morning-sweep-4**, with the highest learning rate, shows the highest loss values and the lowest mAP@50 (0.824), indicating suboptimal learning.
+
 
 The model obtained proposes more detections than the specified by the ground truth. The following figure is an histogram of the number of predictions minus the number of ground truth objects. The histogram is clearly biases and skewed positively.
 
