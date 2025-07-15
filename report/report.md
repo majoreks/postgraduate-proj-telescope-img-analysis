@@ -783,16 +783,18 @@ The model often detects object instances that are not annotated in the ground tr
 
 # 9 Conclusions
 
-Objects present in the images but missing in the database are affectng negatively the metrics obtained, since detected non-catalogued objectes account for false detection in the metrics. It hence becomes complicate to train a network in these conditions, since ground truth cannot completely be trusted.
+The problem of automatic detection of relevant astrophysical objects (such as stars, galaxies, or cosmic structures) in telescope images from Joan Oró in the Montsec Observatory has been tackled with promising results.  
+Area related metrics, in particular `best_iou_per_gt` suggest that the model can robustly find location of labeled objects when considering best case, while `best_iou_per_prediction` being slightly lower indicates that it finds too many objects of scientific interest which were not labeled as such in the ground truth. High `mAP@0.5` metric suggests that the model can successfully and accurately detect objects of scientific interest on images from the dataset, however comparing it to `mAP` metric shows that the model loses accuracy when considering higher IoU thresholds, leaving room for improvement in further steps.
 
-IMAGES SHOWING THE RESULTS  
-	Same dataset with differents amount of data → try with differents croppings \[see what happens\] -> need to add again "atleastonebboxrandomcrop"
+By visual inspection of predictions on images from the test set, the model complies with initial expectations of accurately finding most vast majority of objects from the ground truth, in some cases improving the bounding box by reducing its size and fitting it better around the object of interest. As mentioned before there are other cases where the model marks objects of no scientific interest (False positives) and in some other cases creates too big of a bounding box around an object, especially if it's in proximity of other objects.
 
-Comment as an expert to tell about the quality metrics (not in the report) → questions, at the end
+## Next steps
+An immediate next step could be testing a set of hyperparameters found in the hyperparameter sweep that produced promising results of high mAP@0.5 peak, however took relatively long time to converge. Testing those hyperparameters in full training run could lead to a model with better performance than the one obtained for the final results described above.  
 
-## Future improvements
+Having possibility of using data from Spanish Virtual Observatory, a dataset could be constructed of images from different telescopes or using different sensors so that the model could be tested on images of different characteristics in order to verify generalization capabilities.  
 
-- Zoom in dataset augmentation to make the model more sensible to size variable objects
+Possible line of development involves splitting ground truth used in this project into more labels. It is known that under objects of interest used for training models presented in this project there are different classes of objects, such as stars, galaxies nebulas and other celestial objects of scientific interest.  
+This direction however presents problem of ground truth labels, which don't include sufficient information to accurately define such labels.
 
 # Bibliography
 
