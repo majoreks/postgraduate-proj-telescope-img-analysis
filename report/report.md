@@ -268,7 +268,7 @@ Fine tuning strategies might include:
   
 ## 4.4 Data augmentation
 
-Data augmentation is conducted using the Albumentations library, which allows to crop, rotate, zoom, etc. not only images, but also bounding boxes and masks. The library can also discard invalid bounding boxes (those out of a cropping, for instance).
+Data augmentation is conducted using the Albumentations library, which allows to, among other operations, perform crop, rotate, zoom not only images, but also bounding boxes and masks. The library can also discard invalid bounding boxes (those out of a cropping, for instance).
 
 For data augmentation, originally images were cropped to get 1 image of 512x512 pixels ensuring at least one bounding box,, and  then randomly rotated from 0º to 270º in steps of 90º. After many images were discarded from manual filtering, the images were hard cropped into subimages of 512x512 to overcome the drastic decrease of useful data.
 
