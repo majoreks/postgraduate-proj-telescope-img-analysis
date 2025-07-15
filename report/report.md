@@ -198,7 +198,7 @@ The model of this project has been trained with a [dataset of 299 images](https:
 |:---------:|:---------:|:---------:|:---------:|
 | ![](media/1_nice_det.PNG) | ![](media/2_nice_det.PNG) | ![](media/4_nice_det.PNG) | ![](media/nice_det_3.PNG) |
 
-**Figura**: Ejemplos de cómo se han ajustado las *bounding boxes* sobre los objetos astronómicos para el entrenamiento del modelo de detección.
+**Figure**: Examples of how *bounding boxes* have been adjusted in the astronomical objects in the model training.
 
 
 Even though the dataset has been reduced to retain only reliable labels, there are still plenty of extreme outliers that heavily skew the data. The diagrams below show histograms and boxplots of object sizes with and without outliers
