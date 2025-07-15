@@ -89,14 +89,14 @@ The Team has worked with a set of **astronomical images** professionally **pre-p
 
 ## 2.1 Image characteristics
 
-Joan Oró telescope images are monochromatic and are stored in FITS format. Each file includes embedded metadata with information such as exposure time, or the telescope poyinting direction. Images size is 1024x1024 pixels or 2048x2048 pixels deppending on the file. Deppending on how dark the night was and the exposition time, images can be more or less noisier as shown in the next figure.
+Joan Oró telescope images are monochromatic and are stored in FITS format. Each file includes embedded metadata with information such as exposure time, or the telescope poyinting direction. Images size is 1024x1024 pixels or 2048x2048 pixels deppending on the file. Deppending on how dark the night, the turbulence condtions of the atmosphere, the proximity to the moon and the exposition time, images can be more or less noisier as shown in the next figure.
 
 <p>
   <img src="media/nice_det_3.png" alt="Lower noise image" height="500" />
   <img src="media/binary_ESO.png" alt="Higher noise image" height="500" />
 </p>
 
-Ground truth is obtainesd from the "catalogue" data, plain text files that include among others the x and y coordinates in the image of each catalogued astronomical object that should be present in the image, their apparent magnitude, radius and ellipticity, and flags, as shown in the following figure.
+Ground truth is obtainesd from the "catalogue" data, plain text files that include among other astrophysical parameters the AR and DEC coordinates in the image of each catalogued astronomical object that should be present in the image, their apparent magnitude, radius and ellipticity, and flags from post processing, as shown in the following figure.
 
 ![dat_file](media/dat_file.png)
 
