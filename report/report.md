@@ -313,6 +313,14 @@ Fine tuning strategies might include:
 * Additive Parameter-Efficient Fine-Tuning, which introduces bottleneck layers in the pretrained model, and only these layers are trained.  
 * Reparametrization using techniques such as Low-Rank Adaptation, that allow to represent the current parameters into a lower dimensional form so to find which parameters need to be retuned, reducing the number of parameters to be retuned up to 99% \[18\].
 
+## 4.2 Adapting RGB pre-trained Models for Monochromatic inputs
+
+Object detection models are generally trained with general purpose RGB images. However, the telescope images are monochromatic and might not even be in the Red, Green or Blue channels. Several techniques can be applied to adapt a RGB network to a monochromatic image:
+
+* Replicating 3 times the original image to have a 3 channel image.  
+* Modify the input CNN to have 1 input and use as weights the average of the original 3-channel input CNN.  
+* Modify the input CNN to have 1 input, randomly initialize the weights, and train it from scratch during fine tuning. 
+
 # 5 System architecture
 
 ## 5.1 Model selection
@@ -321,21 +329,13 @@ After evaluating a wide range of models, Faster R-CNN was selected as the archit
 We acknowledge that in a professional setting, the choice of Faster R-CNN would benefit from further refinement. Several models specifically designed for astronomical applications, such as AstroYOLO, PSDetNet, or Pi-AstroDeconv (as explained before) have shown promising performance in recent literature. In this sense, the selection of Faster R-CNN should be viewed as a solid academic baseline rather than an optimal solution.   
 That said, Faster R-CNN is a robust and flexible architecture and it has also been successfully adopted in published astronomical research. For instance, CLARAN (Wu et al., 2018\) \[1\] applies a Faster R-CNN variant to classify complex radio morphologies, while Burke et al. (2019) \[2\] use a Mask R-CNN (built on Faster R-CNN) for deblending and classifying blended sources in deep-sky surveys. These examples demonstrate that, despite being a general-purpose model, Faster R-CNN remains competitive choice for object detection and segmentation in astronomy
 
-## 5.2 Adapting RGB pre-trained Models for Monochromatic inputs
-
-Object detection models are generally trained with general purpose RGB images. However, the telescope images are monochromatic and might not even be in the Red, Green or Blue channels. Several techniques can be applied to adapt a RGB network to a monochromatic image:
-
-* Replicating 3 times the original image to have a 3 channel image.  
-* Modify the input CNN to have 1 input and use as weights the average of the original 3-channel input CNN.  
-* Modify the input CNN to have 1 input, randomly initialize the weights, and train it from scratch during fine tuning. 
-  
-## 5.3 Data augmentation
+## 5.2 Data augmentation
 
 Data augmentation is conducted using the Albumentations library, which allows to, among other operations, perform crop, rotate, zoom not only images, but also bounding boxes and masks. The library can also discard invalid bounding boxes (those out of a cropping, for instance).
 
-For data augmentation, originally images were cropped to get 1 image of 512x512 pixels ensuring at least one bounding box,, and  then randomly rotated from 0º to 270º in steps of 90º. After many images were discarded from manual filtering, the images were hard cropped into subimages of 512x512 to overcome the drastic decrease of useful data.
+For data augmentation, originally images were cropped to get 1 image of 512x512 pixels ensuring at least one bounding box, and  then randomly rotated from 0º to 270º in steps of 90º. After many images were discarded from manual filtering, the images were hard cropped into subimages of 512x512 to overcome the drastic decrease of useful data. Albumentations remove invalid bounding boxes; that is, bounding boxes out of the image. As consequence, objects located the image edges might loss the ground truth information, which will lead to artificially increased false detections metrics.
 
-## 5.4 Checkpoints and Early Stopping
+## 5.3 Checkpoints and Early Stopping
 
 The training pipeline integrates early stopping and checkpointing to ensure efficient and effective model training. Early stopping halts training when a chosen validation metric stops improving, while checkpointing saves the best-performing models based on one or more metrics. This combination preserves optimal results and avoids unnecessary computation.
 
@@ -345,7 +345,7 @@ The training pipeline integrates early stopping and checkpointing to ensure effi
 
     Additionally, if save_last is enabled, it always saves the most recent model at each epoch using save_last_checkpoint. After training concludes, it copies all best checkpoints from the temporary directory to a persistent output location and logs a summary of the best-performing epochs per metric using log_best_checkpoints.
 
-## 5.5 Other Modifications implemented to the models
+## 5.4 Other Modifications implemented to the models
 
 Faster R-CNN has a default maximum number of objects per image to 100, which was set to 1000 since some 512x512 crops contained more than 200 using the input parameter:
 
