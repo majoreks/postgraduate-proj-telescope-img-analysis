@@ -788,54 +788,54 @@ Comment as an expert to tell about the quality metrics (not in the report) → q
 
 # Bibliography  {#bibliography}
 
-\[1\_cris\] Institut d'Estudis Espacials de Catalunya (IEEC). (n.d.). *Joan Oró Telescope*. Retrieved from [https://montsec.ieec.cat/en/joan-oro-telescope/](https://montsec.ieec.cat/en/joan-oro-telescope/)
+\[1\] Institut d'Estudis Espacials de Catalunya (IEEC). (n.d.). *Joan Oró Telescope*. Retrieved from [https://montsec.ieec.cat/en/joan-oro-telescope/](https://montsec.ieec.cat/en/joan-oro-telescope/)
 
-\[2\_cris\] NASA Goddard Space Flight Center. (n.d.). *FITS Viewer*. Retrieved from [https://fits.gsfc.nasa.gov/fits\_viewer.html](https://fits.gsfc.nasa.gov/fits_viewer.html)
+\[2\] NASA Goddard Space Flight Center. (n.d.). *FITS Viewer*. Retrieved from [https://fits.gsfc.nasa.gov/fits_viewer.html](https://fits.gsfc.nasa.gov/fits_viewer.html)
 
-\[3\_cris\] Bertin, E., & Arnouts, S. (n.d.). *SExtractor Configuration Guide*. Retrieved from [https://sextractor.readthedocs.io/en/latest/Config.html](https://sextractor.readthedocs.io/en/latest/Config.html)
+\[3\] Bertin, E., & Arnouts, S. (n.d.). *SExtractor Configuration Guide*. Retrieved from [https://sextractor.readthedocs.io/en/latest/Config.html](https://sextractor.readthedocs.io/en/latest/Config.html)
 
-\[1\] Wu, C., Wong, O. I., Rudnick, L., Shabala, S. S., Alger, M. J., Banfield, J. K., Ong, C. S., White, S. V., Garon, A. F., Norris, R. P., Andernach, H., Tate, J., Lukic, V., Tang, H., Schawinski, K., & Diakogiannis, F. I. (2018). Radio Galaxy Zoo: CLARAN – A deep learning classifier for radio morphologies. Monthly Notices of the Royal Astronomical Society, 482(1), 1211–1230. https://doi.org/10.1093/mnras/sty2646
+\[4\] Wu, C., Wong, O. I., Rudnick, L., Shabala, S. S., Alger, M. J., Banfield, J. K., Ong, C. S., White, S. V., Garon, A. F., Norris, R. P., Andernach, H., Tate, J., Lukic, V., Tang, H., Schawinski, K., & Diakogiannis, F. I. (2018). Radio Galaxy Zoo: CLARAN – A deep learning classifier for radio morphologies. *Monthly Notices of the Royal Astronomical Society, 482*(1), 1211–1230. https://doi.org/10.1093/mnras/sty2646
 
-\[2\]  Burke, C. J., Aleo, P. D., Chen, Y.-C., Liu, X., Peterson, J. R., Sembroski, G. H., & Lin, J. Y.-Y. (2019). Deblending and classifying astronomical sources with Mask R-CNN deep learning. Monthly Notices of the Royal Astronomical Society, 490(3), 3952–3965. [https://doi.org/10.1093/mnras/stz2845](https://doi.org/10.1093/mnras/stz2845)
+\[5\] Burke, C. J., Aleo, P. D., Chen, Y.-C., Liu, X., Peterson, J. R., Sembroski, G. H., & Lin, J. Y.-Y. (2019). Deblending and classifying astronomical sources with Mask R-CNN deep learning. *Monthly Notices of the Royal Astronomical Society, 490*(3), 3952–3965. https://doi.org/10.1093/mnras/stz2845
 
-\[3\] Sortino, R., Magro, D., Fiameni, G., Sciacca, E., Riggi, S., DeMarco, A., Spampinato, C., Hopkins, A. M., Bufano, F., Schillirò, F., Bordiu, C., & Pino, C. (2023). Radio astronomical images object detection and segmentation: A benchmark on deep learning methods. Experimental Astronomy, 56(1), 293–331. [https://doi.org/10.1007/s10686-023-09893-w](https://doi.org/10.1007/s10686-023-09893-w)
+\[6\] Sortino, R., Magro, D., Fiameni, G., Sciacca, E., Riggi, S., DeMarco, A., Spampinato, C., Hopkins, A. M., Bufano, F., Schillirò, F., Bordiu, C., & Pino, C. (2023). Radio astronomical images object detection and segmentation: A benchmark on deep learning methods. *Experimental Astronomy, 56*(1), 293–331. https://doi.org/10.1007/s10686-023-09893-w
 
-\[4\] H. Farias, D. Ortiz, G. Damke, M. Jaque Arancibia, M. Solar, Mask galaxy: Morphological segmentation of galaxies, Astronomy and Computing, Volume 33, 2020, 100420, ISSN 2213-1337, [https://doi.org/10.1016/j.ascom.2020.100420](https://doi.org/10.1016/j.ascom.2020.100420).
+\[7\] H. Farias, D. Ortiz, G. Damke, M. Jaque Arancibia, & M. Solar. (2020). Mask galaxy: Morphological segmentation of galaxies. *Astronomy and Computing, 33*, 100420. https://doi.org/10.1016/j.ascom.2020.100420
 
-\[5\] Bergstra, J., & Bengio, Y. (2012). *Random Search for Hyper-Parameter Optimization*. Journal of Machine Learning Research, 13, 281–305. https://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
+\[8\] Bergstra, J., & Bengio, Y. (2012). *Random Search for Hyper-Parameter Optimization*. Journal of Machine Learning Research, 13, 281–305. https://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
 
-\[6\] Snoek, J., Larochelle, H., & Adams, R. P. (2012). *Practical Bayesian Optimization of Machine Learning Algorithms*. In *Advances in Neural Information Processing Systems* (pp. 2951–2959). [https://arxiv.org/abs/1206.2944](https://arxiv.org/abs/1206.2944)
+\[9\] Snoek, J., Larochelle, H., & Adams, R. P. (2012). *Practical Bayesian Optimization of Machine Learning Algorithms*. In Advances in Neural Information Processing Systems (pp. 2951–2959). https://arxiv.org/abs/1206.2944
 
-\[7\] Li, L., Jamieson, K., DeSalvo, G., Rostamizadeh, A., & Talwalkar, A. (2017). *Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization*. Journal of Machine Learning Research, 18(185), 1–52. [https://arxiv.org/abs/1603.06560](https://arxiv.org/abs/1603.06560)
+\[10\] Li, L., Jamieson, K., DeSalvo, G., Rostamizadeh, A., & Talwalkar, A. (2017). *Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization*. Journal of Machine Learning Research, 18(185), 1–52. https://arxiv.org/abs/1603.06560
 
-\[8\] Falkner, S., Klein, A., & Hutter, F. (2018). *BOHB: Robust and Efficient Hyperparameter Optimization at Scale*. In Proceedings of the 35th International Conference on Machine Learning (ICML 2018). [https://arxiv.org/abs/1807.01774](https://arxiv.org/abs/1807.01774)
+\[11\] Falkner, S., Klein, A., & Hutter, F. (2018). *BOHB: Robust and Efficient Hyperparameter Optimization at Scale*. In Proceedings of the 35th International Conference on Machine Learning (ICML 2018). https://arxiv.org/abs/1807.01774
 
-\[10\] Y. He, J. Wu, W. Wang, B. Jiang, and Y. Zhang, “AstroYOLO: A hybrid CNN–Transformer deep-learning object-detection model for blue horizontal-branch stars,” Publications of the Astronomical Society of Japan, vol. 75, no. 6, pp. 1311–1323, Oct. 2023, doi: 10.1093/pasj/psad071.
+\[12\] Y. He, J. Wu, W. Wang, B. Jiang, & Y. Zhang. (2023). AstroYOLO: A hybrid CNN–Transformer deep-learning object-detection model for blue horizontal-branch stars. *Publications of the Astronomical Society of Japan, 75*(6), 1311–1323. https://doi.org/10.1093/pasj/psad071
 
-\[11\] M. Long, X. Jiarong, D. Jiangbin, Z. Jiayao, W. Xiaotian, and Z. Yu, “Astronomical Pointlike Source Detection via Deep Feature Matching,” ApJS, vol. 276, no. 1, p. 4, Dec. 2024, doi: 10.3847/1538-4365/ad9244.
+\[13\] M. Long, X. Jiarong, D. Jiangbin, Z. Jiayao, W. Xiaotian, & Z. Yu. (2024). Astronomical Pointlike Source Detection via Deep Feature Matching. *The Astrophysical Journal Supplement Series, 276*(1), 4. https://doi.org/10.3847/1538-4365/ad9244
 
-\[12\] K. Min, G.-H. Lee, and S.-W. Lee, “Attentional feature pyramid network for small object detection,” Neural Networks, vol. 155, pp. 439–450, Nov. 2022, doi: 10.1016/j.neunet.2022.08.029.
+\[14\] K. Min, G.-H. Lee, & S.-W. Lee. (2022). Attentional feature pyramid network for small object detection. *Neural Networks, 155*, 439–450. https://doi.org/10.1016/j.neunet.2022.08.029
 
-\[13\] X. Wang, G. Wei, S. Chen, and J. Liu, “An efficient weakly semi-supervised method for object automated annotation,” Multimed Tools Appl, vol. 83, no. 3, pp. 9417–9440, June 2023, doi: 10.1007/s11042-023-15305-0.
+\[15\] X. Wang, G. Wei, S. Chen, & J. Liu. (2023). An efficient weakly semi-supervised method for object automated annotation. *Multimedia Tools and Applications, 83*(3), 9417–9440. https://doi.org/10.1007/s11042-023-15305-0
 
-\[14\] T. Wu, “A Supernova Detection Implementation based on Faster R-CNN,” 2020 International Conference on Big Data \&amp; Artificial Intelligence \&amp; Software Engineering (ICBASE). IEEE, pp. 390–393, Oct. 2020\. doi: 10.1109/icbase51474.2020.00089.
+\[16\] T. Wu. (2020). A Supernova Detection Implementation based on Faster R-CNN. In 2020 International Conference on Big Data & Artificial Intelligence & Software Engineering (ICBASE) (pp. 390–393). IEEE. https://doi.org/10.1109/icbase51474.2020.00089
 
-\[15\] Y. Xiao, Y. Guo, Q. Pang, X. Yang, Z. Zhao, and X. Yin, “STar-DETR: A Lightweight Real-Time Detection Transformer for Space Targets in Optical Sensor Systems,” Sensors, vol. 25, no. 4, p. 1146, Feb. 2025, doi: 10.3390/s25041146.
+\[17\] Y. Xiao, Y. Guo, Q. Pang, X. Yang, Z. Zhao, & X. Yin. (2025). STar-DETR: A Lightweight Real-Time Detection Transformer for Space Targets in Optical Sensor Systems. *Sensors, 25*(4), 1146. https://doi.org/10.3390/s25041146
 
-\[16\] Zhang, D., Feng, T., Xue, L., Wang, Y., Dong, Y., & Tang, J. (2025). Parameter-efficient fine-tuning for foundation models. arXiv preprint arXiv:2501.13787.  
+\[18\] Zhang, D., Feng, T., Xue, L., Wang, Y., Dong, Y., & Tang, J. (2025). Parameter-efficient fine-tuning for foundation models. *arXiv preprint* arXiv:2501.13787
 
-\[17\] https://medium.com/@abhishekjainindore24/fast-rcnn-4fbe954294ef 
+\[19\] https://medium.com/@abhishekjainindore24/fast-rcnn-4fbe954294ef
 
-\[18\] Girshick, R. (2015). Fast R-CNN. arXiv preprint arXiv:1504.08083. https://arxiv.org/abs/1504.08083 
+\[20\] Girshick, R. (2015). Fast R-CNN. *arXiv preprint* arXiv:1504.08083
 
-\[19\] Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. arXiv preprint arXiv:1506.01497. https://arxiv.org/abs/1506.01497
+\[21\] Ren, S., He, K., Girshick, R., & Sun, J. (2016). Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks. *arXiv preprint* arXiv:1506.01497
 
-\[20\] https://medium.com/@henriquevedoveli/metrics-matter-a-deep-dive-into-object-detection-evaluation-ef01385ec62
+\[22\] https://medium.com/@henriquevedoveli/metrics-matter-a-deep-dive-into-object-detection-evaluation-ef01385ec62
 
-\[21\] https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173
+\[23\] https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173
 
-\[23\] PyTorch. (n.d.). torchvision.models.detection.fasterrcnn_resnet50_fpn_v2 [Documentation]. Torchvision main documentation. Retrieved July 13, 2025, from https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html
+\[24\] PyTorch. (n.d.). torchvision.models.detection.fasterrcnn_resnet50_fpn_v2 [Documentation]. Retrieved July 13, 2025, from https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html
 
-\[24\] Li, Y., Xie, S., Chen, X., Dollar, P., He, K., & Girshick, R. (2021). Benchmarking Detection Transfer Learning with Vision Transformers. arXiv preprint arXiv:2111.11429. https://arxiv.org/abs/2111.11429
+\[25\] Li, Y., Xie, S., Chen, X., Dollar, P., He, K., & Girshick, R. (2021). Benchmarking Detection Transfer Learning with Vision Transformers. *arXiv preprint* arXiv:2111.11429
 
-\[25\] He, K., Zhang, X., Ren, S., & Sun, J. (2015). Deep Residual Learning for Image Recognition. arXiv preprint arXiv:1512.03385. https://arxiv.org/abs/1512.03385
+\[26\] He, K., Zhang, X., Ren, S., & Sun, J. (2015). Deep Residual Learning for Image Recognition. *arXiv preprint* arXiv:1512.03385
