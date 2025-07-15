@@ -83,11 +83,67 @@ Using **deep learning object detection models** (Faster R-CNN with ResNet backbo
 
 # 2 Joan Oró Telescope Dataset
 
-The Team has worked with a set of **astronomical images** professionally **pre-processed** by the telescope science data provided and uploaded correspondingly to the SVO (https://svo.cab.inta-csic.es/main/index.php) , with the goal of detecting **relevant astrophysical objects**, such as **stars**, **galaxies**, or other celestial bodies.
+The Team has worked with a set of **astronomical images** professionally **pre-processed** by the opreational processing pipeline and uploaded correspondingly to the SVO (https://svo.cab.inta-csic.es/main/index.php), with the goal of detecting **relevant astrophysical objects**, such as **stars**, **galaxies**, or other celestial bodies.
 
-The dataset has two big blocks: the *.fits* images and the ground truth, which is a file with *.dat* extension. Fits images are very heavy to manage in ram memory during execution (see bibliography \[ref 2\]).
+<!-- The dataset has two big blocks: the *.fits* images and the ground truth, which is a file with *.dat* extension. Fits images are very heavy to manage in ram memory during execution (see bibliography \[ref 2\]). -->
 
-## 2.1 Image characteristics initial dataset (before cleaning to build the Groung Truth Dataset)
+## 2.1 Image characteristics
+
+Joan Oró telescope images are monochromatic and are stored in FITS format. Each file includes embedded metadata with information such as exposure time, or the telescope poyinting direction. Images size is 1024x1024 pixels or 2048x2048 pixels deppending on the file. Deppending on how dark the night was and the exposition time, images can be more or less noisier as shown in the next figure.
+
+<p>
+  <img src="media/nice_det_3.png" alt="Lower noise image" height="500" />
+  <img src="media/binary_ESO.png" alt="Higher noise image" height="500" />
+</p>
+
+Ground truth is obtainesd from the "catalogue" data, plain text files that include among others the x and y coordinates in the image of each catalogued astronomical object that should be present in the image, their apparent magnitude, radius and ellipticity, and flags, as shown in the following figure.
+
+![dat_file](media/dat_file.png)
+
+Objects non observable in the image can befiltered by removing objects with non-zero flags, or flux radius equal to 99. Afterwards, the box size is computed using the center of the object, its apparent radii, the ellipticity, and the FWHM (Full Widht Half Maximum, a parameter to define the width of a gaussian function) obtainedfrom the catalog, and the pixel scale obtained from the image metadata. The oordinates of the boxes are obtained as:
+
+```py
+radius = fhwm_world / pixel_scale * 2
+if ellipticity > 0.5:
+    radius = fhwm_world / pixel_scale * 4
+if mag_calib < 14:
+    radius = fhwm_world / pixel_scale * 3
+
+x_min = x_center - radius
+y_min = y_center - radius
+
+width = radius * 2 
+height = radius * 2
+
+x_max = x_center + width / 2
+y_max = y_center + height / 2
+```
+
+## 2.2 Dataset characteristics
+
+The dataset originally consisted on 1000 images. From there, 414 had to be removed for multiple reasons:
+
+* The presence of shiny artifacts: satellites, comets or diffraction patterns.
+* extremely noise iamges.
+* non-homogenous background: fringes, different biases (seen as rectangles with different luminosities), or luminosity gradients.
+* images with a first plane of galaxies.
+* iamges with missing or incomplete ground truth.
+
+| A satellite crossing teh image | A galaxy with fringes in the background and different biases (rectangl) | Luminosity gradiend | Luminosity gradient overlapped with different biases |
+|:----------------------------:|:--------------------------------------------------------:|:--------------------------------------------------------------:|:---------------------:|
+| ![satellite](media/1_sat.png) | ![zones](media/Gal_1.PNG) | ![fringes](media/2_gradient.PNG) | ![pattern](media/2_zones.PNG) |
+
+# 2.3 Dataset 
+
+The average size of an object is 319.46 pixels² which gives an average ratio of object to the image of 0.00001899 with around 345 objects per image on average. In order to reduce computation resources, homogenize the image sizes, reduce the number of objects per image, increase the relative size of objects to the image, and make use of all parts of the images, the images are split into 512x512 pixel images (configurable), and information on the cropping coordinates is added to the product metadata. A “cropped” version of the ground truth is also generated including only the entries in the cropped region, removing any position offset. If no entries are available at a given crop, neither the cropped image or the cropped ground truth are saved. Such cropping should not negatively affect the information in the image since the objects themselves are not affected by the global context and are relevant only in their local surroundings.
+
+After this operation the average size of an object stays nearly the same at 319.48 pixels² (difference most likely coming from edge cases handling), however the average ratio of an object to an image increases to 0.00121871 and the average number of objects per image drops down to around 48.
+
+In order to homogenize and make use of all possible information, images were cropped into 512x512 subimages. Subimages with no objets present were discarded. A total of 2107 images were obtained, that were sepparated as 1728 for training, 192 for validation, and 187 for testing.
+
+
+
+<!-- ## 2.1 Image characteristics initial dataset (before cleaning to build the Groung Truth Dataset)
 
 *The size of the file is 4096 4098 pixels, being a pixel the minimum resolution unit of the CCD detector. 
 
@@ -215,7 +271,7 @@ In the cleaned dataset the average size of an object is 319.46 pixels² which gi
 
 After this operation the average size of an object stays nearly the same at 319.48 pixels² (difference most likely coming from edge cases handling), however the average ratio of an object to an image increases to 0.00121871 and the average number of objects per image drops down to around 48.
 
-In case any image is found without ground truth, it is set apart from the training dataset, so they still can be used for inference. Right after, the images are hard splitted as 81% train, 9% validation, and 10% test. After the hard cropping, a total of 1728 images were generated for training, 192 for validation, and 187 for test. Note that these numbers do not match the percentages mentioned above because the crops removed for lacking objects inside.
+In case any image is found without ground truth, it is set apart from the training dataset, so they still can be used for inference. Right after, the images are hard splitted as 81% train, 9% validation, and 10% test. After the hard cropping, a total of 1728 images were generated for training, 192 for validation, and 187 for test. Note that these numbers do not match the percentages mentioned above because the crops removed for lacking objects inside. -->
 
 
 # 3 Working environment
