@@ -691,7 +691,7 @@ Taking all of the above into consideration it has been decided to use the v2 of 
 
 It should be noted that all of the experiments have been performed using the same hyperparameters which might skew the results. In ideal scenario each network could undergo hyperparameter search and then the results of those would be compared.
 
-The NMS experiment showed that adjusting the NMS threshold might impact possitively in the system performance.
+The NMS experiment showed that adjusting the NMS threshold impacts possitively in the system performance by reducing the overdetection of objects.
 
 # 7 Results
 
@@ -735,10 +735,14 @@ WIP (no results until the sweep is done)
 
 # 8 Conclusions
 
+Objects present in the images but missing in the database are affectng negatively the metrics obtained, since detected non-catalogued objectes account for false detection in the metrics. It hence becomes complicate to train a network in these conditions, since ground truth cannot completely be trusted.
+
 IMAGES SHOWING THE RESULTS  
-	Same dataset with differents amount of data → try with differents croppings \[see what happens\]
+	Same dataset with differents amount of data → try with differents croppings \[see what happens\] -> need to add again "atleastonebboxrandomcrop"
 
 Comment as an expert to tell about the quality metrics (not in the report) → questions, at the end
+
+
 
 # Future improvements {#future-improvements}
 
