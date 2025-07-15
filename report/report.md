@@ -262,13 +262,13 @@ Object detection models are generally trained with general purpose RGB images. H
 
 Pretrained object detection networks are trained with a wide variety of objects. Their use for specific categories of objects (such as celestial bodies) require fine tuning, even more if the goal is to differentiate between objects that are so similar (the difference between a galaxy and a star is small compared to the difference of a cat and a car).
 
-Reducing the number of layers might seem a logical decision since the objects have low complexity (white dots or ellipsoids in an almost black background), so the network becomes lighter and faster to train. However, the difference between a star and a galaxy might be encoded in deeper and more abstract features \[Min, 2022\], and therefore it might be a counterproductive decision.
+Reducing the number of layers might seem a logical decision since the objects have low complexity (white dots or ellipsoids in an almost black background), so the network becomes lighter and faster to train. However, the difference between a star and a galaxy might be encoded in deeper and more abstract features \[14\], and therefore it might be a counterproductive decision.
 
 Fine tuning strategies might include:
 
 * Selective Parameter-Efficient Fine-Tuning, or partial fine tuning, which trains only part of the layers of the model, typically the latest ones, freezing the backbone. A variation includes the Dynamic Backbone Freezing, which freezes and unfreezes alternately the backbone during the training stage. This technique allows to preserve low-level generic features and to include new specific features.  
 * Additive Parameter-Efficient Fine-Tuning, which introduces bottleneck layers in the pretrained model, and only these layers are trained.  
-* Reparametrization using techniques such as Low-Rank Adaptation, that allow to represent the current parameters into a lower dimensional form so to find which parameters need to be retuned, reducing the number of parameters to be retuned up to 99% \[Zhang, 2025\].  
+* Reparametrization using techniques such as Low-Rank Adaptation, that allow to represent the current parameters into a lower dimensional form so to find which parameters need to be retuned, reducing the number of parameters to be retuned up to 99% \[18\].  
   
 ## 4.4 Data augmentation
 
@@ -573,7 +573,7 @@ The v2 network with ResNet50 is used. To visualize the effect of non-maximum sup
 In the following noisy image, it can be seen how by increasing the NMS threshold increases the number of predictions in the same object, clearly seen in the object clusters at (x,y) \~ (110,50), (250, 0), and (500, 0).
 <figure>
   <div align="center">
-    <img src ="media/noisy03.png" width="33%" /><img src ="media/noisy05.png" width="33%" /><img src ="media/noisy07.png" width="33%" />
+    <img src ="media/noisy03_2.png" width="33%" /><img src ="media/noisy05_2.png" width="33%" /><img src ="media/noisy07_2.png" width="33%" />
   </div>
   <figcaption align="center">From left to right, NMS threshold = 0.3, 0.5, and 0.7, respectively. Check the object cluster at (x,y) \~ (110,50) Bottom-Left, (250, 0) Bottom-Center, and (500, 0) Bottom-Right.</figcaption>
 </figure>
@@ -583,7 +583,7 @@ The following example, less noisier, also shows how reducing the NMS threshold r
 
 <figure>
   <div align="center">
-    <img src ="media/clean03.png" width="33%" /><img src ="media/clean05.png" width="33%" /><img src ="media/clean07.png" width="33%" />
+    <img src ="media/clean03_2.png" width="33%" /><img src ="media/clean05_2.png" width="33%" /><img src ="media/clean07_2.png" width="33%" />
   </div>
   <figcaption align="center">From left to right, NMS threshold = 0.3, 0.5, and 0.7, respectively. Check the object cluster at (x,y) \~ (220, 480) or in (450,25).</figcaption>
 </figure>
