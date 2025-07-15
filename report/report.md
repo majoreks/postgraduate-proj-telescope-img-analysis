@@ -121,7 +121,7 @@ Different illumination patterns and “contrast” between images due to differe
 
 After the observation campaign in the telescope, images are processed with a professional pipeline in the telescope and every image acquires (or should be paired to) its catalogue, a .dat file that is saved together with the image and will be provided later as a dataset. 
 
-![][image11]
+![dat_file](media/dat_file.png)
 
 This catalogue has astronomical information about the observed objects such as luminosity, position in the sky, ellipticity of the objects, , and other astrophysical features. As other telescopes over the world, it follows the unified sextractor format \[ref 3\]. However, there are some potential issues related to this file when handling a huge amount of data:
 
@@ -180,7 +180,7 @@ In the following table labels are summarized to illustrate variability of the da
 
 This processing gives as a result a generation of a **clean, high-quality dataset** with [labels associated to the file](https://drive.google.com/drive/folders/1bJ2Juznn3Gzg7jkGEJmCCFB1bcMXFdFk?usp=drive_link), in order to filter datasets and being able to generate controlled and labelled ground truth to perform the experiments:
 
-![][media/label_file.png] 
+![label_file](media/label_file.png)
 
 In the following graph, the variance of the images is summarized ([script](https://colab.research.google.com/drive/1Zildsp_DplN5QcJmf9-2w8AyHPB6686q?usp=drive_link)):
 
