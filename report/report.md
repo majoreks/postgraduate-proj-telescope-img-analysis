@@ -190,7 +190,12 @@ In order to **just take into account images with relevant objects** we only incl
 
 The model of this project has been trained with a [dataset of 299 images](https://colab.research.google.com/drive/1r49XJp1SminHT5qjxWdTCSZ7A8Eq813h?usp=drive_link) with reliable labels such as this image and to generate it we have filtered the images with no saturated objects and no weird features excluding galaxies, comets, or binary systems to make sure that the model learn how to differentiate a star from the background, and so, is capable to detect **relevant objects**.
 
-![][media/nice_detection1]
+| Example 1 | Example 2 | Example 3 | Example 4 |
+|:---------:|:---------:|:---------:|:---------:|
+| ![](media/1_nice_det.PNG) | ![](media/2_nice_det.PNG) | ![](media/4_nice_det.PNG) | ![](media/nice_det_3.PNG) |
+
+**Figura**: Ejemplos de cómo se han ajustado las *bounding boxes* sobre los objetos astronómicos para el entrenamiento del modelo de detección.
+
 
 Even though the dataset has been reduced to retain only reliable labels, there are still plenty of extreme outliers that heavily skew the data. The diagrams below show histograms and boxplots of object sizes with and without outliers
 ![alt text](media/data_object-distribution-hist.png)
