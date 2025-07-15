@@ -677,7 +677,18 @@ and training metrics:
 
 The experiment **glad-sweep-9** stands out as the most effective configuration, achieving the highest mAP@50 (0.844) while maintaining low and stable training losses across all key components. Its moderate learning rate enables efficient convergence with a short early stopping patience (5), indicating a well-balanced training dynamic. Although **floral-sweep-29** exhibits slightly lower loss values, its performance is marginally lower (mAP@50 of 0.838) and the slower convergence suggests potential underfitting due to a very low learning rate. **Morning-sweep-4**, with the highest learning rate, shows the highest loss values and the lowest mAP@50 (0.824), indicating suboptimal learning.
 
+## 6.7 Conclusions
+Series of experiments has highlighted the need of using pretrained weights, most importantly for the backbone to be able to effectively train the full network. It was also shown that having pretrained weights for the whole network is not as important as it is for just the backbone. Experiments have also shown that unfreezing all layers of the network, in particular including all layers of the backbone, greatly increases performance of the whole network and it's ability to trian.  
+The choice of backbone also seems to play an important role where ResNet18 seems to be too small of a network while any backbone ResNet above or equal to ResNet34 seems to be sufficiently big for the problem.   
+Finally the choice of v2 network seems to increase the speed (in terms of epochs of training) at which the network can converge and increases performance of the model during early epochs of the training while also enabling to model to achieve higher maximum results.  
 
+Taking all of the above into consideration it has been decided to use the v2 of FasterRCNN network with all pretrained weights and all layers unfrozen as the model.  
+
+It should be noted that all of the experiments have been performed using the same hyperparameters which might skew the results. In ideal scenario each network could undergo hyperparameter search and then the results of those would be compared.
+
+The NMS experiment showed that adjusting the NMS threshold impacts possitively in the system performance by reducing the overdetection of objects.
+
+# 7 Results
 The model obtained proposes more detections than the specified by the ground truth. The following figure is an histogram of the number of predictions minus the number of ground truth objects. The histogram is clearly biases and skewed positively.
 
 ![](media/histogram_BB_predictions_vs_targets.png)
@@ -691,61 +702,6 @@ This does not imply that these are false detections; on the contrary, new object
   <figcaption align="center">3 examples infered from the validation dataset with NMS=0.3.</figcaption>
 </figure>
 
-
-
-
-
-## 6.7 Conclusions
-Series of experiments has highlighted the need of using pretrained weights, most importantly for the backbone to be able to effectively train the full network. It was also shown that having pretrained weights for the whole network is not as important as it is for just the backbone. Experiments have also shown that unfreezing all layers of the network, in particular including all layers of the backbone, greatly increases performance of the whole network and it's ability to trian.  
-The choice of backbone also seems to play an important role where ResNet18 seems to be too small of a network while any backbone ResNet above or equal to ResNet34 seems to be sufficiently big for the problem.   
-Finally the choice of v2 network seems to increase the speed (in terms of epochs of training) at which the network can converge and increases performance of the model during early epochs of the training while also enabling to model to achieve higher maximum results.  
-
-Taking all of the above into consideration it has been decided to use the v2 of FasterRCNN network with all pretrained weights and all layers unfrozen as the model.  
-
-It should be noted that all of the experiments have been performed using the same hyperparameters which might skew the results. In ideal scenario each network could undergo hyperparameter search and then the results of those would be compared.
-
-The NMS experiment showed that adjusting the NMS threshold impacts possitively in the system performance by reducing the overdetection of objects.
-
-# 7 Results
-
-## 7.1 Model comparison
-
-Benchmarck  
-→ Szimon with different encoders  
-	Different backbones: how important it is to start with some pre-trained weights.   
-	Table (model, metrics in validation test)
-
-## 7.2 Best performance {#best-performance}
-
-Final choice Faster R-CNN v2 \+ ResNet-50
-
-
-
-* 
-
-## 7.3 Hyperparameter search
-
-**Results**
-
-WIP (no results until the sweep is done)
-
-
-
-* 
-
-* 
-
-* 
-
-## 7.4 Inference and Validation?
-
-* Final inferences performed on the cleaned dataset
-
-* Validation set fixed (non-random) for consistency
-
-* Results visualized and compared across architectures and settings
-
-
 # 8 Conclusions
 
 Objects present in the images but missing in the database are affectng negatively the metrics obtained, since detected non-catalogued objectes account for false detection in the metrics. It hence becomes complicate to train a network in these conditions, since ground truth cannot completely be trusted.
@@ -755,14 +711,11 @@ IMAGES SHOWING THE RESULTS
 
 Comment as an expert to tell about the quality metrics (not in the report) → questions, at the end
 
-
-
-# Future improvements {#future-improvements}
+# Future improvements
 
 - Zoom in dataset augmentation to make the model more sensible to size variable objects
 
-
-# Bibliography  {#bibliography}
+# Bibliography
 
 \[1\] Institut d'Estudis Espacials de Catalunya (IEEC). (n.d.). *Joan Oró Telescope*. Retrieved from [https://montsec.ieec.cat/en/joan-oro-telescope/](https://montsec.ieec.cat/en/joan-oro-telescope/)
 
