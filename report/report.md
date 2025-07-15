@@ -83,13 +83,14 @@ Using **deep learning object detection models** (Faster R-CNN with ResNet backbo
 
 # 2 Joan Oró Telescope Dataset
 
-The Team has worked with a set of **astronomical images**, both **raw** and **pre-processed**, with the goal of detecting **relevant astrophysical objects**, such as **stars**, **galaxies**, or other celestial bodies.
+The Team has worked with a set of **astronomical images** professionally **pre-processed** by the telescope science data provided and uploaded correspondingly to the SVO (https://svo.cab.inta-csic.es/main/index.php) , with the goal of detecting **relevant astrophysical objects**, such as **stars**, **galaxies**, or other celestial bodies.
 
 The dataset has two big blocks: the *.fits* images and the ground truth, which is a file with *.dat* extension. As it is stated in the bibliography \[ref 2\], fits images are very heavy to manage in ram memory during execution.
 
-## 2.1 Image characteristics
+## 2.1 Image characteristics initial dataset (before cleaning)
 
-* **Duplicated images** that were not properly detected by filename but could be identified through content or metadata.  
+*The size of the file is 4096 4098 px. CCD theory. Add image of the detector. and the size 
+
 * **High variability** in the appearance of these objects: they can differ greatly in **shape**, **brightness**, **size**, and **contrast**.
 
 * The presence of **shiny artifacts**, **diffraction patterns**, and **instrumental noise**, which can mislead detection models.
