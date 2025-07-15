@@ -618,13 +618,13 @@ In our experiments, the objective metric selected for optimization was mean Aver
 
 The hyperparameter space was designed to explore a range of values that are known to influence both model convergence and generalization. It includes:
 
-* `batch_size`: values of 4, 8, and 16  
+* `batch_size`: values of 4 and 6 
   These values help explore the trade-off between training stability, memory efficiency, and gradient estimation quality.  
-* `learning_rate`: sampled log-uniformly between 1e-6 and 1e-2  
+* `learning_rate`: sampled log-uniformly between 5e-6 and 5e-3  
   This range allows the sweep to test both conservative and aggressive learning regimes, capturing several orders of magnitude of possible behavior.  
-* `weight_decay`: values of 1e-5, 1e-4, and 1e-2  
+* `weight_decay`: values of 0, 1e-6, 1e-4 and 5e-3  
   This regularization parameter helps prevent overfitting, especially in small or imbalanced datasets typical in scientific domains.  
-* `early_stopping_patience`: values of 0, 3, and 5  
+* `early_stopping_patience`: values of 5, 10, and 12  
   This parameter controls how many epochs without improvement are tolerated before stopping. Exploring different values allows us to assess the sensitivity of training time and convergence to early-stopping aggressiveness.
 
 The NMS threshold was setted to its default value of 0.5.
