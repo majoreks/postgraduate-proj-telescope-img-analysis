@@ -689,7 +689,26 @@ It should be noted that all of the experiments have been performed using the sam
 The NMS experiment showed that adjusting the NMS threshold impacts possitively in the system performance by reducing the overdetection of objects.
 
 # 7 Results
-The model obtained proposes more detections than the specified by the ground truth. The following figure is an histogram of the number of predictions minus the number of ground truth objects. The histogram is clearly biases and skewed positively.
+<p>
+  <img src="media/final-training_loss.png" alt="Loss over time" width="96.5%" />
+</p>
+<p>
+  <img src="media/final-training_best-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="media/final-training_best-per-gt.png" alt="IoU per ground truth" width="48%" />
+</p>
+<p>
+  <img src="media/final-training_map-50.png" alt="mAP@0.5 over time" width="48%" />
+</p>
+The training of the final model using hyperparameters defined by hyperparameter sweep has gone similarily to models trained for experiments purposes with the losses steadily declining. The model started with already very high performance, most likely by using pretrained weights. The model improved throughout the training, however i also displayed high level of fluctuations in metrics on validation set. Best IoU per prediction has improved with training, reaching value 0.71 indicating that the model has gained precision, similarily mAP at 0.5 IoU threshold has slightly improved after some epochs reaching nearly value 0.89 in it's peak.  
+
+| Dataset        | mAP@0.5 | mAP    | mAR@1000 | best_iou_per_gt | best_iou_per_prediction |
+|----------------|---------|--------|----------|-----------------|-------------------------|
+| **Test**       | 0.8878  | 0.5248 | 0.5958   | 0.7563          | 0.6413                  |
+| **Validation** | 0.8464  | 0.4936 | 0.5686   | 0.7327          | 0.6389                  |
+
+While the key metric of mAP@0.5 (mAP at 0.5 IoU threshold) is high it can be observed that mAP (average over range of IoU thresholds) is substantially lower which could indicate that while the model generally predicts objects correctly, the exact bounding boxes could be improved in terms of IoU.
+
+The model obtained proposes more detections than the specified by the ground truth. The following figure is an histogram of the number of predictions minus the number of ground truth objects. The histogram is clearly biases and skewed positively. Best IoU per ground truth and per prediciton metrics also indicate that, since best IoU per prediction is lower, it most likely is being penalized by predictions of the model that have no correspodning ground truth lowering the overall average.
 
 ![](media/histogram_BB_predictions_vs_targets.png)
 
