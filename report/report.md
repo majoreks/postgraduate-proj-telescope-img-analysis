@@ -343,7 +343,7 @@ The training pipeline integrates early stopping and checkpointing to ensure effi
 
   * The checkpointing mechanism monitors multiple evaluation metrics during training and selectively saves model checkpoints based on improvements in those metrics. For each metric defined in checkpoint_metrics, it compares the current value (score) with the best value seen so far (best_scores). If the new value is better—based on whether the metric is to be maximized or minimized—it updates the best score and saves a new checkpoint via save_best_checkpoint.
 
-  Additionally, if save_last is enabled, it always saves the most recent model at each epoch using save_last_checkpoint. After training concludes, it copies all best checkpoints from the temporary directory to a persistent output location and logs a summary of the best-performing epochs per metric using log_best_checkpoints.
+    Additionally, if save_last is enabled, it always saves the most recent model at each epoch using save_last_checkpoint. After training concludes, it copies all best checkpoints from the temporary directory to a persistent output location and logs a summary of the best-performing epochs per metric using log_best_checkpoints.
 
 ## 5.5 Other Modifications implemented to the models
 
