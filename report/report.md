@@ -85,11 +85,14 @@ Using **deep learning object detection models** (Faster R-CNN with ResNet backbo
 
 The Team has worked with a set of **astronomical images** professionally **pre-processed** by the telescope science data provided and uploaded correspondingly to the SVO (https://svo.cab.inta-csic.es/main/index.php) , with the goal of detecting **relevant astrophysical objects**, such as **stars**, **galaxies**, or other celestial bodies.
 
-The dataset has two big blocks: the *.fits* images and the ground truth, which is a file with *.dat* extension. As it is stated in the bibliography \[ref 2\], fits images are very heavy to manage in ram memory during execution.
+The dataset has two big blocks: the *.fits* images and the ground truth, which is a file with *.dat* extension. Fits images are very heavy to manage in ram memory during execution (see bibliography \[ref 2\]).
 
-## 2.1 Image characteristics initial dataset (before cleaning)
+## 2.1 Image characteristics initial dataset (before cleaning to build the Groung Truth Dataset)
 
-*The size of the file is 4096 4098 px. CCD theory. Add image of the detector. and the size 
+*The size of the file is 4096 4098 pixels, being a pixel the minimum resolution unit of the CCD detector. 
+
+![dat_file](media/dat_file.png)
+
 
 * **High variability** in the appearance of these objects: they can differ greatly in **shape**, **brightness**, **size**, and **contrast**.
 
