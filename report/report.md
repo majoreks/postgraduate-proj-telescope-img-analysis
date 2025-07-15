@@ -289,14 +289,7 @@ For data augmentation, originally images were cropped to get 1 image of 512x512 
   * Considered early stopping (optional, based on wandb config)  
   * 
 
-## 4.7 Main Hyperparameters
-
-* `batch_size`: \[4, 8, 16\]
-* `learning_rate`: log-uniform \[1e-6 to 1e-2\]
-* `early_stopping_patience`: \[0, 3, 5\]
-* `weight_decay`: \[1e-5, 1e-4, 1e-2\]
-
-## 4.8 Other Modifications implemented to the models
+## 4.7 Other Modifications implemented to the models
 
 Faster R-CNN has a default maximum number of objects per image to 100, which was set to 1000 since some 512x512 crops contained more than 200 using the input parameter:
 
