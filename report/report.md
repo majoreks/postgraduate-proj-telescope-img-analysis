@@ -712,13 +712,13 @@ The model obtained proposes more detections than the specified by the ground tru
 
 ![](media/histogram_BB_predictions_vs_targets.png)
 
-This does not imply that these are false detections; on the contrary, new objects are detected as can be seen in the next figures, where multiple new objects are detected. These detections seem to match reality, but since they do not match the ground truth. Metrics are impacted negatively eventhough visually the model seems to generalize well. No false detection seem to happen with respect to objects present in the images, but some objects are detected multiple times, which implies that the NMS threshold should be adjusted.
+The model often detects object instances that are not annotated in the ground truth. Visual inspection suggests these extra detections correspond to real objects that were simply omitted from the labels, yet under the current evaluation protocol they are counted as errors. Further investigation may be needed to clarify this discrepancy.
 
 <figure>
   <div align="center">
     <img src ="media/labels_2_TJO2459810_59700_2_U_imc.png" width="33%" /><img src ="media/labels_11_TJO2459820_55570_3_U_imc.png" width="33%" /><img src ="media/labels_37_TJO2459838_47861_1_U_imc.png" width="33%" />
   </div>
-  <figcaption align="center">3 examples infered from the validation dataset with NMS=0.3.</figcaption>
+  <figcaption align="center">3 examples infered from the test set with NMS=0.3.</figcaption>
 </figure>
 
 # 8 Conclusions
