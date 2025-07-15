@@ -662,13 +662,17 @@ The speed guard is injected into the training loop via the on\_batch\_end callba
 
 ### 6.6.4 Results
 
-After 1080 minutes, 30 consecutive attemps were performed: 13 of them ended succesfully while the remaining 17 were aborted following the logic explained before. The impact on the `map_50` is summarized in the following figure:
+After 1080 minutes, 30 consecutive attemps were performed: 13 of them ended succesfully while the remaining 17 were aborted following the logic explained before. 
 
-| ![](media/OverallSweepMetrics.png) |
+ ![](media/param-sweep-run.png) 
+
+The impact on the `map_50` is summarized in the following figure:
+
+![](media/OverallSweepMetrics.png)
 
 The top 3 sweeps resulted:
 
-| ![](media/Best3Sweeps.png) |
+![](media/Best3Sweeps.png)
 
 with the following hyperparams:
 
