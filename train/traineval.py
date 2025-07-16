@@ -176,7 +176,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device, model_
 
 def inference(config, tempdir, device, weights_path: str, task_name: str, model_type: str | None = None, resnet_type: str | None = None, save_fig=True):
     
-    test_data_path = os.path.join(config["data_path"], "test_dataset")
+    test_data_path = os.path.join(config["data_path"], "test_dataset_cropped")
     output_path = Path(f"{config['output_path']}/{task_name}-inference")
     output_path.mkdir(parents=True, exist_ok=True)
 
