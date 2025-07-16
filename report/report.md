@@ -499,7 +499,8 @@ In this stage of experiments we explore backbone architecture choices among diff
 ResNet is a deep convolutional network architecture that introduces residual, or skip, connections to help train very deep models. In each residual block the input is added directly to the output of a few stacked convolutional layers, letting the network learn only the “residual” needed to improve performance. This design mitigates vanishing‐gradient issues and allows networks with dozens or even hundreds of layers to converge faster and achieve higher accuracy.  
 
 Below diagram depicts ResNet block and ResNet(18) architecture
-![alt text](media/resnet-block.svg) ![alt text](media/resnet18-90-1.svg)  
+
+![alt text](media/resnet-block.png) ![alt text](media/resnet18-90-1.png)  
 By configuring different numbers of channels and residual blocks in the module, we can create different ResNet models, such as the deeper 152-layer ResNet-152
 
 ### 7.3.2 Hypothesis
@@ -758,7 +759,7 @@ Having possibility of using data from Spanish Virtual Observatory, a dataset cou
 Possible line of development involves splitting ground truth used in this project into more labels. It is known that under objects of interest used for training models presented in this project there are different classes of objects, such as stars, galaxies nebulas and other celestial objects of scientific interest.  
 This direction however presents problem of ground truth labels, which don't include sufficient information to accurately define such labels.
 
-Other possiblities include exploring the dynamic backbone freezing technique and/or adding skipping layers might help to improve the system performance, since it could facilitate to optimize the first layer. Using random zooms or a FPN backbone could help to generalize the size of objects, since most of the objects in the image have similar sizes. Addtionally, it could be interesting to perform inference in images from the southern hemisphere sky (obviously not available in this telescope) to evaluate if the model generalizes well, or if it learnt the position of some objects because it learn the sky constellations.
+Other possiblities include exploring the dynamic backbone freezing technique and/or adding skipping layers might help to improve the system performance, since it could facilitate to optimize the first layer. Using random zooms or a FPN backbone could help to generalize the size of objects, since most of the objects in the image have similar sizes. Addtionally, it could be interesting to perform inference in images from the southern hemisphere sky (not available in this telescope) to evaluate if the model generalizes well, or if it learnt the position of some objects because it learn the sky constellations.
 
 # Bibliography
 
