@@ -555,7 +555,7 @@ In this experiment both networks were trained using ResNet50 backbone and pretra
 <p>
   <img src="report/media/exp_faster-rcnn-v_map-50.png" alt="mAP@0.5 over time" width="48%" />
 </p>
-The main apparent difference between using v2 model instead of v1 according to the experimet is that the v2 model achieves higher results faster than the v1 counterpart. The final difference between max _mAP_50_ between both models was $0.87$ for v2 and $0.862$ for v1, however v1 model needed 75 epochs whereas v2 model achieved $0.87$ _mAP_50_ in 30 epochs.  
+The main apparent difference between using v2 model instead of v1 according to the experimet is that the v2 model achieves higher results faster than the v1 counterpart. The final difference between max mAP_50 between both models was 0.87 for v2 and 0.862 for v1, however v1 model needed 75 epochs whereas v2 model achieved 0.87 mAP_50 in 30 epochs.  
 Even though it took less epochs for for the v2 model to achieve high metric reuslt, the time was similar due to increased complexity of the v2 model and thus each epoch taking longer to train.
 
 | Network     | Number of parameters (total) |
