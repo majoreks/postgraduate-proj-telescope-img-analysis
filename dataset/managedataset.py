@@ -135,7 +135,7 @@ def check_and_split(config,temp_dir, device):
             if len(os.listdir(data_path)) >= 3:
                 folders = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(config["data_path"], f))]
                 print(f"La variables sel(folfers) es de la forma {set(folders)}")
-                required_folders = {"metadataless_dataset", "test_dataset", "train_dataset"}
+                required_folders = {"metadataless_dataset_cropped", "test_dataset_cropped", "train_dataset_cropped"}
                 if required_folders.issubset(set(folders)):
                     need_to_split = False
                     print("Dataset already split into train and test folders.")

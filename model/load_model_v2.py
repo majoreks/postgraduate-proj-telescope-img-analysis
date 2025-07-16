@@ -1,7 +1,8 @@
+from typing import Callable
 import torch
 import torch.nn as nn
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone, _resnet_fpn_extractor, _validate_trainable_layers
-from torchvision.models import resnet50, resnet34, resnet101, ResNet34_Weights, ResNet101_Weights
+from torchvision.models import resnet50, resnet34, resnet101, resnet18, ResNet34_Weights, ResNet101_Weights, ResNet50_Weights, WeightsEnum, ResNet18_Weights, ResNet34_Weights
 from model.FastRCNNConvFCHead import FastRCNNConvFCHead
 from model.FastRCNNPredictor import FastRCNNPredictor
 from model.FasterRCNN import FasterRCNN
@@ -16,14 +17,26 @@ representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 2 # object of interest + background
 
-def load_model_v2(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None) -> nn.Module:
+def resnet_loader(resnet_type: str | None) -> tuple[Callable, WeightsEnum]:
+    if resnet_type is None or resnet_type == 'resnet50':
+        return resnet50, ResNet50_Weights
+    if resnet_type == 'resnet18':
+        return resnet18, ResNet18_Weights
+    if resnet_type == 'resnet34':
+        return resnet34, ResNet34_Weights
+    if resnet_type == 'resnet101':
+        return resnet101, ResNet101_Weights
+
+def load_model_v2(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None, resnet_type: str | None = None) -> nn.Module:
     print(f'loading v2 model')
     
     box_detections_per_img= config['box_detections_per_img']
     nms_threshold = config['nms_threshold']
 
-    print(f'backbone resnet50 | no pretrained weights for backbone')
-    backbone = resnet50(weights=None, progress=True)
+    resnet, weights = resnet_loader(resnet_type)
+
+    print(f'backbone {resnet_type} | using pretrained weights {weights}')
+    backbone = resnet(weights=weights, progress=True)
 
     # trainable_backbone_layers = _validate_trainable_layers(True, None, 5, 3)
     trainable_backbone_layers = 5
@@ -44,10 +57,11 @@ def load_model_v2(device: torch.device, config:dict, load_weights: bool = False,
 
         return model
 
-    print(f'loading pretrained weights for the model')
-    url = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth"
-    state_dict =  torch.hub.load_state_dict_from_url(url)
-    model.load_state_dict(state_dict)
+    if resnet_type is None:
+        print(f'loading pretrained weights for the model')
+        url = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth"
+        state_dict =  torch.hub.load_state_dict_from_url(url)
+        model.load_state_dict(state_dict)
 
     # substitute first layer with one that accepts 1 channel image
     old_conv = model.backbone.body.conv1
@@ -55,11 +69,6 @@ def load_model_v2(device: torch.device, config:dict, load_weights: bool = False,
     new_conv.weight.data = old_conv.weight.data.mean(dim=1, keepdim=True)
     model.backbone.body.conv1 = new_conv
 
-    # for name, param in model.backbone.named_parameters():
-    #     if name.startswith("body.conv1") or name.startswith("body.layer1"):
-    #         param.requires_grad = True
-    #     else:
-    #         param.requires_grad = False
     for param in model.parameters():
         param.requires_grad = True
 

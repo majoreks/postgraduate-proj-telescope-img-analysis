@@ -10,11 +10,11 @@ import wandb
 def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    mode, task, dev = read_arguments()
+    mode, task, dev, weights_path, resnet_type, model_type = read_arguments()
 
     config = {
         "lr": 1e-3,
-        "batch_size": 4,
+        "batch_size": 2,
         "epochs": 200,
         "data_path": "../images1000_filtered",
         "output_path": "./output",
@@ -24,6 +24,8 @@ def main() -> None:
         "train_val_split": [0.9, 0.1],   # train dataset split in train + val
         "crop_size": 512,
         "nms_threshold":0.3,
+        "weight_decay": 1e-6,
+        "patience": 10,
         # Checkpointing config
         "checkpointing": {
             "enabled": True,
@@ -66,9 +68,9 @@ def main() -> None:
         check_and_split(config,temp_dir=tempdir, device=device)
         
         if mode == Mode.TRAIN:
-            train_model(config, tempdir, task, dev, device=device)
+            train_model(config, tempdir, task, dev, device=device, model_type=model_type, resnet_type=resnet_type)
         elif mode == Mode.INFER:
-            inference(config, tempdir, device=device)
+            inference(config, tempdir, device=device, model_type=model_type, resnet_type=resnet_type, task_name=task, weights_path=weights_path)
         elif mode == Mode.EXPERIMENT:
             sweep_id = wandb.sweep(sweep_config, project="postgraduate-sat-object-detection")
             wrapper = sweep_wrapper_factory(config, sweep_config, task, dev, device, tempdir)
