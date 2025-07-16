@@ -1,21 +1,3 @@
-import torch
-import albumentations as A
-from torch.utils.data import DataLoader, Subset
-from tqdm import tqdm
-from dataset.dataloader import custom_collate_fn
-from dataset.telescope_dataset import TelescopeDataset
-from logger.logger import Logger
-from model.load_model import load_model
-from model.load_model_v2 import load_model_v2, read_model_v2
-from model.model_reader import save_model, download_model_data, read_model
-from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
-from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchmetrics.functional.detection import intersection_over_union
-from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
-import os
-from train.EarlyStopping import EarlyStopping
-
-
 early_stopping_metric = "map_50"
 
 
@@ -65,7 +47,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     model = load_model_v2(device, config)
 
     model = model.train()
-    optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
+    optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=config["lr"], weight_decay=config["weight_decay"])
     logger.log_model(model)
 
     start = 0.3 * config["box_detections_per_img"]
@@ -82,7 +64,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     save_last = config.get("checkpointing", {}).get("save_last", True)
     metric_best_epochs = {}
 
-    early_stopping = EarlyStopping(early_stopping_metric)
+    early_stopping = EarlyStopping(early_stopping_metric, patience=config["patience"])
 
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
@@ -173,21 +155,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
 
 def inference(config, tempdir, device, save_fig=True):
     
-    data_transforms = A.Compose([A.ToTensorV2()], 
-                                 bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
-                                                          filter_invalid_bboxes=True))
-
-    
-    # torch.manual_seed(42*42)
-    # test_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
-    # dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
-    # _ , t_dataset = torch.utils.data.random_split(dataset, config['train_val_split'])
-    # test_loader = DataLoader(t_dataset, batch_size=1, collate_fn=custom_collate_fn)
-
-    test_data_path = os.path.join(config["data_path"], "test_dataset_cropped")
-    dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
-    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
-
+    test_data_path = os.path.join(config["data_path"], "test_dataset")
 
     print('inference', test_data_path)
     print('-----')
@@ -197,37 +165,23 @@ def inference(config, tempdir, device, save_fig=True):
     else:
         print("El directorio existe.")
 
-
-    # download_model_data()
-    # model = load_model(device, config=config, load_weights=True)
-    # model = read_model(model, device)
-
-    model = load_model_v2(device, config)
-    model = read_model_v2(model, device)
+    
+    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.ToTensorV2()], 
+                                 bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
+                                                          filter_invalid_bboxes=True))
 
 
-    nms_threshold  = config['nms_threshold']
-    model.roi_heads.nms_thresh = nms_threshold
+    dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
+    test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
+    download_model_data()
+    model = load_model(device, config=config, load_weights=True)
+    model = read_model(model, device)
     model.eval()
 
     print(f"Número de muestras cargadas: {len(dataset)}")
 
-    start = 0.3 * config["box_detections_per_img"]
-    end = config["box_detections_per_img"]
-    detection_thresholds = [
-        int(start),
-        int((start + end) / 2),
-        int(end)
-    ]
-    mAPMetric = MeanAveragePrecision(iou_type="bbox", max_detection_thresholds=detection_thresholds, backend='faster_coco_eval')
-    mAPMetric.reset()
-    ious_dim0 = []
-    ious_dim1 = []
-
     results = []
-    BBtargets = []
-    BBpredictions = []
 
     with torch.no_grad():
         for idx, (images, targets) in enumerate(test_loader):
@@ -244,12 +198,6 @@ def inference(config, tempdir, device, save_fig=True):
 
             # Obtener predicciones del modelo
             predictions, _ = model(images, targets)
-            mAPMetric.update(predictions, targets)
-
-            for pred, target in zip(predictions, targets):
-                iou = intersection_over_union(pred["boxes"], target["boxes"], aggregate=False)
-                ious_dim0.append(iou.max(dim=0).values)
-                ious_dim1.append(iou.max(dim=1).values)
 
             # Aux variables
             image=images[0].cpu().numpy()
@@ -259,9 +207,6 @@ def inference(config, tempdir, device, save_fig=True):
 
             # Print results from the model
             print(f"[{idx}] Image {filename} GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
-
-            BBtargets.append(len(targets[0]['boxes']))
-            BBpredictions.append(len(predictions[0]['boxes']))
 
             # Saves the inference plotted image
             if save_fig:
@@ -281,29 +226,10 @@ def inference(config, tempdir, device, save_fig=True):
                 'filename': filename  # nombre del archivo de imagen
             })
 
-    mAPMetrics = mAPMetric.compute()
-    mAPMetrics.pop("classes", None)
-
-    iou_dim0 = torch.cat(ious_dim0).mean()       # 1-D tensor of length = sum of all element-counts
-    iou_dim1 = torch.cat(ious_dim1).mean()
-
-    print(f"Inference completed. mAP Metrics: {mAPMetrics}, IOU Metrics: {iou_dim0}, {iou_dim1}")
-
     # Opcional: guardar en disco como torch.save
     output_path = os.path.join(tempdir, "results.pt")
     torch.save(results, output_path)
     print(f"\nResultados guardados en: {output_path}")
-
-    # import matplotlib.pyplot as plt
-    # import numpy as np
-    # plt.figure(figsize=(10, 5))
-    # plt.hist(np.asarray(BBpredictions)-np.asarray(BBtargets), bins=50, alpha=0.5, label='BB Targets', color='blue')
-    # plt.title('Histogram of #N Predicted Bounding Boxes - #N Ground Truth Bouding Boxes')
-    # plt.grid()
-    # plt.xlabel('Difference (Predicted - Ground Truth)')
-    # plt.ylabel('Frequency')
-    # plt.savefig(os.path.join(config['output_path'], "histogram_BB_predictions_vs_targets.png"))
-    # plt.close()
 
     #avaluar el model sobre les dades de test:
         #1. filtrar objecte dataset a la regió test del dataset (szimon to harmonize)
@@ -317,7 +243,7 @@ def inference(config, tempdir, device, save_fig=True):
     #estructura de dades com s'itera
     #utilitzar aquelles que hagin anat a parar al badge de test
 
-def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, sweep_params) -> None:
+def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, sweep_params, on_batch_end=None) -> None:
     logger = Logger(task, sweep_params, dev)
 
     data_transforms = A.Compose([
@@ -325,7 +251,7 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
         A.ToTensorV2()
     ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
-    train_data_path = os.path.join(config["data_path"], "train_dataset")
+    train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
     dataset = TelescopeDataset(train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
 
     print(f"[DEBUG] Dataset root path: {train_data_path}")
@@ -352,7 +278,7 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
         - early_stopping_patience = {patience}
     """)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=2)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
 
     model = load_model_v2(device, config)
@@ -392,6 +318,8 @@ def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, s
             predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
             for k, v in loss_dict.items():
                 train_losses.setdefault(k, []).append(v.item())
+            if on_batch_end is not None:
+                on_batch_end() 
 
         avg_train = {k: sum(v)/len(v) for k, v in train_losses.items()}
         logger.log_train_loss(avg_train, is_train=True)
