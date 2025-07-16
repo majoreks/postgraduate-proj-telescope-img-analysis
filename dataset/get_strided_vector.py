@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 def getStridedVector(length, Num_pixels):
 
@@ -6,7 +7,7 @@ def getStridedVector(length, Num_pixels):
     excessheight = int(( - length % Num_pixels ) % Num_pixels)
     heightstride = int(excessheight // (Nheight-1))
     pos = []
-
+    
     for ii in range(int(Nheight)):
         if ii == 0:
             elem = [0, Num_pixels]

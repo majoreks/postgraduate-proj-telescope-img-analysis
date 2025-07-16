@@ -15,7 +15,7 @@ class FasterRCNN(nn.Module):
                  box_score_thresh=0.05, box_nms_thresh=0.5, box_detections_per_img=100,
                  box_fg_iou_thresh=0.5, box_bg_iou_thresh=0.5,
                  box_batch_size_per_image=512, box_positive_fraction=0.25,
-                 bbox_reg_weights=None, num_classes=91):
+                 bbox_reg_weights=None, num_classes=91, conv_depth=1):
         super().__init__()
         # First, set the backbone that we will use to extract the feature maps
         self.backbone = backbone
@@ -31,7 +31,7 @@ class FasterRCNN(nn.Module):
 
         # Declare the Head of the RPN that will classify the proposals
         rpn_head = RPNHead(
-            out_channels, rpn_anchor_generator.num_anchors_per_location()[0]
+            out_channels, rpn_anchor_generator.num_anchors_per_location()[0], conv_depth=conv_depth
         )
         rpn_pre_nms_top_n = {"training": rpn_pre_nms_top_n_train, "testing": rpn_pre_nms_top_n_test}
         rpn_post_nms_top_n = {"training": rpn_post_nms_top_n_train, "testing": rpn_post_nms_top_n_test}

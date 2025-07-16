@@ -11,12 +11,16 @@ representation_size = 1024
 num_classes_pretrained = 91
 num_classes = 2 # object of interest + background
 
-def load_model(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None) -> nn.Module:
+def load_model(device: torch.device, config:dict, load_weights: bool = False, weights_path: str = None, resnet_type: str | None = None) -> nn.Module:
+    print(f'loading v1 model')
 
     box_detections_per_img= config['box_detections_per_img']
     nms_threshold = config['nms_threshold']
 
-    backbone = resnet_fpn_backbone("resnet50", pretrained=not load_weights)
+    resnet_type_load = "resnet50" if resnet_type is None else resnet_type
+    backbone = resnet_fpn_backbone(resnet_type_load, pretrained=not load_weights)
+    print(f'backbone {resnet_type} | loading pretrained weights for backbone: {not load_weights}')
+
     model = FasterRCNN(backbone, box_detections_per_img=box_detections_per_img)
 
     model.roi_heads.box_head = TwoMLPHead(in_size, representation_size)
@@ -31,9 +35,10 @@ def load_model(device: torch.device, config:dict, load_weights: bool = False, we
 
         return model
 
-    url = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
-    state_dict =  torch.hub.load_state_dict_from_url(url)
-    model.load_state_dict(state_dict)
+    if resnet_type is None:
+        url = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
+        state_dict =  torch.hub.load_state_dict_from_url(url)
+        model.load_state_dict(state_dict)
 
     # substitute first layer with one that accepts 1 channel image
     old_conv = model.backbone.body.conv1

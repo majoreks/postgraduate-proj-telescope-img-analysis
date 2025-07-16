@@ -1,11 +1,14 @@
+import json
 import torch
 import albumentations as A
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
+from dev_utils.tensor_serializer import serialize_tensor
 from logger.logger import Logger
 from model.load_model import load_model
+from model.load_model_v2 import load_model_v2
 from model.model_reader import save_model, download_model_data, read_model
 from dev_utils.plotImagesBBoxes import plotFITSImageWithBoundingBoxes
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -13,8 +16,7 @@ from torchmetrics.functional.detection import intersection_over_union
 from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
 from train.EarlyStopping import EarlyStopping
-from postprocess.metrics import compute_confusion_matrix, plot_confusion_matrix
-
+from pathlib import Path
 
 early_stopping_metric = "map_50"
 
@@ -46,15 +48,15 @@ def eval_single_epoch(model, images, device):
     return predictions
 
 
-def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> None:
+def train_model(config: dict, tempdir: str, task: str, dev: bool, device, model_type: str | None, resnet_type: str | None) -> None:
 
     data_transforms = A.Compose([A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
     train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
     joan_oro_dataset = TelescopeDataset(data_path=train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     if dev:
-        joan_oro_dataset = Subset(joan_oro_dataset, range(min(50, len(joan_oro_dataset))))
-        config["epochs"] = 3
+        joan_oro_dataset = Subset(joan_oro_dataset, range(min(20, len(joan_oro_dataset))))
+        config["epochs"] = 2
     
     torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, config['train_val_split'])
@@ -62,10 +64,11 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
     logger = Logger(task, config, dev)
-    model = load_model(device, config)
+    model_loader = load_model if model_type == "v1" else load_model_v2
+    model = model_loader(device, config, resnet_type=resnet_type)
 
     model = model.train()
-    optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=1e-4, weight_decay=0.001)
+    optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=config["lr"], weight_decay=config["weight_decay"])
     logger.log_model(model)
 
     start = 0.3 * config["box_detections_per_img"]
@@ -82,7 +85,7 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     save_last = config.get("checkpointing", {}).get("save_last", True)
     metric_best_epochs = {}
 
-    early_stopping = EarlyStopping(early_stopping_metric)
+    early_stopping = EarlyStopping(early_stopping_metric, patience=config["patience"])
 
     for epoch in range(config['epochs']):
         print(f"\nEpoch {epoch+1}/{config['epochs']}")
@@ -171,9 +174,11 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     logger.flush()
 
 
-def inference(config, tempdir, device, save_fig=True):
+def inference(config, tempdir, device, weights_path: str, task_name: str, model_type: str | None = None, resnet_type: str | None = None, save_fig=True):
     
     test_data_path = os.path.join(config["data_path"], "test_dataset_cropped")
+    output_path = Path(f"{config['output_path']}/{task_name}-inference")
+    output_path.mkdir(parents=True, exist_ok=True)
 
     print('inference', test_data_path)
     print('-----')
@@ -192,9 +197,8 @@ def inference(config, tempdir, device, save_fig=True):
     dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
-    # download_model_data()
-    model = load_model(device, config=config, load_weights=True)
-    model = read_model(model, device)
+    model_loader = load_model if model_type == "v1" else load_model_v2
+    model = model_loader(device, config=config, load_weights=True, weights_path=weights_path, resnet_type=resnet_type)
 
     nms_threshold  = config['nms_threshold']
     model.roi_heads.nms_thresh = nms_threshold
@@ -252,15 +256,9 @@ def inference(config, tempdir, device, save_fig=True):
 
             BBtargets.append(len(targets[0]['boxes']))
             BBpredictions.append(len(predictions[0]['boxes']))
-
             # Saves the inference plotted image
             if save_fig:
-                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, 
-                                               labels_ground_truth=ground_truth, 
-                                               save_fig=True, 
-                                               save_fig_sufix=f"{idx}_{filename}", 
-                                               output_path=config["output_path"],
-                                               title_sufix=filename)              
+                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=f"{idx}_{filename}", title_sufix=filename, output_path=os.path.join(output_path, "images_inference"))              
 
             # Almacenar resultados
             results.append({
@@ -276,8 +274,16 @@ def inference(config, tempdir, device, save_fig=True):
 
     iou_dim0 = torch.cat(ious_dim0).mean()       # 1-D tensor of length = sum of all element-counts
     iou_dim1 = torch.cat(ious_dim1).mean()
+    iou_metrics = {
+        "best_iou_per_gt": iou_dim0, "best_iou_per_prediction": iou_dim1
+    }
+    print(f"Inference completed. mAP Metrics: {mAPMetrics}, IOU Metrics: {iou_metrics}")
 
-    print(f"Inference completed. mAP Metrics: {mAPMetrics}, IOU Metrics: {iou_dim0}, {iou_dim1}")
+    metrics_output_path = Path(os.path.join(output_path, "evaluation_metrics", "metrics.json"))
+    metrics_output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(metrics_output_path, 'w') as f:
+        json.dump(serialize_tensor(mAPMetrics, iou_metrics), f)
 
     # Opcional: guardar en disco como torch.save
     output_path = os.path.join(tempdir, "results.pt")
@@ -295,3 +301,143 @@ def inference(config, tempdir, device, save_fig=True):
 
     #estructura de dades com s'itera
     #utilitzar aquelles que hagin anat a parar al badge de test
+
+def train_experiment(config: dict, tempdir: str, task: str, dev: bool, device, sweep_params, on_batch_end=None) -> None:
+    logger = Logger(task, sweep_params, dev)
+
+    data_transforms = A.Compose([
+        A.RandomRotate90(p=1),
+        A.ToTensorV2()
+    ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
+
+    train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
+    dataset = TelescopeDataset(train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
+
+    print(f"[DEBUG] Dataset root path: {train_data_path}")
+    print(f"[DEBUG] Nº de muestras cargadas: {len(dataset)}")
+
+    if dev:
+        dataset = Subset(dataset, range(min(50, len(dataset))))
+        config["epochs"] = 3
+
+    torch.manual_seed(42 * 42)
+    train_dataset, val_dataset = torch.utils.data.random_split(dataset, config["train_val_split"])
+
+    # Parámetros
+    batch_size = sweep_params.get("batch_size", 4)
+    lr = sweep_params.get("lr", 1e-3)
+    weight_decay = sweep_params.get("weight_decay", 1e-4)
+    patience = sweep_params.get("early_stopping_patience", 0)
+
+    print(f"""
+        Sweep Parameters:
+        - batch_size              = {batch_size}
+        - learning_rate (lr)      = {lr}
+        - weight_decay            = {weight_decay}
+        - early_stopping_patience = {patience}
+    """)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn, num_workers=8)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
+
+    model = load_model_v2(device, config)
+
+    model = model.train()
+    optimizer = torch.optim.Adam(
+        list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()),
+        lr=lr,
+        weight_decay=weight_decay
+    )
+
+    logger.log_model(model)
+
+    # Métricas
+    start = 0.3 * config["box_detections_per_img"]
+    end = config["box_detections_per_img"]
+    detection_thresholds = [int(start), int((start + end) / 2), int(end)]
+    mAPMetric = MeanAveragePrecision(iou_type="bbox", max_detection_thresholds=detection_thresholds, backend='faster_coco_eval')
+
+    # Checkpointing
+    checkpoint_enabled, checkpoint_dir, checkpoint_metrics, best_scores = init_checkpointing(config, tempdir)
+    save_last = config.get("checkpointing", {}).get("save_last", True)
+    metric_best_epochs = {}
+
+    early_stopping_metric = config.get("checkpointing", {}).get("early_stopping_metric", "map_50")
+    early_stopping = EarlyStopping(early_stopping_metric, patience=patience)
+    epochs = config['epochs']
+    for epoch in range(epochs):
+        print(f"\nEpoch {epoch + 1}/{epochs}")
+        train_losses = {}
+
+        for _, (images, targets) in tqdm(enumerate(train_loader), total=len(train_loader), desc=f"train | epoch {epoch+1}"):
+            if len(images) == 0 or len(targets) == 0:
+                print("Batch vacío, saltando")
+                continue
+
+            predictions, loss_dict = train_single_epoch(model, images, targets, optimizer, device)
+            for k, v in loss_dict.items():
+                train_losses.setdefault(k, []).append(v.item())
+            if on_batch_end is not None:
+                on_batch_end() 
+
+        avg_train = {k: sum(v)/len(v) for k, v in train_losses.items()}
+        logger.log_train_loss(avg_train, is_train=True)
+
+        mAPMetric.reset()
+        ious_dim0, ious_dim1 = [], []
+
+        with torch.no_grad():
+            for _, (images, targets) in tqdm(enumerate(val_loader), total=len(val_loader), desc=f"eval | epoch {epoch+1}"):
+                predictions = eval_single_epoch(model, images, device)
+                predictions = [{k: v.detach().cpu() for k, v in pred.items()} for pred in predictions[0]]
+                mAPMetric.update(predictions, targets)
+
+                for pred, target in zip(predictions, targets):
+                    iou = intersection_over_union(pred["boxes"], target["boxes"], aggregate=False)
+                    ious_dim0.append(iou.max(dim=0).values)
+                    ious_dim1.append(iou.max(dim=1).values)
+
+        mAPMetrics = mAPMetric.compute()
+        mAPMetrics.pop("classes", None)
+
+        iou_dim0 = torch.cat(ious_dim0).mean()
+        iou_dim1 = torch.cat(ious_dim1).mean()
+        iou_metrics = {
+            "best_iou_per_gt": iou_dim0,
+            "best_iou_per_prediction": iou_dim1
+        }
+
+        logger.log_train_loss(mAPMetrics, iou_metrics, is_train=False)
+        logger.step()
+
+        all_metrics = {**mAPMetrics, **iou_metrics}
+        early_stopping.step(all_metrics)
+
+        if early_stopping.should_stop:
+            print(f"Early stopping: no improvement in [{early_stopping_metric}]")
+            logger.log_early_stop()
+            break
+
+        if checkpoint_enabled:
+            for metric_name, mode in checkpoint_metrics.items():
+                score = all_metrics.get(metric_name)
+                if score is None:
+                    print(f"Metric '{metric_name}' not found.")
+                    continue
+
+                is_better = score > best_scores[metric_name] if mode == "max" else score < best_scores[metric_name]
+                if is_better:
+                    save_best_checkpoint(model, metric_name, score, best_scores, mode, checkpoint_dir)
+                    best_scores[metric_name] = score
+                    metric_best_epochs[metric_name] = (epoch, score)
+
+            if save_last:
+                save_last_checkpoint(model, checkpoint_dir)
+
+    save_model(model)
+
+    if checkpoint_enabled:
+        persist_checkpoints(os.path.join(tempdir, config["checkpointing"]["save_path"]), config["output_path"], task)
+        log_best_checkpoints(metric_best_epochs, logger)
+
+    logger.flush()
