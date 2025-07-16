@@ -22,8 +22,8 @@
 - [8 Results](#8-results)  
 - [9 Conclusions](#9-conclusions)  
   - [9.1 Next steps](#91-next-steps)  
-- [Bibliography](#bibliography) 
-- [Appendices]
+- [Bibliography](#bibliography)
+- [Appendices](#appendices)
 
 # 1 Introduction
 
@@ -55,13 +55,13 @@ The Team has worked with a set of **astronomical images** professionally **pre-p
 Joan Oró telescope images are monochromatic and are stored in FITS format. Each file includes embedded metadata with information such as exposure time, or the telescope poyinting direction. Images size is 1024x1024 pixels or 2048x2048 pixels deppending on the file. Deppending on how dark the night, the turbulence condtions of the atmosphere, the proximity to the moon and the exposition time, images can be more or less noisier as shown in the next figure.
 
 <p>
-  <img src="report/medmedmedinice_det_3.PNG" alt="Lower noise image" height="500" />
-  <img src="report/medmedmedibinary_ESO.png" alt="Higher noise image" height="500" />
+  <img src="report/media/nice_det_3.PNG" alt="Lower noise image" height="500" />
+  <img src="report/media/binary_ESO.png" alt="Higher noise image" height="500" />
 </p>
 
 Ground truth is obtained from the "catalogue" data, plain text files that are the result of a professional data processing from the observations taken from the telescope during one night. This file includes, among other astrophysical parameters the AR and DEC and X,Y coordinates in the image of each catalogued astronomical object that should be present in the image, their apparent magnitude, radius and ellipticity, and flags from post processing, as shown in the following figure.
 
-![dat_file](report/medmedmedidat_file.png)
+![dat_file](report/media/dat_file.png)
 
 Objects non observable in the image can befiltered by removing objects with non-zero flags, or flux radius equal to 99. Afterwards, the box size is computed using the center of the object, its apparent radii, the ellipticity, and the FWHM (Full Widht Half Maximum, a parameter to define the width of a gaussian function) obtained from the catalogue, and the pixel scale obtained from the image metadata. The oordinates of the boxes are obtained as:
 
@@ -94,7 +94,7 @@ The dataset originally consisted on 1000 images. From there, 414 had to be remov
 
 | A satellite crossing the image | A galaxy with fringes in the background and different biases (rectangles) | Luminosity gradient | Luminosity gradient overlapped with different biases |
 |:----------------------------:|:--------------------------------------------------------:|:--------------------------------------------------------------:|:---------------------:|
-| ![satellite](report/medmedmedi1_sat.png) | ![zones](report/medmedmediGal_1.PNG) | ![fringes](report/medmedmedi2_gradient.PNG) | ![pattern](report/medmedmedi2_zones.PNG) |
+| ![satellite](report/media/1_sat.png) | ![zones](report/media/Gal_1.PNG) | ![fringes](report/media/2_gradient.PNG) | ![pattern](report/media/2_zones.PNG) |
 
 ## 2.3 Dataset 
 
@@ -110,7 +110,7 @@ In order to homogenize and make use of all possible information, images were cro
 
 *The size of the file is 4096 4098 pixels, being a pixel the minimum resolution unit of the CCD detector. 
 
-![dat_file](report/medmedidat_file.png)
+![dat_file](report/media/dat_file.png)
 
 
 * **High variability** in the appearance of these objects: they can differ greatly in **shape**, **brightness**, **size**, and **contrast**.
@@ -125,19 +125,19 @@ Examples of defects and **variability** of the data:
 
 | A satellite can be detected | Depending on the readout, different regions of the detector can have different biases | Example of fringes due to illumination in the background or filter defect | Examples of fringes II |
 |:----------------------------:|:--------------------------------------------------------:|:--------------------------------------------------------------:|:---------------------:|
-| ![satellite](report/medmedi1_sat.png) | ![zones](report/medmedi2_zones.PNG) | ![fringes](report/medmedi3_fringes.PNG) | ![pattern](report/medmedipattern4.PNG) |
+| ![satellite](report/media/1_sat.png) | ![zones](report/media/2_zones.PNG) | ![fringes](report/media/3_fringes.PNG) | ![pattern](report/media/pattern4.PNG) |
 
 
 Different illumination patterns and “contrast” between images due to different exposition time, different filters and different background illumination (sky luminosity counts). If the moon is near, or the object is near the twilight it can affect the background counts.
 
 | Saturated objects may appear | Gradient in the background illumination | A trace from a comet | A galaxy with high ellipticity |
 |:-----------------------------:|:----------------------------------------:|:---------------------:|:-----------------------------:|
-| ![](report/medmediESO_2.PNG) | ![](report/medmedi2_gradient.PNG) | ![](report/medmedi2_comet.png) | ![](report/medmedi2_galaxy.PNG) |
+| ![](report/media/ESO_2.PNG) | ![](report/media/2_gradient.PNG) | ![](report/media/2_comet.png) | ![](report/media/2_galaxy.PNG) |
 
 
 | A big galaxy with high ellipticity and different sizes | A big galaxy with high ellipticity and different sizes | Different background and appearance of the object due to the use of two different filters | Different background and appearance of the object due to the use of two different filters |
 |:------------------------------------------------------:|:------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|
-| ![](report/medmediGal_1.PNG) | ![](report/medmedigal_2.PNG) | ![](report/medmedigal_3.PNG) | ![](report/medmedigal_4.PNG) |
+| ![](report/media/Gal_1.PNG) | ![](report/media/gal_2.PNG) | ![](report/media/gal_3.PNG) | ![](report/media/gal_4.PNG) |
 
 
 ## 2.2 Ground truth characteristics
@@ -146,7 +146,7 @@ After the observation campaign in the telescope, images are processed with a pro
 
 This catalogue has astronomical information about the observed objects such as luminosity, position in the sky, ellipticity of the objects, , and other astrophysical features. As other telescopes over the world, it follows the unified sextractor format \[ref 3\]. However, there are some potential issues related to this file when handling a huge amount of data:
 
-![dat_file](report/medmedidat_file.png)
+![dat_file](report/media/dat_file.png)
 
 From this data we get the information to get the relevant objects form the image. In order to do so we .... pipeline and a sentence
 
@@ -166,7 +166,7 @@ Taking into account the previous issues a pre-processing of the data was done a 
 
 | Example of issue 2) | Example of issue 2) | Example of issue 3) |
 |:-------------------:|:-------------------:|:-------------------:|
-| ![](report/medmedihalfBB.png) | ![](report/medmediKO_few_BB.png) | ![](report/medmedinot_understandable.png) |
+| ![](report/media/halfBB.png) | ![](report/media/KO_few_BB.png) | ![](report/media/not_understandable.png) |
 
 * Individual review of hundreds of images to label the images.  
 * Identification of duplicates using metadata and visual content.  
@@ -183,11 +183,11 @@ Examples of the labels linked to the image files after a 1 by 1 inspection of th
   </tr>
   <tr>
     <td style="vertical-align:top; text-align:center">
-      <img src="report/medmedisaturation.PNG" width="400"/>
+      <img src="report/media/saturation.PNG" width="400"/>
     </td>
     <td style="vertical-align:top; text-align:center">
-      <img src="report/medmedinearly_saturated_profile.PNG" width="300"/><br/>
-      <img src="report/medmedisuper_saturated_profile.PNG" width="300"/>
+      <img src="report/media/nearly_saturated_profile.PNG" width="300"/><br/>
+      <img src="report/media/super_saturated_profile.PNG" width="300"/>
     </td>
   </tr>
 </table>
@@ -196,21 +196,21 @@ In the following table labels are summarized to illustrate variability of the da
 
 | ESO, COMET | TRACE | GALAXY | ESO |
 |:----------:|:-----:|:------:|:---:|
-| ![](report/medmediESO_comet.png) | ![](report/medmeditrace_2.png) | ![](report/medmedispiral_galaxy.png) | ![](report/medmediburned_det.PNG) |
-| ![](report/medmedicomet_2.png) | ![](report/medmeditraza_duda.png) | ![](report/medmediBBsize_OK_galaxy.PNG) | ![](report/medmediperfect_definitionofBB_3.png) |
+| ![](report/media/ESO_comet.png) | ![](report/media/trace_2.png) | ![](report/media/spiral_galaxy.png) | ![](report/media/burned_det.PNG) |
+| ![](report/media/comet_2.png) | ![](report/media/traza_duda.png) | ![](report/media/BBsize_OK_galaxy.PNG) | ![](report/media/perfect_definitionofBB_3.png) |
 
 
 | BINARY | LIGHT |
 | :---- | :---- |
-| ![](report/medmedibinary_ESO.png) | ![](report/medmedilight_2.PNG) |
+| ![](report/media/binary_ESO.png) | ![](report/media/light_2.PNG) |
 
 This processing gives as a result a generation of a **clean, high-quality dataset** with [labels associated to the file](https://drive.google.com/drive/folders/1bJ2Juznn3Gzg7jkGEJmCCFB1bcMXFdFk?usp=drive_link), in order to filter datasets and being able to generate controlled and labelled ground truth to perform the experiments:
 
-![label_file](report/medmedilabel_file.png)
+![label_file](report/media/label_file.png)
 
 In the following graph, the variance of the images is summarized ([script](https://colab.research.google.com/drive/1Zildsp_DplN5QcJmf9-2w8AyHPB6686q?usp=drive_link)):
 
-![](report/medmediabundanceOfImages.png)
+![](report/media/abundanceOfImages.png)
 
 In order to **just take into account images with relevant objects** we only include in the model exploration and training a clean dataset. To do so, [some datasets were prepared](https://colab.research.google.com/drive/1r49XJp1SminHT5qjxWdTCSZ7A8Eq813h?usp=drive_link), selecting the labels OK, OK and ESO among the 1000 images that were obtained by Joan Oro's telescope repository. 
 
@@ -218,14 +218,14 @@ The model of this project has been trained with a [dataset of 299 images](https:
 
 | Example 1 | Example 2 | Example 3 | Example 4 |
 |:---------:|:---------:|:---------:|:---------:|
-| ![](report/medmedi1_nice_det.PNG) | ![](report/medmedi2_nice_det.PNG) | ![](report/medmedi4_nice_det.PNG) | ![](report/medmedinice_det_3.PNG) |
+| ![](report/media/1_nice_det.PNG) | ![](report/media/2_nice_det.PNG) | ![](report/media/4_nice_det.PNG) | ![](report/media/nice_det_3.PNG) |
 
 **Figure**: Examples of how *bounding boxes* have been adjusted in the astronomical objects in the model training.
 
 
 Even though the dataset has been reduced to retain only reliable labels, there are still plenty of extreme outliers that heavily skew the data. The diagrams below show histograms and boxplots of object sizes with and without outliers
-![alt text](report/medmedidata_object-distribution-hist.png)
-![alt text](report/medmedidata_object-distribution-boxplot.png)   
+![alt text](report/media/data_object-distribution-hist.png)
+![alt text](report/media/data_object-distribution-boxplot.png)   
 In both cases it can be seen that there are extreme outliers heavily skewing the data beyond it’s otherwise close to normal distribution.
 
 ### 2.3.2 Image selection, splitting, and cropping
@@ -379,7 +379,7 @@ where
 - $\cup$ denotes their union
 - $area()$ indicates the area of the region
 
-![alt text](report/medmedi1_Fh2VtPW6NNOvTPZ7ZWG3kQ.webp)
+![alt text](report/media/1_Fh2VtPW6NNOvTPZ7ZWG3kQ.webp)
 
 
 Using the matrix described above, we focus on the following 2 metrics
@@ -454,14 +454,14 @@ In each of the setups defualt FasterRCNN with ResNet 50 backbone was used. In on
 - _updated-labels-network-v1-all-unfrozen-10/07/2025-00:24_ - all available pretrained weights   
 
 <p>
-  <img src="report/medmediexp_pretrained-weights_loss.png" alt="Loss over time" width="96.5%" />
+  <img src="report/media/exp_pretrained-weights_loss.png" alt="Loss over time" width="96.5%" />
 </p>
 <p>
-  <img src="report/medmediexp_pretrained-weights_iou_per-per-pred.png" alt="IoU per prediction" width="48%" />
-  <img src="report/medmediexp_pretrained-weights_iou_per-per-gt.png" alt="IoU per ground truth" width="48%" />
+  <img src="report/media/exp_pretrained-weights_iou_per-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="report/media/exp_pretrained-weights_iou_per-per-gt.png" alt="IoU per ground truth" width="48%" />
 </p>
 <p>
-  <img src="report/medmediexp_pretrained_weights_map_50.png" alt="mAP@0.5 over time" width="48%" />
+  <img src="report/media/exp_pretrained_weights_map_50.png" alt="mAP@0.5 over time" width="48%" />
 </p>
 Model that was not usign any pretrained weights has performed by far the worst being unable to gain any performance in the first 30 epochs besides slight improvement in terms of IoU per ground truth and per prediction. Models using pretrained weights for the backbone only and for the whole network performed very similarly, especially in terms of _map_50_ and best IoU per ground truth.
 
@@ -479,14 +479,14 @@ In the partially frozen experiment, only the first layer was unfrozen to accomod
 
 ### 7.2.3 Results
 <p>
-  <img src="report/medmediexp_layer-freezing_loss.png" alt="Loss over time" width="96.5%" />
+  <img src="report/media/exp_layer-freezing_loss.png" alt="Loss over time" width="96.5%" />
 </p>
 <p>
-  <img src="report/medmediexp_layer-freezing_iou-per-pred.png" alt="IoU per prediction" width="48%" />
-  <img src="report/medmediexp_layer-freezing_iou-per-gt.png" alt="IoU per ground truth" width="48%" />
+  <img src="report/media/exp_layer-freezing_iou-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="report/media/exp_layer-freezing_iou-per-gt.png" alt="IoU per ground truth" width="48%" />
 </p>
 <p>
-  <img src="report/medmediexp_layer-freezing_map-50.png" alt="mAP@0.5 over time" width="48%" />
+  <img src="report/media/exp_layer-freezing_map-50.png" alt="mAP@0.5 over time" width="48%" />
 </p>
 Training the model with all layers unfrozen has vastly outperformed model with backbone partially frozen in all metrics.
 
@@ -501,7 +501,7 @@ ResNet is a deep convolutional network architecture that introduces residual, or
 
 Below diagram depicts ResNet block and ResNet(18) architecture
 
-![alt text](report/medmediresnet-block.png) ![alt text](report/medmediresnet18-90-1.png)  
+![alt text](report/media/resnet-block.png) ![alt text](report/media/resnet18-90-1.png)  
 By configuring different numbers of channels and residual blocks in the module, we can create different ResNet models, such as the deeper 152-layer ResNet-152
 
 ### 7.3.2 Hypothesis
@@ -512,14 +512,14 @@ FasterRCNN network would be trained for limited number of epochs (60 epochs, dow
 
 ### 7.3.4 Results
 <p>
-  <img src="report/medmediexp_backbone-architechture_loss.png" alt="Loss over time" width="96.5%" />
+  <img src="report/media/exp_backbone-architechture_loss.png" alt="Loss over time" width="96.5%" />
 </p>
 <p>
-  <img src="report/medmediexp_backbone-architechture_iou-per-pred.png" alt="IoU per prediction" width="48%" />
-  <img src="report/medmediexp_backbone-architechture_iou-per-gt.png" alt="IoU per ground truth" width="48%" />
+  <img src="report/media/exp_backbone-architechture_iou-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="report/media/exp_backbone-architechture_iou-per-gt.png" alt="IoU per ground truth" width="48%" />
 </p>
 <p>
-  <img src="report/medmediexp_backbone-architechture_map-50.png" alt="mAP@0.5 over time" width="48%" />
+  <img src="report/media/exp_backbone-architechture_map-50.png" alt="mAP@0.5 over time" width="48%" />
 </p>
 Considering _mAP_50_ metric, ResNet18 has performed worse than other networks, whereas ResNets34, 50 and 101 have performed at similar levels without any advantages of one over the others. 
 
@@ -546,14 +546,14 @@ In this experiment both networks were trained using ResNet50 backbone and pretra
 
 ### 7.4.3 Results
 <p>
-  <img src="report/medmediexp_faster-rcnn-v_loss.png" alt="Loss over time" width="96.5%" />
+  <img src="report/media/exp_faster-rcnn-v_loss.png" alt="Loss over time" width="96.5%" />
 </p>
 <p>
-  <img src="report/medmediexp_faster-rcnn-v_best-per-pred.png" alt="IoU per prediction" width="48%" />
-  <img src="report/medmediexp_faster-rcnn-v_best-per-gt.png" alt="IoU per ground truth" width="48%" />
+  <img src="report/media/exp_faster-rcnn-v_best-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="report/media/exp_faster-rcnn-v_best-per-gt.png" alt="IoU per ground truth" width="48%" />
 </p>
 <p>
-  <img src="report/medmediexp_faster-rcnn-v_map-50.png" alt="mAP@0.5 over time" width="48%" />
+  <img src="report/media/exp_faster-rcnn-v_map-50.png" alt="mAP@0.5 over time" width="48%" />
 </p>
 The main apparent difference between using v2 model instead of v1 according to the experimet is that the v2 model achieves higher results faster than the v1 counterpart. The final difference between max _mAP_50_ between both models was $0.87$ for v2 and $0.862$ for v1, however v1 model needed 75 epochs whereas v2 model achieved $0.87$ _mAP_50_ in 30 epochs.  
 Even though it took less epochs for for the v2 model to achieve high metric reuslt, the time was similar due to increased complexity of the v2 model and thus each epoch taking longer to train.
@@ -589,7 +589,7 @@ The v2 network with ResNet50 is used. To visualize the effect of non-maximum sup
 In the following noisy image, it can be seen how by increasing the NMS threshold increases the number of predictions in the same object, clearly seen in the object clusters at (x,y) \~ (110,50), (250, 0), and (500, 0).
 <figure>
   <div align="center">
-    <img src ="report/medmedinoisy03_2.png" width="33%" /><img src ="report/medmedinoisy05_2.png" width="33%" /><img src ="report/medmedinoisy07_2.png" width="33%" />
+    <img src ="report/media/noisy03_2.png" width="33%" /><img src ="report/media/noisy05_2.png" width="33%" /><img src ="report/media/noisy07_2.png" width="33%" />
   </div>
   <figcaption align="center">From left to right, NMS threshold = 0.3, 0.5, and 0.7, respectively. Check the object cluster at (x,y) \~ (110,50) Bottom-Left, (250, 0) Bottom-Center, and (500, 0) Bottom-Right.</figcaption>
 </figure>
@@ -599,7 +599,7 @@ The following example, less noisier, also shows how reducing the NMS threshold r
 
 <figure>
   <div align="center">
-    <img src ="report/medmediclean03_2.png" width="33%" /><img src ="report/medmediclean05_2.png" width="33%" /><img src ="report/medmediclean07_2.png" width="33%" />
+    <img src ="report/media/clean03_2.png" width="33%" /><img src ="report/media/clean05_2.png" width="33%" /><img src ="report/media/clean07_2.png" width="33%" />
   </div>
   <figcaption align="center">From left to right, NMS threshold = 0.3, 0.5, and 0.7, respectively. Check the object cluster at (x,y) \~ (220, 480) or in (450,25).</figcaption>
 </figure>
@@ -677,15 +677,15 @@ The speed guard is injected into the training loop via the on\_batch\_end callba
 
 After 1080 minutes, 30 consecutive attemps were performed: 13 of them ended succesfully while the remaining 17 were aborted following the logic explained before. Runs that were aborted resulted in `map_50` value equal to `null` and were excluded from further consideration. 
 
- ![](report/medmediwb_sweep_results.png) 
+ ![](report/media/wb_sweep_results.png) 
 
 The impact on the `map_50` metric is summarized in the following figure:
 
-![](report/medmediOverallSweepMetrics.png)
+![](report/media/OverallSweepMetrics.png)
 
 The top 3 sweeps resulted:
 
-![](report/medmediBest3Sweeps.png)
+![](report/media/Best3Sweeps.png)
 
 with the following hyperparams:
 
@@ -697,7 +697,7 @@ with the following hyperparams:
 
 and training metrics:
 
-![](report/medmediBest_training_metrics.png)
+![](report/media/Best_training_metrics.png)
 
 The experiment **glad-sweep-9** stands out as the most effective configuration, achieving the highest mAP@50 (0.844) while maintaining low and stable training losses across all key components. Its moderate learning rate enables efficient convergence with a short early stopping patience (5), indicating a well-balanced training dynamic. Although **floral-sweep-29** exhibits slightly lower loss values, its performance is marginally lower (mAP@50 of 0.838) and the slower convergence suggests potential underfitting due to a very low learning rate. **Morning-sweep-4**, with the highest learning rate, shows the highest loss values and the lowest mAP@50 (0.824), indicating suboptimal learning.
 
@@ -714,14 +714,14 @@ The NMS experiment showed that adjusting the NMS threshold impacts possitively i
 
 # 8 Results
 <p>
-  <img src="report/medmedifinal-training_loss.png" alt="Loss over time" width="96.5%" />
+  <img src="report/media/final-training_loss.png" alt="Loss over time" width="96.5%" />
 </p>
 <p>
-  <img src="report/medmedifinal-training_best-per-pred.png" alt="IoU per prediction" width="48%" />
-  <img src="report/medmedifinal-training_best-per-gt.png" alt="IoU per ground truth" width="48%" />
+  <img src="report/media/final-training_best-per-pred.png" alt="IoU per prediction" width="48%" />
+  <img src="report/media/final-training_best-per-gt.png" alt="IoU per ground truth" width="48%" />
 </p>
 <p>
-  <img src="report/medmedifinal-training_map-50.png" alt="mAP@0.5 over time" width="48%" />
+  <img src="report/media/final-training_map-50.png" alt="mAP@0.5 over time" width="48%" />
 </p>
 The training of the final model using hyperparameters defined by hyperparameter sweep has gone similarily to models trained for experiments purposes with the losses steadily declining. The model started with already very high performance, most likely by using pretrained weights. The model improved throughout the training, however i also displayed high level of fluctuations in metrics on validation set. Best IoU per prediction has improved with training, reaching value 0.71 indicating that the model has gained precision, similarily mAP at 0.5 IoU threshold has slightly improved after some epochs reaching nearly value 0.89 in it's peak.  
 
@@ -734,13 +734,13 @@ While the key metric of mAP@0.5 (mAP at 0.5 IoU threshold) is high it can be obs
 
 The model obtained proposes more detections than the specified by the ground truth. The following figure is an histogram of the number of predictions minus the number of ground truth objects. The histogram is clearly biases and skewed positively. Best IoU per ground truth and per prediciton metrics also indicate that, since best IoU per prediction is lower, it most likely is being penalized by predictions of the model that have no correspodning ground truth lowering the overall average.
 
-![](report/medmedihistogram_BB_predictions_vs_targets.png)
+![](report/media/histogram_BB_predictions_vs_targets.png)
 
 The model often detects object instances that are not annotated in the ground truth. Visual inspection suggests these extra detections correspond to real objects that were simply omitted from the labels, yet under the current evaluation protocol they are counted as errors. Further investigation may be needed to clarify this discrepancy.
 
 <figure>
   <div align="center">
-    <img src ="report/medmedilabels_2_TJO2459810_59700_2_U_imc.png" width="33%" /><img src ="report/medmedilabels_11_TJO2459820_55570_3_U_imc.png" width="33%" /><img src ="report/medmedilabels_37_TJO2459838_47861_1_U_imc.png" width="33%" />
+    <img src ="report/media/labels_2_TJO2459810_59700_2_U_imc.png" width="33%" /><img src ="report/media/labels_11_TJO2459820_55570_3_U_imc.png" width="33%" /><img src ="report/media/labels_37_TJO2459838_47861_1_U_imc.png" width="33%" />
   </div>
   <figcaption align="center">3 examples infered from the test set with NMS=0.3.</figcaption>
 </figure>
