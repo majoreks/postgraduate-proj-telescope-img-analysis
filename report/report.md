@@ -1,66 +1,28 @@
 # SAT PROJECT
 
-[**1 INTRODUCTION	2**](#1-introduction)
-
-[1.1 Motivation: PROBLEM TO SOLVE	2](#1.1-motivation:-problem-to-solve)
-
-[2 JOAN ORÓ TELESCOPE DATASET	2](#2-joan-oró-telescope-dataset)
-
-[2.1 Image characteristics	3](#2.1-image-characteristics)
-
-[2.2 Ground truth characteristics	4](#2.2-ground-truth-characteristics)
-
-[2.3 Dataset Preprocessing Procedure	6](#2.3-dataset-preprocessing-procedure)
-
-[2.3.1 Manual cleaning and curation of the dataset	6](#2.3.1-manual-cleaning-and-curation-of-the-dataset)
-
-[2.3.2 Image selection, splitting, and cropping	10](#2.3.2-image-selection,-splitting,-and-cropping)
-
-[**3\. SYSTEM ARCHITECTURE	10**](#4.-system-architecture)
-
-[3.1 Model selection	10](#4.1-model-selection)
-
-[3.2 Adapting RGB pre-trained Models for Monochromatic inputs	13](#4.2-adapting-rgb-pre-trained-models-for-monochromatic-inputs)
-
-[3.3 Fine tuning strategies for specific object detection	13](#4.3-fine-tuning-strategies-for-specific-object-detection)
-
-[3.3 Data augmentation	13](#4.4-data-augmentation)
-
-[3.3 Metrics and loss criterion	13](#heading=h.xdqeqmhe54xo)
-
-[3.4 Checkpoints and Early Stopping	13](#4.6-checkpoints-and-early-stopping)
-
-[3.1 Main Hyperparameters	14](#4.7-main-hyperparameters)
-
-[3.5 Working Environment	14](#heading=h.8ha8vao109aq)
-
-[**4\. Variations and experiments	14**](#5.-experiments)
-
-[4.3 Hyperparameter search experiments	14](#5.2-hyperparameter-search-experiment)
-
-[**4\. Results	17**](#6.-results)
-
-[4.1 Model comparison	17](#6.1-model-comparison)
-
-[Best performance	17](#best-performance)
-
-[Experiments that have been run	17](#heading=h.uomqm1h8tdzf)
-
-[4.2 Effect of Non Maximum Suppression Threshold on Object Detection	17](#6.2-effect-of-non-maximum-suppression-threshold-on-object-detection)
-
-[4\. Modifications implemented to the models / Special Techniques	18](#4.-modifications-implemented-to-the-models-/-special-techniques)
-
-[5\. Inference and Validation	18](#5.-inference-and-validation)
-
-[**CONCLUSIONS	19**](#conclusions)
-
-[**Future improvements	19**](#future-improvements)
-
-[Index	19](#index)
-
-[**Bibliography	22**](#bibliography)
-
-# 
+- [1 Introduction](#1-introduction)  
+  - [1.1 Motivation: Problem to solve](#11-motivation-problem-to-solve)  
+- [2 Joan Oró Telescope Dataset](#2-joan-oró-telescope-dataset)  
+  - [2.1 Image characteristics](#21-image-characteristics)  
+  - [2.2 Dataset characteristics](#22-dataset-characteristics)  
+  - [2.3 Dataset](#23-dataset)  
+- [3 Working environment](#3-working-environment)  
+- [4 State of the art](#4-state-of-the-art)  
+  - [4.1 Fine tuning strategies for specific object detection](#41-fine-tuning-strategies-for-specific-object-detection)  
+  - [4.2 Adapting RGB pre-trained models for monochromatic inputs](#42-adapting-rgb-pre-trained-models-for-monochromatic-inputs)  
+- [5 System architecture](#5-system-architecture)  
+  - [5.1 Model selection](#51-model-selection)  
+  - [5.2 Data augmentation](#52-data-augmentation)  
+  - [5.3 Checkpoints and early stopping](#53-checkpoints-and-early-stopping)  
+  - [5.4 Other modifications](#54-other-modifications-implemented-to-the-models)  
+- [6 Loss criterion and evaluation metrics](#6-loss-criterion-and-evaluation-metrics)  
+  - [6.1 Loss criterion](#61-loss-criterion)  
+  - [6.2 Evaluation metrics](#62-evaluation-metrics)  
+- [7 Model experiments](#7-model-experiments)  
+- [8 Results](#8-results)  
+- [9 Conclusions](#9-conclusions)  
+  - [9.1 Next steps](#91-next-steps)  
+- [Bibliography](#bibliography)  
 
 # 1 Introduction
 
@@ -788,7 +750,7 @@ Area related metrics, in particular `best_iou_per_gt` suggest that the model can
 
 By visual inspection of predictions on images from the test set, the model complies with initial expectations of accurately finding most vast majority of objects from the ground truth, in some cases improving the bounding box by reducing its size and fitting it better around the object of interest. As mentioned before there are other cases where the model marks objects of no scientific interest (False positives) and in some other cases creates too big of a bounding box around an object, especially if it's in proximity of other objects.
 
-## Next steps
+## 9.1 Next steps
 An immediate next step could be testing a set of hyperparameters found in the hyperparameter sweep that produced promising results of high mAP@0.5 peak, however took relatively long time to converge. Testing those hyperparameters in full training run could lead to a model with better performance than the one obtained for the final results described above.  
 
 Having possibility of using data from Spanish Virtual Observatory, a dataset could be constructed of images from different telescopes or using different sensors so that the model could be tested on images of different characteristics in order to verify generalization capabilities.  
