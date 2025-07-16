@@ -12,7 +12,7 @@ Once requirements are installed, the main part of the project can be executed vi
 - data of interest should be unpacked in directory specified by `data_path` 
 - output directory specified by `output_path` should be created.   
 
-Project can be run in train mode and inference mode.
+Project can be run in train mode and inference mode. Experiment mode is also available, however it's reserved for performing hyperparameter sweeps using wandb.
 
 ### Training
 
