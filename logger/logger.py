@@ -20,7 +20,7 @@ class Logger():
 
     def __init_logger(self, task: str, config: dict) -> None:
         # For the experiment mode to run
-        if wandb.run is not None and wandb.run._settings._run_id is not None:
+        if wandb.run is not None:
             return
         
         # For the train mode to run
