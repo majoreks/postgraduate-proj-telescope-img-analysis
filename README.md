@@ -1,5 +1,8 @@
 # postgraduate-proj-telescope-img-analysis
 
+## Report
+[Report link](https://github.com/majoreks/postgraduate-proj-telescope-img-analysis/blob/main/report/report.md) (report/report.md)
+
 ## How to run
 Pre requirement to run the training or inference is installing necessary requirements. This can be done by running (assuming `pip` usage)
 ```bash
@@ -10,20 +13,98 @@ Once requirements are installed, the main part of the project can be executed vi
 - output directory specified by `output_path` should be created.   
 
 Project can be run in train mode and inference mode.
+
 ### Training
-Additionally to requirements specified above, user should be logged into wandb locally for logging purposes (if not dev run).
+
+Before running, make sure:
+
+- Your environment meets the requirements listed above.
+- You’re logged into Weights & Biases locally (unless using `--dev`).
+
+#### Required flags
+
+- `--mode` / `-m`  
+  Must be set to `train`.
+
+- `--task` / `-t`  
+  A unique name for this training run (used for W&B logging).
+
+#### Optional flags
+
+- `--dev`  
+  If present, enables development mode:
+  - Disables W&B logging
+  - Uses a smaller subset of data
+  - Runs for fewer epochs
+
+- `--resnet-type`  
+  Choose a ResNet backbone to initialize only the backbone weights (ImageNet pretrained). One of:
+  - `resnet18`
+  - `resnet34`
+  - `resnet50`
+  - `resnet101`  
+  If omitted, the script will assume ResNet50 as backbone and weights for the entire network will be loaded.
+
+- `--model-type`  
+  Which Faster R-CNN variant to use. One of:
+  - `v1`
+  - `v2`  
+  Defaults to `v2` if not provided.
+
+#### Basic example
+
+Running with particular resnet as backbone  
 
 ```bash
-python main.py --mode train --task <task-name> [--dev]
-```
-- `--task` parameter is required and defines the task name for logging purposes
-- `--dev` flag can be additionally passed, this will ensure that the wandb logging is not enabled, only subset of images is used and few epochs are run.   
+python main.py \
+  --mode train \
+  --task my_experiment \
+  --resnet-type resnet34 \
+  --model-type v1
+``` 
+
+Running in default, where FasterRCNN v2 with ResNet50 backbone will be assumed and pretrained weights for the whole network will be used
+
+```bash
+python main.py \
+  --mode train \
+  --task my_experiment
+``` 
 
 ### Inference
-```bash
-python main.py --mode infer --task <task-name>
-```
-In order to run inference instead of training, `--mode` should be set to `infer`, `--task` flag is still required, however has no real effect so can have any value. Model weights are automatically downloaded by the inference script, path to test images is found in data_path configured in config file and then looking inside `test_dataset` directory inside of directory indicated by data_path
 
-## Report
-[Report link](https://github.com/majoreks/postgraduate-proj-telescope-img-analysis/blob/main/report/report.md) (report/report.md)
+To run the model in inference mode, you need to supply:
+
+- `--mode` / `-m`  
+  Must be set to `infer`.
+
+- `--task` / `-t`  
+  Output directory where your inference outputs (e.g., visualizations, JSON results) will be saved.
+
+- `--weights-path`  
+  **(required)** Path to the `.pth` or `.pt` file containing your pre-trained Faster R-CNN model weights.
+
+- `--resnet-type`  
+  **(required)** Which ResNet backbone your model uses. One of:
+  - `resnet18`
+  - `resnet34`
+  - `resnet50`
+  - `resnet101`
+
+- `--model-type`  
+  **(required)** Which Faster R-CNN variant to use. One of:
+  - `v1`
+  - `v2`
+
+The script will automatically discover your test images by looking under the `test_dataset` folder in the `data_path` configured in your `config` file.
+
+#### Basic example
+
+```bash
+python main.py \
+  --mode infer \
+  --task inference_run_01 \
+  --weights-path /path/to/model_resnet50_v2.pth \
+  --resnet-type resnet50 \
+  --model-type v2
+```
