@@ -225,8 +225,6 @@ def inference(config, tempdir, device, weights_path: str, task_name: str, model_
 
     with torch.no_grad():
         for idx, (images, targets) in enumerate(test_loader):
-            if idx >= 2:
-                break
             if not images:
                 print(f"Skipping idx {idx} because images is empty.")
                 continue
