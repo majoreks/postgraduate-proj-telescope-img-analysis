@@ -3,10 +3,23 @@ from dev_utils.analyse_labels.labels_reader import read_labels
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
+from astropy.io import fits
+
+def extract_pixel_scale(hdul):
+    hdr = hdul[0].header
+    cdelt1 = abs(hdr.get('CD1_1', None))
+    cdelt2 = abs(hdr.get('CD2_2', None))
+    if cdelt1 and cdelt2:
+        return (abs(cdelt1) + abs(cdelt2)) / 2
+    else:
+        raise ValueError("No se encontró CDELT1/CDELT2 en el header del FITS")
 
 # root_dir = os.path.expanduser('/home/szymon/code/posgrado/postgraduate-proj-telescope-img-analysis/data_full')
-root_dir = os.path.expanduser('~/data/posgrado-proj/images1000')
+# root_dir = os.path.expanduser('~/data/posgrado-proj/images1000') # original dataset
+root_dir = os.path.expanduser('~/data/posgrado-proj/to_train_just_OK') # cleaned dataset
+# root_dir = os.path.expanduser('~/data/posgrado-proj/images1000_filtered_data') # cleaned + cropped dataset
 image_width, image_height = 4096, 4108
+# image_width, image_height = 512, 512
 image_area = image_width * image_height
 
 all_data = []
@@ -18,8 +31,13 @@ def main():
         for file in filenames:
             if file.endswith('.dat') and '_imc_trl' in file:
                 file_path = os.path.join(dirpath, file)
+                fits_file_path = os.path.join(dirpath, '_'.join(file.split("_")[:-1]) + '.fits.gz')
+
                 try:
-                    df = read_labels(file_path)
+                    with fits.open(fits_file_path) as hdul:
+                        pixel_scale = extract_pixel_scale(hdul)
+
+                    df = read_labels(file_path, pixel_scale)
 
                     if df["reason"] != 'success':
                         if df["reason"] not in results:
@@ -52,9 +70,8 @@ def main():
     df = pd.concat(all_data, ignore_index=True)
 
     print(f'Num objects found: {len(df)}')
+    print(f'Average number of objects in an image: {len(df)/len(all_data)}')
 
-    image_width = 4096   
-    image_height = 4108
     image_area = image_width * image_height
 
     # Calculate width, length, size, and ratio
@@ -101,6 +118,7 @@ def main():
     print(f"Num invalid objects after filtering: {len(df_invalid)}")
     df_invalid.to_csv('output/dev/data/invalid.csv')
     print(f'Num unique files with invalid values {len(df_invalid["PATH"].unique())}')
+    print(f"Average number of objects in an image after filtering: {len(df)/len(all_data)}")
 
     print('\n\n')
 
