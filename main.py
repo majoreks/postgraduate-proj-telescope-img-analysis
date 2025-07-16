@@ -72,7 +72,7 @@ def main() -> None:
         elif mode == Mode.EXPERIMENT:
             sweep_id = wandb.sweep(sweep_config, project="postgraduate-sat-object-detection")
             wrapper = sweep_wrapper_factory(config, sweep_config, task, dev, device, tempdir)
-            wandb.agent(sweep_id, function=wrapper, count=20)
+            wandb.agent(sweep_id, function=wrapper, count=30)
 
 if __name__ == "__main__":
     main()
