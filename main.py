@@ -46,18 +46,18 @@ def main() -> None:
             },
             'parameters': {
                 'batch_size': {
-                    'values': [4, 8, 16]
+                    'values': [4, 6]
                 },
                 'lr': {
                     'distribution': 'log_uniform_values',
-                    'min': 1e-6,
-                    'max': 1e-2
+                    'min': 5e-6,
+                    'max': 5e-3
                 },
                 'early_stopping_patience': {
-                    'values': [0, 3, 5]
+                    'values': [5, 10, 12]
                 },
                 'weigth_decay': {
-                    'values': [1e-5,1e-4,1e-2]
+                    'values':  [0.0, 1e-6, 1e-4, 5e-3]
                 }
             }
     }
