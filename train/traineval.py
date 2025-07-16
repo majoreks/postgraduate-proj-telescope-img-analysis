@@ -1,9 +1,11 @@
+import json
 import torch
 import albumentations as A
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 from dataset.dataloader import custom_collate_fn
 from dataset.telescope_dataset import TelescopeDataset
+from dev_utils.tensor_serializer import serialize_tensor
 from logger.logger import Logger
 from model.load_model import load_model
 from model.load_model_v2 import load_model_v2
@@ -14,6 +16,7 @@ from torchmetrics.functional.detection import intersection_over_union
 from model.checkpointing import init_checkpointing, save_best_checkpoint, save_last_checkpoint, persist_checkpoints, log_best_checkpoints
 import os
 from train.EarlyStopping import EarlyStopping
+from pathlib import Path
 
 early_stopping_metric = "map_50"
 
@@ -45,15 +48,15 @@ def eval_single_epoch(model, images, device):
     return predictions
 
 
-def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> None:
+def train_model(config: dict, tempdir: str, task: str, dev: bool, device, model_type: str | None, resnet_type: str | None) -> None:
 
     data_transforms = A.Compose([A.RandomRotate90(p=1), A.ToTensorV2()], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], filter_invalid_bboxes=True))
 
     train_data_path = os.path.join(config["data_path"], "train_dataset_cropped")
     joan_oro_dataset = TelescopeDataset(data_path=train_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     if dev:
-        joan_oro_dataset = Subset(joan_oro_dataset, range(min(50, len(joan_oro_dataset))))
-        config["epochs"] = 3
+        joan_oro_dataset = Subset(joan_oro_dataset, range(min(20, len(joan_oro_dataset))))
+        config["epochs"] = 2
     
     torch.manual_seed(42*42)
     train_dataset, val_dataset = torch.utils.data.random_split(joan_oro_dataset, config['train_val_split'])
@@ -61,7 +64,8 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], collate_fn=custom_collate_fn)
 
     logger = Logger(task, config, dev)
-    model = load_model_v2(device, config)
+    model_loader = load_model if model_type == "v1" else load_model_v2
+    model = model_loader(device, config, resnet_type=resnet_type)
 
     model = model.train()
     optimizer = torch.optim.Adam(list(model.backbone.parameters()) + list(model.roi_heads.box_predictor.parameters()), lr=config["lr"], weight_decay=config["weight_decay"])
@@ -170,9 +174,11 @@ def train_model(config: dict, tempdir: str, task: str, dev: bool, device) -> Non
     logger.flush()
 
 
-def inference(config, tempdir, device, save_fig=True):
+def inference(config, tempdir, device, weights_path: str, task_name: str, model_type: str | None = None, resnet_type: str | None = None, save_fig=True):
     
     test_data_path = os.path.join(config["data_path"], "test_dataset")
+    output_path = Path(f"{config['output_path']}/{task_name}-inference")
+    output_path.mkdir(parents=True, exist_ok=True)
 
     print('inference', test_data_path)
     print('-----')
@@ -183,7 +189,7 @@ def inference(config, tempdir, device, save_fig=True):
         print("El directorio existe.")
 
     
-    data_transforms = A.Compose([A.AtLeastOneBBoxRandomCrop(width=config["crop_size"], height=config["crop_size"]), A.ToTensorV2()], 
+    data_transforms = A.Compose([A.ToTensorV2()], 
                                  bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], 
                                                           filter_invalid_bboxes=True))
 
@@ -191,17 +197,36 @@ def inference(config, tempdir, device, save_fig=True):
     dataset = TelescopeDataset(data_path=test_data_path, cache_dir=tempdir, transform=data_transforms, device=device)
     test_loader = DataLoader(dataset, batch_size=1, collate_fn=custom_collate_fn)
 
-    download_model_data()
-    model = load_model(device, config=config, load_weights=True)
-    model = read_model(model, device)
+    model_loader = load_model if model_type == "v1" else load_model_v2
+    model = model_loader(device, config=config, load_weights=True, weights_path=weights_path, resnet_type=resnet_type)
+
+    nms_threshold  = config['nms_threshold']
+    model.roi_heads.nms_thresh = nms_threshold
+
     model.eval()
 
     print(f"Número de muestras cargadas: {len(dataset)}")
 
+    start = 0.3 * config["box_detections_per_img"]
+    end = config["box_detections_per_img"]
+    detection_thresholds = [
+        int(start),
+        int((start + end) / 2),
+        int(end)
+    ]
+    mAPMetric = MeanAveragePrecision(iou_type="bbox", max_detection_thresholds=detection_thresholds, backend='faster_coco_eval')
+    mAPMetric.reset()
+    ious_dim0 = []
+    ious_dim1 = []
+
     results = []
+    BBtargets = []
+    BBpredictions = []
 
     with torch.no_grad():
         for idx, (images, targets) in enumerate(test_loader):
+            if idx >= 2:
+                break
             if not images:
                 print(f"Skipping idx {idx} because images is empty.")
                 continue
@@ -215,6 +240,12 @@ def inference(config, tempdir, device, save_fig=True):
 
             # Obtener predicciones del modelo
             predictions, _ = model(images, targets)
+            mAPMetric.update(predictions, targets)
+
+            for pred, target in zip(predictions, targets):
+                iou = intersection_over_union(pred["boxes"], target["boxes"], aggregate=False)
+                ious_dim0.append(iou.max(dim=0).values)
+                ious_dim1.append(iou.max(dim=1).values)
 
             # Aux variables
             image=images[0].cpu().numpy()
@@ -225,14 +256,11 @@ def inference(config, tempdir, device, save_fig=True):
             # Print results from the model
             print(f"[{idx}] Image {filename} GT: {len(targets[0]['boxes'])} BBs, Pred: {len(predictions[0]['boxes'])} BBs")
 
+            BBtargets.append(len(targets[0]['boxes']))
+            BBpredictions.append(len(predictions[0]['boxes']))
             # Saves the inference plotted image
             if save_fig:
-                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, 
-                                               labels_ground_truth=ground_truth, 
-                                               save_fig=True, 
-                                               save_fig_sufix=f"{idx}_{filename}", 
-                                               output_path=config["output_path"],
-                                               title_sufix=filename)              
+                plotFITSImageWithBoundingBoxes(image, labels_predictions=prediction, labels_ground_truth=ground_truth, save_fig=True, save_fig_sufix=f"{idx}_{filename}", title_sufix=filename, output_path=os.path.join(output_path, "images_inference"))              
 
             # Almacenar resultados
             results.append({
@@ -242,6 +270,22 @@ def inference(config, tempdir, device, save_fig=True):
                 'prediction': prediction,  # dict con 'boxes', 'labels', 'scores'
                 'filename': filename  # nombre del archivo de imagen
             })
+
+    mAPMetrics = mAPMetric.compute()
+    mAPMetrics.pop("classes", None)
+
+    iou_dim0 = torch.cat(ious_dim0).mean()       # 1-D tensor of length = sum of all element-counts
+    iou_dim1 = torch.cat(ious_dim1).mean()
+    iou_metrics = {
+        "best_iou_per_gt": iou_dim0, "best_iou_per_prediction": iou_dim1
+    }
+    print(f"Inference completed. mAP Metrics: {mAPMetrics}, IOU Metrics: {iou_metrics}")
+
+    metrics_output_path = Path(os.path.join(output_path, "evaluation_metrics", "metrics.json"))
+    metrics_output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(metrics_output_path, 'w') as f:
+        json.dump(serialize_tensor(mAPMetrics, iou_metrics), f)
 
     # Opcional: guardar en disco como torch.save
     output_path = os.path.join(tempdir, "results.pt")

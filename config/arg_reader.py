@@ -48,5 +48,9 @@ def read_arguments() -> Tuple[Mode, str, bool, Optional[str], str, Optional[str]
 
     if args.mode == Mode.INFER and args.weights_path is None:
         raise Exception("weights_path is obligatory for infer (inference) mode")
+    if args.mode == Mode.INFER and args.resnet_type is None:
+        raise Exception("resnet_type is obligatory for infer (inference) mode")
+    if args.mode == Mode.INFER and args.model_type is None:
+        raise Exception("model_type is obligatory for infer (inference) mode")
 
     return args.mode, args.task, args.dev, args.weights_path, args.resnet_type, args.model_type
